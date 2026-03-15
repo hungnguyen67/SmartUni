@@ -41,10 +41,7 @@ export class ProfileComponent implements OnInit {
       const name = this.user?.name || 'User';
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8ABC&color=fff&size=80`;
     }
-    if (this.user.avatar.startsWith('http')) {
-      return this.user.avatar;
-    }
-    return 'http://localhost:8001' + this.user.avatar;
+    return this.user.avatar;
   }
 
   loadUserProfile() {

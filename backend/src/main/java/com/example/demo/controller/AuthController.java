@@ -54,8 +54,11 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
 
-    private final String jwtSecret = "mySecretKeyForJWTGenerationThatIsLongEnoughForHS256Algorithm";
-    private final long jwtExpirationMs = 86400000;
+    @org.springframework.beans.factory.annotation.Value("${jwt.secret}")
+    private String jwtSecret;
+
+    @org.springframework.beans.factory.annotation.Value("${jwt.expiration}")
+    private long jwtExpirationMs;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {

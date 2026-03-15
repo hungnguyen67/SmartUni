@@ -77,9 +77,7 @@ export class DashboardLayoutComponent implements OnInit {
       const name = this.currentUser?.first_name || 'Admin';
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8ABC&color=fff`;
     }
-    return this.currentUser.avatar.startsWith('http')
-      ? this.currentUser.avatar
-      : `http://localhost:8001${this.currentUser.avatar}`;
+    return this.currentUser.avatar;
   }
 
   isMenuOpen(menuName: string): boolean {

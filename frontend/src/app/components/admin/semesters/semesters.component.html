@@ -156,13 +156,13 @@
                         <td class="px-4 py-4 text-sm text-slate-900">{{ semester.name }}</td>
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ semester.academicYear }}</td>
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ semester.semesterOrder }}</td>
-                        <td class="px-4 py-4 text-sm text-slate-500">
+                        <td class="px-4 py-4 text-sm text-slate-900">
                             {{ semester.startDate | date:'dd/MM/yyyy' }} - {{ semester.endDate | date:'dd/MM/yyyy' }}
                         </td>
-                        <td class="px-4 py-4 text-sm text-center">
-                            <span
-                                [class]="'inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border ' + getStatusClass(semester.semesterStatus)">
-                                {{ getStatusLabel(semester.semesterStatus) }}
+                        <td class="px-2 py-4 text-center">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold border"
+                                [ngClass]="getStatusClass(semester.semesterStatus)">
+                                {{getStatusLabel(semester.semesterStatus)}}
                             </span>
                         </td>
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">

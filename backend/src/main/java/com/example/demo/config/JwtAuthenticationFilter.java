@@ -23,7 +23,8 @@ import io.jsonwebtoken.Jwts;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final UserDetailsService userDetailsService;
-    private final String jwtSecret = "mySecretKeyForJWTGenerationThatIsLongEnoughForHS256Algorithm";
+    @org.springframework.beans.factory.annotation.Value("${jwt.secret}")
+    private String jwtSecret;
 
     public JwtAuthenticationFilter(UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
