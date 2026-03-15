@@ -1,0 +1,177 @@
+<div class="bg-white rounded-lg shadow-sm border border-slate-200">
+    <div class="p-6 border-b border-slate-200">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800">Quản lý Chương trình đào tạo</h1>
+                <p class="text-sm text-slate-500">Danh sách các chương trình đào tạo</p>
+            </div>
+            <button
+                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm shadow-blue-200">
+                <i class="fas fa-plus text-xs"></i>
+                Thêm CTĐT
+            </button>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <div class="flex flex-col md:flex-row gap-4 mb-8">
+            <div class="flex-1 relative group">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
+                    <i class="fas fa-search text-sm"></i>
+                </span>
+                <input type="text" [(ngModel)]="searchTerm" (input)="onFilter()"
+                    placeholder="Tìm kiếm theo tên CTĐT, tên ngành..."
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md focus:bg-white focus:border-slate-300 focus:ring-0 outline-none transition-all text-sm placeholder:text-slate-400">
+            </div>
+
+            <div class="flex flex-wrap md:flex-nowrap gap-3 items-center w-full md:w-auto">
+                <div class="relative min-w-[220px] flex-1 md:flex-none dropdown-container">
+                    <button
+                        (click)="activeDropdown = activeDropdown === 'major' ? '' : 'major'; $event.stopPropagation()"
+                        class="relative w-full pl-3 pr-10 py-2.5 bg-white border border-slate-200 rounded-md hover:border-slate-300 text-sm font-medium text-slate-700 shadow-sm text-left outline-none">
+                        <span>{{ getSelectedMajorName() }}</span>
+                        <i class="fas fa-chevron-right absolute text-[9px] right-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-transform duration-300"
+                            [class.rotate-90]="activeDropdown === 'major'"></i>
+                    </button>
+
+                    <div *ngIf="activeDropdown === 'major'"
+                        class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-xl py-1 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+                        <div (click)="selectedMajorId=null; onFilter(); activeDropdown=''"
+                            class="px-4 py-2.5 text-sm hover:bg-slate-50 hover:text-blue-600 cursor-pointer"
+                            [class.text-blue-600]="selectedMajorId === null">Tất cả các ngành học</div>
+                        <div *ngFor="let m of majors" (click)="selectedMajorId=m.id; onFilter(); activeDropdown=''"
+                            class="px-4 py-2.5 text-sm hover:text-blue-600 cursor-pointer"
+                            [class.text-blue-600]="selectedMajorId === m.id">
+                            {{ m.majorName }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative min-w-[180px] flex-1 md:flex-none dropdown-container">
+                    <button
+                        (click)="activeDropdown = activeDropdown === 'status' ? '' : 'status'; $event.stopPropagation()"
+                        class="relative w-full pl-3 pr-10 py-2.5 bg-white border border-slate-200 rounded-md hover:border-slate-300 text-sm font-medium text-slate-700 shadow-sm text-left outline-none">
+                        <span>{{ selectedStatus === 'ACTIVE' ? 'Tất cả trạng thái' : selectedStatus === 'INACTIVE' ?
+                            'Ngưng áp
+                            dụng' : 'Tất cả trạng thái' }}</span>
+                        <i class="fas fa-chevron-right absolute text-[9px] right-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-transform duration-300"
+                            [class.rotate-90]="activeDropdown === 'status'"></i>
+                    </button>
+
+                    <div *ngIf="activeDropdown === 'status'"
+                        class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-xl py-1 animate-in fade-in zoom-in-95 duration-200">
+                        <div (click)="selectedStatus='ALL'; onFilter(); activeDropdown=''"
+                            class="px-4 py-2.5 text-sm hover:text-blue-600 cursor-pointer">Tất cả
+                            trạng thái</div>
+                        <div (click)="selectedStatus='ACTIVE'; onFilter(); activeDropdown=''"
+                            class="px-4 py-2.5 text-sm hover:text-blue-600 cursor-pointer">Đang áp
+                            dụng
+                        </div>
+                        <div (click)="selectedStatus='INACTIVE'; onFilter(); activeDropdown=''"
+                            class="px-4 py-2.5 text-sm hover:text-blue-600 cursor-pointer">Ngưng áp
+                            dụng</div>
+                    </div>
+                </div>
+
+                <button (click)="resetFilters()"
+                    class="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                    title="Làm mới">
+                    <i class="fas fa-sync-alt text-sm" [class.animate-spin]="loading"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="w-[80px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            STT</th>
+                        <th class="w-[120px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Ngành</th>
+                        <th class="w-[200px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                            Tên chương trình</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Năm áp dụng</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Số khối</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Tổng học phần</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Tổng TC</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Trạng thái</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Hành động</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    <tr *ngFor="let item of paginatedCurriculums; let i = index"
+                        class="hover:bg-slate-50 transition-colors">
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ (currentPage - 1) * itemsPerPage + i
+                            + 1 }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">
+                            {{ item.majorCode }}
+                        </td>
+                        <td class="px-4 py-4 text-sm text-slate-900">
+                            {{ item.curriculumName }}
+                        </td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ item.appliedYear }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{
+                            item.totalKnowledgeBlocks }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{
+                            item.totalSubjects }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{
+                            item.totalCreditsRequired }}</td>
+                        <td class="px-4 py-4 text-center">
+                            <span
+                                [class]="item.status === 'ACTIVE' 
+                                ? 'inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100'
+                                : 'inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium bg-slate-50 text-slate-400 rounded-full border border-slate-100'">
+                                {{ item.status === 'ACTIVE' ? 'Đang áp dụng' : 'Ngưng áp dụng' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 text-sm text-center">
+                            <button (click)="editCurriculum(item)"
+                                class="text-blue-600 hover:text-blue-900 mr-3 transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 transition-colors">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr *ngIf="!loading && filteredCurriculums.length === 0">
+                        <td colspan="9" class="px-4 py-12 text-center text-slate-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-inbox text-4xl text-slate-200 mb-4"></i>
+                                <p class="text-sm font-medium">Không tìm thấy chương trình đào tạo nào</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex justify-between items-center mt-4">
+            <div class="text-sm text-slate-600">
+                Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ minEnd }} của {{ filteredCurriculums.length }}
+                kết quả
+            </div>
+            <div class="flex space-x-2">
+                <button (click)="prevPage()" [disabled]="currentPage === 1"
+                    class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50">
+                    Trước
+                </button>
+                <span class="px-3 py-1 text-sm text-slate-600">
+                    Trang {{ currentPage }} / {{ totalPages }}
+                </span>
+                <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+                    class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50">
+                    Sau
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

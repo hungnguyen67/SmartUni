@@ -1,0 +1,49 @@
+<div class="mx-auto flex flex-col h-auto">
+  <div class="flex bg-white rounded-md shadow-sm border border-slate-200 overflow-hidden h-auto">
+
+    <aside class="w-64 border-r border-slate-200 flex flex-col flex-shrink-0 bg-slate-50/30">
+      <div class="h-16 flex items-center px-5 border-b border-slate-100 bg-white sticky top-0 z-10">
+        <div
+          class="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm shadow-blue-200">
+          <i class="fas fa-cog text-white text-[14px] animate-spin-slow"></i>
+        </div>
+        <span class="ml-4 font-bold text-slate-700 uppercase tracking-wider text-[10px] leading-none select-none">
+          Cài đặt hệ thống
+        </span>
+      </div>
+
+      <nav class="flex-1 py-4 px-3">
+        <div class="space-y-1.5">
+          <a routerLink="/dashboard/settings/profile"
+            routerLinkActive="bg-blue-50 text-blue-700 border-blue-600 shadow-sm" #rlaProfile="routerLinkActive"
+            class="flex items-center px-4 py-3 gap-3 text-slate-500 font-semibold rounded-md hover:bg-slate-50 transition-all group border-l-4 border-transparent">
+            <div class="flex items-center justify-center w-6 h-6 flex-shrink-0">
+              <i class="fas fa-user-circle text-[19px] transition-colors" [class.text-blue-600]="rlaProfile.isActive"
+                [class.group-hover:text-blue-600]="!rlaProfile.isActive"></i>
+            </div>
+            <span class="text-[13px] leading-none select-none">Thông tin cá nhân</span>
+          </a>
+
+          <a routerLink="/dashboard/settings/change-password"
+            routerLinkActive="bg-blue-50 text-blue-700 border-blue-600 shadow-sm" #rlaPass="routerLinkActive"
+            class="flex items-center px-4 py-3 gap-3 text-slate-500 font-semibold rounded-md hover:bg-slate-50 transition-all group border-l-4 border-transparent">
+            <div class="flex items-center justify-center w-6 h-6 flex-shrink-0">
+              <i class="fas fa-key text-[18px] transition-colors" [class.text-blue-600]="rlaPass.isActive"
+                [class.group-hover:text-blue-600]="!rlaPass.isActive"></i>
+            </div>
+            <span class="text-[13px] leading-none select-none">Bảo mật tài khoản</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <div class="flex-1 bg-white min-h-full h-auto">
+      <main class="px-8 py-6 h-auto">
+        <div class="animate-fadeIn h-auto">
+          <router-outlet></router-outlet>
+        </div>
+      </main>
+    </div>
+
+  </div>
+</div>

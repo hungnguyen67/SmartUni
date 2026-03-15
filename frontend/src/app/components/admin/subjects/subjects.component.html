@@ -1,0 +1,234 @@
+<div class="bg-white rounded-lg shadow-sm border border-slate-200">
+    <div class="p-6 border-b border-slate-200">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800">Quản lý Học phần</h1>
+                <p class="text-sm text-slate-500">Danh sách các học phần/môn học trong hệ thống</p>
+            </div>
+            <button (click)="openAddModal()"
+                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm shadow-blue-200">
+                <i class="fas fa-plus text-xs"></i>
+                Thêm Học phần
+            </button>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <div class="flex flex-col md:flex-row gap-4 mb-8">
+            <div class="flex-1 relative group">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
+                    <i class="fas fa-search text-sm"></i>
+                </span>
+                <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
+                    placeholder="Tìm kiếm mã học phần, tên học phần..."
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md focus:bg-white focus:border-slate-300 focus:ring-0 outline-none transition-all text-sm placeholder:text-slate-400">
+            </div>
+            <button (click)="searchTerm=''; onSearch()"
+                class="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                title="Đặt lại bộ lọc">
+                <i class="fas fa-sync-alt text-sm"></i>
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="w-[80px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            STT</th>
+                        <th class="w-[120px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Mã HP</th>
+                        <th class="w-[200px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                            Tên học phần</th>
+                        <th class="w-[260px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                            Mô tả</th>
+                        <th class="w-[120px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Số TC</th>
+                        <th class="w-[120px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            LT / TH</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Trạng thái</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Hành động</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    <tr *ngFor="let subject of paginatedSubjects; let i = index"
+                        class="hover:bg-slate-50 transition-colors">
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ (currentPage - 1) *
+                            itemsPerPage + i
+                            + 1 }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ subject.subjectCode }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900">{{ subject.name }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-500 max-w-[300px] truncate"
+                            [title]="subject.description">
+                            {{ subject.description }}
+                        </td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{subject.credits }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">
+                            <span>{{ subject.theoryPeriods }}</span>
+                            <span class="text-slate-400 mx-1">/</span>
+                            <span>{{ subject.practicalPeriods }}</span>
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <span
+                                [class]="subject.status === 'ACTIVE' 
+                                ? 'inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100'
+                                : subject.status === 'DRAFT'
+                                ? 'inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-600 rounded-full border border-amber-100'
+                                : 'inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium bg-slate-50 text-slate-400 rounded-full border border-slate-100'">
+                                {{ subject.status === 'ACTIVE' ? 'Đang áp dụng' : subject.status === 'DRAFT' ? 'Bản
+                                nháp' :
+                                'Ngừng áp dụng' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center" (click)="$event.stopPropagation()">
+                            <button class="text-blue-600 hover:text-blue-900 mr-3 transition-colors" title="Chỉnh sửa">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button (click)="deleteSubject(subject)"
+                                class="text-red-600 hover:text-red-900 transition-colors" title="Xóa">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr *ngIf="filteredSubjects.length === 0">
+                        <td colspan="8" class="px-4 py-12 text-center text-slate-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-inbox text-4xl text-slate-200 mb-4"></i>
+                                <p class="text-sm font-medium">Không tìm thấy học phần nào</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex justify-between items-center mt-4">
+            <div class="text-sm text-slate-600">
+                Hiển t hị {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ minEnd }} của {{ filteredSubjects.length }}
+                kết quả
+            </div>
+            <div class="flex space-x-2">
+                <button (click)="prevPage()" [disabled]="currentPage === 1"
+                    class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50">
+                    Trước
+                </button>
+                <span class="px-3 py-1 text-sm text-slate-600">
+                    Trang {{ currentPage }} / {{ totalPages }}
+                </span>
+                <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+                    class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50">
+                    Sau
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm/Sửa Học phần -->
+<div *ngIf="showModal"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div>
+                <h3 class="text-lg font-bold text-slate-800">{{ isEditing ? 'Chỉnh sửa Học phần' : 'Thêm Học phần mới'
+                    }}</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Vui lòng điền đầy đủ các thông tin bên dưới</p>
+            </div>
+            <button (click)="closeModal()"
+                class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Mã Học phần <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" [(ngModel)]="currentSubject.subjectCode"
+                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-sm font-medium"
+                        placeholder="VD: IT001">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tên Học phần <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" [(ngModel)]="currentSubject.name"
+                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-sm font-medium"
+                        placeholder="VD: Cấu trúc dữ liệu và Giải thuật">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Số tín chỉ <span
+                            class="text-red-500">*</span></label>
+                    <input type="number" [(ngModel)]="currentSubject.credits"
+                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-sm font-medium"
+                        placeholder="0">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Số tiết Lý thuyết</label>
+                    <input type="number" [(ngModel)]="currentSubject.theoryPeriods"
+                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-sm font-medium"
+                        placeholder="0">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Số tiết Thực hành</label>
+                    <input type="number" [(ngModel)]="currentSubject.practicalPeriods"
+                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-sm font-medium"
+                        placeholder="0">
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái</label>
+                <div class="flex gap-4">
+                    <label class="flex-1 cursor-pointer group">
+                        <input type="radio" name="status" [(ngModel)]="currentSubject.status" value="ACTIVE"
+                            class="sr-only peer">
+                        <div
+                            class="flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg group-hover:bg-white peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 transition-all text-sm font-semibold">
+                            <i class="fas fa-check-circle text-xs peer-checked:block hidden"></i>
+                            Hoạt động
+                        </div>
+                    </label>
+                    <label class="flex-1 cursor-pointer group">
+                        <input type="radio" name="status" [(ngModel)]="currentSubject.status" value="DRAFT"
+                            class="sr-only peer">
+                        <div
+                            class="flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg group-hover:bg-white peer-checked:bg-amber-50 peer-checked:border-amber-500 peer-checked:text-amber-700 transition-all text-sm font-semibold">
+                            Bản nháp
+                        </div>
+                    </label>
+                    <label class="flex-1 cursor-pointer group">
+                        <input type="radio" name="status" [(ngModel)]="currentSubject.status" value="INACTIVE"
+                            class="sr-only peer">
+                        <div
+                            class="flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg group-hover:bg-white peer-checked:bg-slate-100 peer-checked:border-slate-400 peer-checked:text-slate-700 transition-all text-sm font-semibold">
+                            Tạm khóa
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Mô tả</label>
+                <textarea [(ngModel)]="currentSubject.description" rows="3"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-sm resize-none"
+                    placeholder="Nhập mô tả về học phần này..."></textarea>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+            <button (click)="closeModal()"
+                class="px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition-all">Hủy</button>
+            <button (click)="saveSubject()"
+                class="px-8 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="!currentSubject.subjectCode || !currentSubject.name || !currentSubject.credits">
+                {{ isEditing ? 'Cập nhật' : 'Lưu thông tin' }}
+            </button>
+        </div>
+    </div>
+</div>

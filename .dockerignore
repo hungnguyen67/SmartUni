@@ -1,0 +1,9 @@
+node_modules
+target
+dist
+*.log
+*.tmp
+.DS_Store
+/.angular
+/.idea
+/.git

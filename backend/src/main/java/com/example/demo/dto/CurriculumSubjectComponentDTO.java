@@ -1,0 +1,56 @@
+package com.example.demo.dto;
+
+import java.util.List;
+
+public class CurriculumSubjectComponentDTO {
+    private Long subjectId;
+    private String subjectCode;
+    private String subjectName;
+    private Integer credits;
+    private Integer semester;
+    private Boolean isRequired;
+    private List<String> prerequisites;
+    private List<String> corequisites;
+    private List<String> equivalents;
+    
+    public CurriculumSubjectComponentDTO() {}
+
+    public CurriculumSubjectComponentDTO(Long subjectId, String subjectCode, String subjectName, Integer credits, Integer semester, Boolean isRequired, List<String> prerequisites, List<String> corequisites, List<String> equivalents) {
+        this.subjectId = subjectId;
+        this.subjectCode = subjectCode;
+        this.subjectName = subjectName;
+        this.credits = credits;
+        this.semester = semester;
+        this.isRequired = isRequired;
+        this.prerequisites = prerequisites;
+        this.corequisites = corequisites;
+        this.equivalents = equivalents;
+    }
+
+    public Long getSubjectId() { return subjectId; }
+    public void setSubjectId(Long subjectId) { this.subjectId = subjectId; }
+
+    public String getSubjectCode() { return subjectCode; }
+    public void setSubjectCode(String subjectCode) { this.subjectCode = subjectCode; }
+
+    public String getSubjectName() { return subjectName; }
+    public void setSubjectName(String subjectName) { this.subjectName = subjectName; }
+
+    public Integer getCredits() { return credits; }
+    public void setCredits(Integer credits) { this.credits = credits; }
+
+    public Integer getSemester() { return semester; }
+    public void setSemester(Integer semester) { this.semester = semester; }
+
+    public Boolean getIsRequired() { return isRequired; }
+    public void setIsRequired(Boolean isRequired) { this.isRequired = isRequired; }
+
+    public List<String> getPrerequisites() { return prerequisites; }
+    public void setPrerequisites(List<String> prerequisites) { this.prerequisites = prerequisites; }
+
+    public List<String> getCorequisites() { return corequisites; }
+    public void setCorequisites(List<String> corequisites) { this.corequisites = corequisites; }
+
+    public List<String> getEquivalents() { return equivalents; }
+    public void setEquivalents(List<String> equivalents) { this.equivalents = equivalents; }
+}

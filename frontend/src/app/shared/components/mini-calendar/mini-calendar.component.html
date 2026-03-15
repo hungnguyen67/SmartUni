@@ -1,0 +1,30 @@
+<div class="bg-[#2d3a82] text-white rounded-t-2xl px-4 py-2 flex justify-between items-center">
+    <h3 class="font-bold text-[16px]">{{ monthYearString }}</h3>
+    <div class="flex gap-4">
+        <button (click)="previousMonth()" class="p-1 rounded transition-colors">
+            <i class="fas fa-chevron-left text-[12px]"></i>
+        </button>
+        <button (click)="nextMonth()" class="p-1 rounded transition-colors">
+            <i class="fas fa-chevron-right text-[12px]"></i>
+        </button>
+    </div>
+</div>
+<div class="bg-white rounded-b-2xl p-4 shadow-lg">
+    <div class="grid grid-cols-7 gap-1 text-center mb-2">
+        <div *ngFor="let day of weekDays" class="text-xs font-bold text-slate-900 py-2">
+            {{ day }}
+        </div>
+    </div>
+    <div class="grid grid-cols-7 gap-1 text-center">
+        <div *ngFor="let day of days; let i = index" (click)="onDateClick(day, i)"
+            class="text-sm py-2 rounded-full cursor-pointer transition-all flex items-center justify-center aspect-square"
+            [ngClass]="{
+           'text-slate-900 font-medium': isCurrentMonth(i),
+           'text-slate-300': !isCurrentMonth(i),
+           'bg-blue-600 text-white shadow-md': isSelected(day, i),
+           'bg-orange-500 text-white shadow-sm': isToday(day) && isCurrentMonth(i) && !isSelected(day, i)
+         }">
+            {{ day }}
+        </div>
+    </div>
+</div>

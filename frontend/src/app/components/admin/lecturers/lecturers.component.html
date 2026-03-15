@@ -1,0 +1,146 @@
+<div class="bg-white rounded-lg shadow-sm border border-slate-200">
+    <div class="p-6 border-b border-slate-200">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold text-slate-800">Quản lý Giảng viên</h1>
+                <p class="text-sm text-slate-500">Quản lý hồ sơ và học vị của giảng viên</p>
+            </div>
+            <button
+                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm shadow-blue-200">
+                <i class="fas fa-plus text-xs"></i>
+                Thêm Giảng viên
+            </button>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <div class="flex flex-col md:flex-row gap-4 mb-8">
+            <div class="flex-1 relative group">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
+                    <i class="fas fa-search text-sm"></i>
+                </span>
+                <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
+                    placeholder="Tìm kiếm mã giảng viên, họ tên..."
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md focus:bg-white focus:border-slate-300 focus:ring-0 outline-none transition-all text-sm placeholder:text-slate-400">
+            </div>
+
+            <div class="flex flex-wrap md:flex-nowrap gap-3 items-center w-full md:w-auto">
+                <div class="relative min-w-[200px] flex-1 md:flex-none">
+                    <button
+                        (click)="activeDropdown = activeDropdown === 'faculty' ? '' : 'faculty'; $event.stopPropagation()"
+                        class="appearance-none w-full pl-3 pr-10 py-2.5 bg-white border border-slate-200 rounded-md hover:border-slate-300 focus:border-slate-300 focus:ring-0 outline-none transition-all text-sm cursor-pointer font-medium text-slate-700 shadow-sm shadow-slate-100/50">
+                        <div class="flex items-center gap-2">
+                            <span>{{ getSelectedFacultyName() }}</span>
+                        </div>
+                        <i class="fas fa-chevron-right absolute text-[9px] right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 transition-transform duration-300 ease-in-out"
+                            [class.rotate-90]="activeDropdown === 'faculty'"></i>
+                    </button>
+
+                    <div *ngIf="activeDropdown === 'faculty'"
+                        class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-xl py-1 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+                        <div (click)="filterFaculty=null; onSearch(); activeDropdown=''"
+                            class="px-4 py-2.5 text-sm hover:text-blue-600 cursor-pointer transition-colors"
+                            [class.text-blue-600]="filterFaculty === null">
+                            Tất cả các khoa
+                        </div>
+                        <div *ngFor="let faculty of faculties"
+                            (click)="filterFaculty=faculty.id; onSearch(); activeDropdown=''"
+                            class="px-4 py-2.5 text-sm hover:text-blue-600 cursor-pointer transition-colors"
+                            [class.text-blue-600]="filterFaculty === faculty.id">
+                            {{ faculty.facultyName }}
+                        </div>
+                    </div>
+                </div>
+
+                <button (click)="resetFilters()"
+                    class="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                    title="Đặt lại bộ lọc">
+                    <i class="fas fa-sync-alt text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="w-[80px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            STT</th>
+                        <th class="w-[120px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Mã GV</th>
+                        <th class="w-[200px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                            Họ tên</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                            SĐT</th>
+                        <th class="w-[120px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Giới tính</th>
+                        <th class="w-[200px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                            Khoa đào tạo</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Học vị</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                            Học hàm</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                            Lớp cố vấn</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
+                            Hành động</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    <tr *ngFor="let lecturer of paginatedLecturers; let i = index" class="hover:bg-slate-50">
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">
+                            {{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ lecturer.lecturerCode }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900">{{ lecturer.fullName }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900">{{ lecturer.phone }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ getGenderName(lecturer.gender) }}
+                        </td>
+                        <td class="px-4 py-4 text-sm text-slate-900">{{ lecturer.facultyName }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ lecturer.degree }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ lecturer.academicRank}}
+                        </td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-left">
+                            {{ lecturer.advisorClasses.join(', ') }}
+                        </td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center" (click)="$event.stopPropagation()">
+                            <button (click)="editLecturer(lecturer)" class="text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button (click)="deleteLecturer(lecturer)" class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr *ngIf="lecturers.length === 0">
+                        <td colspan="10" class="px-4 py-12 text-center text-slate-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-inbox text-4xl text-slate-200 mb-4"></i>
+                                <p class="text-sm font-medium">Không tìm thấy giảng viên nào</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex justify-between items-center mt-4">
+            <div class="text-sm text-slate-600">
+                Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ minEnd }} của {{ lecturers.length }}
+                kết quả
+            </div>
+            <div class="flex space-x-2">
+                <button (click)="prevPage()" [disabled]="currentPage === 1"
+                    class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50">
+                    Trước
+                </button>
+                <span class="px-3 py-1 text-sm text-slate-600">
+                    Trang {{ currentPage }} / {{ totalPages }}
+                </span>
+                <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+                    class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50">
+                    Sau
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

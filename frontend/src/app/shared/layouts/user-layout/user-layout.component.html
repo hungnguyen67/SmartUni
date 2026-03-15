@@ -1,0 +1,133 @@
+<div class="min-h-screen bg-[#f8fafc] flex font-sans text-slate-900">
+  <aside [class.w-64]="isSidebarOpen" [class.w-20]="!isSidebarOpen"
+    class="bg-white border-r border-slate-200 transition-all duration-300 flex flex-col fixed h-screen z-50 shadow-sm">
+
+    <div class="h-16 flex items-center px-6 border-b border-slate-100 bg-white flex-shrink-0">
+      <div class="w-9 h-9 bg-blue-600 rounded-md flex-shrink-0 flex items-center justify-center">
+        <i class="fas fa-university text-white text-base"></i>
+      </div>
+      <span *ngIf="isSidebarOpen"
+        class="ml-4 font-bold text-base tracking-tight text-slate-800 uppercase whitespace-nowrap">SmartUni</span>
+    </div>
+
+    <nav class="flex-1 py-4 px-3 overflow-y-auto custom-scrollbar">
+      <div class="space-y-1.5">
+        <a routerLink="/home" [routerLinkActiveOptions]="{exact: true}"
+          routerLinkActive="bg-blue-50 text-blue-700 !rounded-lg" #rlaHome="routerLinkActive"
+          class="flex items-center px-4 py-3 gap-2 text-slate-600 font-semibold hover:bg-slate-50 hover:text-blue-600 transition-all rounded-lg group">
+          <i class="fas fa-home text-lg w-7 transition-colors pt-0.5" [class.text-blue-700]="rlaHome.isActive"></i>
+          <span *ngIf="isSidebarOpen" class="text-[14px] leading-tight flex-1 transition-colors"
+            [class.text-blue-700]="rlaHome.isActive">
+            Trang chủ
+          </span>
+        </a>
+
+        <div class="relative">
+          <div (click)="toggleMenu('learning', $event)"
+            [class.bg-blue-50]="isParentActive(['/home/grades', '/home/curriculum'])"
+            [class.text-blue-700]="isParentActive(['/home/grades', '/home/curriculum'])"
+            class="w-full flex items-center px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all font-semibold cursor-pointer rounded-lg group">
+            <div class="flex items-center gap-2 flex-1">
+              <i class="fas fa-cubes text-lg w-7 pt-0.5 transition-colors"
+                [class.text-blue-700]="isParentActive(['/home/grades', '/home/curriculum'])"></i>
+              <span *ngIf="isSidebarOpen" class="text-[14px] flex-1 transition-colors"
+                [class.text-blue-700]="isParentActive(['/home/grades', '/home/curriculum'])">
+                Góc học tập
+              </span>
+            </div>
+            <i *ngIf="isSidebarOpen" class="fas fa-chevron-right text-[10px] transition-all ml-2"
+              [class.rotate-90]="openMenuName === 'learning'"
+              [class.text-blue-700]="isParentActive(['/home/grades', '/home/curriculum'])"></i>
+          </div>
+          <div *ngIf="isMenuOpen('learning')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+            <a routerLink="/home/grades" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+              Tra cứu điểm
+            </a>
+            <a routerLink="/home/curriculum" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+              Chương trình học
+            </a>
+          </div>
+        </div>
+
+        <div class="relative">
+          <div (click)="toggleMenu('registration', $event)"
+            [class.bg-blue-50]="isParentActive(['/home/register-course'])"
+            [class.text-blue-700]="isParentActive(['/home/register-course'])"
+            class="w-full flex items-center px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all font-semibold cursor-pointer rounded-lg group">
+            <div class="flex items-center gap-2 flex-1">
+              <i class="fas fa-edit text-lg w-7 pt-0.5 transition-colors"
+                [class.text-blue-700]="isParentActive(['/home/register-course'])"></i>
+              <span *ngIf="isSidebarOpen" class="text-[14px] flex-1 transition-colors"
+                [class.text-blue-700]="isParentActive(['/home/register-course'])">
+                Đăng ký trực tuyến
+              </span>
+            </div>
+            <i *ngIf="isSidebarOpen" class="fas fa-chevron-right text-[10px] transition-all ml-2"
+              [class.rotate-90]="openMenuName === 'registration'"
+              [class.text-blue-700]="isParentActive(['/home/register-course'])"></i>
+          </div>
+          <div *ngIf="isMenuOpen('registration')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+            <a routerLink="/home/register-course" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+              Đăng ký học phần
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+  <div [class.ml-64]="isSidebarOpen" [class.ml-20]="!isSidebarOpen"
+    class="flex-1 flex flex-col transition-all duration-300">
+
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-40">
+      <div class="flex items-center gap-4">
+        <button (click)="toggleSidebar()"
+          class="w-9 h-9 flex items-center justify-center bg-white hover:bg-blue-50 transition-all rounded-lg">
+          <i class="fa-solid text-[17px]" [ngClass]="isSidebarOpen ? 'fa-bars-staggered' : 'fa-bars'"></i>
+        </button>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <div class="relative">
+          <button (click)="toggleUserDropdown($event)"
+            class="flex items-center gap-x-4 p-2 hover:bg-slate-100 rounded-full transition-all border border-transparent group">
+            <img [src]="getAvatarUrl()" class="w-7 h-7 rounded-full object-cover ring-2 ring-white shadow-sm"
+              alt="Avatar">
+            <div class="text-left hidden sm:block mr-3">
+              <p class="text-[14px] font-bold text-slate-700 leading-none">{{ currentUser?.name }}</p>
+            </div>
+            <i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform ml-auto mr-1"
+              [class.rotate-90]="isUserDropdownOpen"></i>
+          </button>
+
+          <div *ngIf="isUserDropdownOpen"
+            class="absolute right-0 mt-3 w-52 bg-white border border-slate-200 rounded-md shadow-lg py-1.5 z-50">
+            <div class="px-3 py-2 mb-1 border-b border-slate-50">
+              <p class="text-[13px] font-bold text-slate-800 truncate">{{ currentUser?.name }}</p>
+              <p class="text-[11px] text-slate-500 truncate mt-0.5">{{ currentUser?.email }}</p>
+            </div>
+            <div class="px-1.5 space-y-0.5">
+              <a routerLink="/profile/change-password"
+                class="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-slate-50 transition-colors">
+                <i class="fas fa-key text-[12px]"></i> <span>Đổi mật khẩu</span>
+              </a>
+              <div class="pt-1 mt-1 border-t border-slate-100">
+                <button (click)="logout()"
+                  class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                  <i class="fas fa-right-from-bracket text-[12px]"></i> <span>Đăng xuất</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="p-6 flex-1 bg-[#f8fafc]">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
