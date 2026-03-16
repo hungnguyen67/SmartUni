@@ -1,14 +1,17 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.AttendanceSubmitDTO;
+import com.example.demo.dto.SessionDetailDTO;
+import com.example.demo.dto.StudentDTO;
 import com.example.demo.model.*;
 import com.example.demo.repository.ClassScheduleInstanceRepository;
 import com.example.demo.repository.ClassSchedulePatternRepository;
 import com.example.demo.repository.CourseClassRepository;
+import com.example.demo.repository.CourseRegistrationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -31,7 +34,16 @@ public class ScheduleService {
     private com.example.demo.repository.LecturerProfileRepository lecturerRepository;
 
     @Autowired
-    private EntityManager entityManager;
+    private CourseRegistrationRepository registrationRepository;
+
+    @Autowired
+    private com.example.demo.repository.StudentProfileRepository studentRepository;
+
+    @Autowired
+    private com.example.demo.repository.AttendanceSessionRepository attendanceSessionRepository;
+
+    @Autowired
+    private com.example.demo.repository.AttendanceRepository attendanceRepository;
 
     @Transactional
     public void addPattern(Long classId, ClassSchedulePattern pattern) {
@@ -45,19 +57,20 @@ public class ScheduleService {
             pattern.setToWeek(15);
 
         // Remove existing patterns for same day/class that overlap this week range
-        // This ensures CLEAN replacement
-        List<ClassSchedulePattern> existingPatterns = patternRepository.findByCourseClassId(classId);
-        existingPatterns.stream()
+        List<ClassSchedulePattern> toDelete = patternRepository.findByCourseClassId(classId).stream()
                 .filter(p -> p.getDayOfWeek().equals(pattern.getDayOfWeek()))
                 .filter(p -> (p.getFromWeek() >= pattern.getFromWeek() && p.getFromWeek() <= pattern.getToWeek()) ||
                         (p.getToWeek() >= pattern.getFromWeek() && p.getToWeek() <= pattern.getToWeek()) ||
                         (pattern.getFromWeek() >= p.getFromWeek() && pattern.getFromWeek() <= p.getToWeek()))
-                .forEach(p -> patternRepository.delete(p));
+                .collect(Collectors.toList());
 
-        patternRepository.flush(); // Ensure deletions are sent to DB
+        if (!toDelete.isEmpty()) {
+            patternRepository.deleteAll(toDelete);
+            patternRepository.flush();
+        }
 
         patternRepository.save(pattern);
-        patternRepository.flush(); // IMPORTANT: Ensure ID is generated before generating instances
+        patternRepository.flush();
 
         // Cập nhật thông tin dự kiến của lớp học phần nếu mẫu có thông tin
         if (pattern.getLecturer() != null) {
@@ -76,25 +89,29 @@ public class ScheduleService {
     public void addPatternsBulk(Long classId, List<ClassSchedulePattern> patterns) {
         CourseClass cc = courseClassRepository.findById(classId)
                 .orElseThrow(() -> new RuntimeException("Course class not found"));
-        
-        List<ClassSchedulePattern> existingPatterns = patternRepository.findByCourseClassId(classId);
 
         for (ClassSchedulePattern pattern : patterns) {
             pattern.setCourseClass(cc);
-            if (pattern.getFromWeek() == null) pattern.setFromWeek(1);
-            if (pattern.getToWeek() == null) pattern.setToWeek(15);
+            if (pattern.getFromWeek() == null)
+                pattern.setFromWeek(1);
+            if (pattern.getToWeek() == null)
+                pattern.setToWeek(15);
 
             // Xóa trùng lặp
-            existingPatterns.stream()
-                .filter(p -> p.getDayOfWeek().equals(pattern.getDayOfWeek()))
-                .filter(p -> (p.getFromWeek() >= pattern.getFromWeek() && p.getFromWeek() <= pattern.getToWeek()) ||
-                             (p.getToWeek() >= pattern.getFromWeek() && p.getToWeek() <= pattern.getToWeek()) ||
-                             (pattern.getFromWeek() >= p.getFromWeek() && pattern.getFromWeek() <= p.getToWeek()))
-                .forEach(p -> patternRepository.delete(p));
-            
+            List<ClassSchedulePattern> toDelete = patternRepository.findByCourseClassId(classId).stream()
+                    .filter(p -> p.getDayOfWeek().equals(pattern.getDayOfWeek()))
+                    .filter(p -> (p.getFromWeek() >= pattern.getFromWeek() && p.getFromWeek() <= pattern.getToWeek()) ||
+                            (p.getToWeek() >= pattern.getFromWeek() && p.getToWeek() <= pattern.getToWeek()) ||
+                            (pattern.getFromWeek() >= p.getFromWeek() && pattern.getFromWeek() <= p.getToWeek()))
+                    .collect(Collectors.toList());
+
+            if (!toDelete.isEmpty()) {
+                patternRepository.deleteAll(toDelete);
+                patternRepository.flush();
+            }
+
             patternRepository.save(pattern);
 
-            // Cập nhật thông tin dự kiến từ mẫu - chỉ cập nhật nếu có giá trị
             if (pattern.getLecturer() != null) {
                 cc.setLecturer(pattern.getLecturer());
             }
@@ -102,7 +119,7 @@ public class ScheduleService {
                 cc.setExpectedRoom(pattern.getRoomName());
             }
         }
-        
+
         courseClassRepository.save(cc);
         patternRepository.flush();
         generateInstances(classId);
@@ -115,15 +132,13 @@ public class ScheduleService {
 
         Semester semester = cc.getSemester();
         if (semester == null || semester.getStartDate() == null || semester.getEndDate() == null) {
-            throw new RuntimeException("Semester dates not fully defined");
+            return;
         }
 
-        List<ClassScheduleInstance> existing = instanceRepository.findByCourseClassId(classId);
-        instanceRepository.deleteAll(existing);
-        instanceRepository.flush(); // Ensure delete is executed
+        instanceRepository.deleteByCourseClassId(classId);
+        instanceRepository.flush();
 
-        entityManager.refresh(cc); // Ensure we have latest patterns
-        List<ClassSchedulePattern> patterns = cc.getSchedules();
+        List<ClassSchedulePattern> patterns = patternRepository.findByCourseClassId(classId);
         if (patterns == null || patterns.isEmpty())
             return;
 
@@ -139,7 +154,8 @@ public class ScheduleService {
             while (!current.isAfter(end)) {
                 int normalizedDay = current.getDayOfWeek().getValue() + 1;
                 if (normalizedDay == targetDay) {
-                    long weeksBetween = ChronoUnit.WEEKS.between(startMonday, current) + 1;
+                    long daysBetween = ChronoUnit.DAYS.between(startMonday, current);
+                    long weeksBetween = Math.floorDiv(daysBetween, 7) + 1;
 
                     if (weeksBetween >= pattern.getFromWeek() && weeksBetween <= pattern.getToWeek()) {
                         ClassScheduleInstance inst = new ClassScheduleInstance();
@@ -168,6 +184,140 @@ public class ScheduleService {
         return instances.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
+    public List<com.example.demo.dto.ClassScheduleInstanceDTO> getStudentSchedule(Long studentId, Long semesterId) {
+        List<CourseClass.ClassStatus> activeStatuses = java.util.Arrays.asList(
+                CourseClass.ClassStatus.CLOSED);
+        List<ClassScheduleInstance> instances = instanceRepository.findByStudentIdAndSemesterIdAndStatusIn(studentId,
+                semesterId, activeStatuses);
+        return instances.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public List<com.example.demo.dto.ClassScheduleInstanceDTO> getLecturerSchedule(Long lecturerId, Long semesterId) {
+        List<CourseClass.ClassStatus> activeStatuses = java.util.Arrays.asList(
+                CourseClass.ClassStatus.CLOSED);
+        // Assuming schedules are also generated based on OPEN_REGISTRATION, FULL,
+        // CLOSED statuses similar to students.
+        List<ClassScheduleInstance> instances = instanceRepository.findByLecturerIdAndSemesterIdAndStatusIn(lecturerId,
+                semesterId, activeStatuses);
+        return instances.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public SessionDetailDTO getScheduleInstanceDetail(Long instanceId) {
+        ClassScheduleInstance inst = instanceRepository.findById(instanceId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy buổi học (Session not found)"));
+
+        SessionDetailDTO detail = new SessionDetailDTO();
+        detail.setId(inst.getId());
+        detail.setScheduleDate(inst.getScheduleDate());
+        detail.setStartPeriod(inst.getStartPeriod());
+        detail.setEndPeriod(inst.getEndPeriod());
+        detail.setStartTime(inst.getStartTime());
+        detail.setEndTime(inst.getEndTime());
+        detail.setRoomName(inst.getRoomName());
+
+        if (inst.getCourseClass() != null) {
+            detail.setClassId(inst.getCourseClass().getId());
+            detail.setClassCode(inst.getCourseClass().getClassCode());
+            if (inst.getCourseClass().getSubject() != null) {
+                detail.setSubjectName(inst.getCourseClass().getSubject().getName());
+            }
+
+            // Get attendance session if exists
+            final AttendanceSession session = attendanceSessionRepository.findByScheduleInstanceId(inst.getId()).orElse(null);
+            if (session != null) {
+                detail.setAttendanceActive(session.getIsActive());
+                detail.setAttendanceCode(session.getAttendanceCode());
+                detail.setClosedAt(session.getClosedAt());
+            }
+
+            // Fetch students
+            List<CourseRegistration> registrations = registrationRepository
+                    .findByCourseClassId(inst.getCourseClass().getId());
+            List<StudentDTO> studentDTOs = registrations.stream()
+                    .map(reg -> convertStudentToDTO(reg.getStudent(), inst.getCourseClass(), session))
+                    .collect(Collectors.toList());
+            detail.setStudents(studentDTOs);
+        }
+
+        if (inst.getLecturer() != null && inst.getLecturer().getUser() != null) {
+            detail.setLecturerName(inst.getLecturer().getUser().getFullName());
+        } else if (inst.getCourseClass() != null && inst.getCourseClass().getLecturer() != null
+                && inst.getCourseClass().getLecturer().getUser() != null) {
+            detail.setLecturerName(inst.getCourseClass().getLecturer().getUser().getFullName());
+        }
+
+        return detail;
+    }
+
+    private StudentDTO convertStudentToDTO(StudentProfile student, CourseClass courseClass, AttendanceSession session) {
+        StudentDTO dto = new StudentDTO();
+        dto.setId(student.getUserId());
+        dto.setStudentCode(student.getStudentCode());
+        if (student.getUser() != null) {
+            dto.setFullName(student.getUser().getFullName());
+            dto.setFirstName(student.getUser().getFirstName());
+            dto.setLastName(student.getUser().getLastName());
+        }
+
+        if (student.getAdministrativeClass() != null) {
+            dto.setClassName(student.getAdministrativeClass().getClassCode());
+            dto.setClassId(student.getAdministrativeClass().getId());
+        }
+
+        dto.setEnrollmentYear(student.getEnrollmentYear());
+        dto.setCurrentSemester(student.getCurrentSemester());
+        dto.setStatus(student.getStatus() != null ? student.getStatus().name() : null);
+
+        if (courseClass != null && courseClass.getSubject() != null) {
+            Integer absentPeriods = attendanceRepository.sumAbsentPeriodsByStudentAndCourseClass(student.getUserId(), courseClass.getId());
+            Integer absentSessions = attendanceRepository.countAbsentSessionsByStudentAndCourseClass(student.getUserId(), courseClass.getId());
+            
+            dto.setAbsentPeriods(absentPeriods != null ? absentPeriods : 0);
+            dto.setAbsentSessions(absentSessions != null ? absentSessions : 0);
+            
+            Subject subject = courseClass.getSubject();
+            Integer totalPeriods = (subject.getTheoryPeriods() != null ? subject.getTheoryPeriods() : 0) + 
+                                   (subject.getPracticalPeriods() != null ? subject.getPracticalPeriods() : 0);
+            
+            if (totalPeriods > 0) {
+                double percent = (dto.getAbsentPeriods() * 100.0) / totalPeriods;
+                dto.setAbsentPercent(Math.round(percent * 100.0) / 100.0);
+            } else {
+                dto.setAbsentPercent(0.0);
+            }
+
+            // Check attendance for THIS session
+            if (session != null) {
+                // Default: no ticks yet until finalized or manually touched
+                dto.setSessionAbsentPeriods(0);
+                dto.setAbsent(false);
+                dto.setPresent(false);
+                dto.setExcused(false);
+                
+                attendanceRepository.findBySessionIdAndStudentUserId(session.getId(), student.getUserId())
+                    .ifPresent(a -> {
+                        dto.setEnteredCode(a.getStudentEnteredCode());
+                        dto.setSelfAttended(a.getStudentEnteredCode() != null && !a.getStudentEnteredCode().isEmpty());
+                        
+                        // Only show status in UI if session is closed OR if it was manually marked by lecturer
+                        // (Manually marked means getStudentEnteredCode is null)
+                        if (!session.getIsActive() || a.getStudentEnteredCode() == null) {
+                            dto.setAbsent(a.getStatus() == AttendanceStatus.ABSENT);
+                            dto.setExcused(a.getStatus() == AttendanceStatus.EXCUSED);
+                            dto.setPresent(a.getStatus() == AttendanceStatus.PRESENT);
+                            dto.setSessionAbsentPeriods(a.getAbsentPeriods());
+                        }
+                    });
+            }
+        } else {
+            dto.setAbsentSessions(0);
+            dto.setAbsentPeriods(0);
+            dto.setAbsentPercent(0.0);
+        }
+
+        return dto;
+    }
+
     private com.example.demo.dto.ClassScheduleInstanceDTO convertToDTO(ClassScheduleInstance inst) {
         com.example.demo.dto.ClassScheduleInstanceDTO dto = new com.example.demo.dto.ClassScheduleInstanceDTO();
         dto.setId(inst.getId());
@@ -186,6 +336,7 @@ public class ScheduleService {
             dto.setClassCode(inst.getCourseClass().getClassCode());
             if (inst.getCourseClass().getSubject() != null) {
                 dto.setSubjectName(inst.getCourseClass().getSubject().getName());
+                dto.setSubjectId(inst.getCourseClass().getSubject().getId());
             }
         }
 
@@ -201,34 +352,37 @@ public class ScheduleService {
 
     private LocalDate getMonday(LocalDate date) {
         int day = date.getDayOfWeek().getValue(); // 1=Mon, 7=Sun
-        return date.minusDays(day - 1);
+        if (day != 1) {
+            return date.plusDays(8 - day);
+        }
+        return date;
     }
 
     @Transactional
     public void deletePattern(Long patternId) {
-        ClassSchedulePattern pattern = entityManager.find(ClassSchedulePattern.class, patternId);
+        ClassSchedulePattern pattern = patternRepository.findById(patternId).orElse(null);
         if (pattern != null) {
             Long classId = pattern.getCourseClass().getId();
-            entityManager.remove(pattern);
-            entityManager.flush();
-            generateInstances(classId); // Regenerate after removal
+            patternRepository.delete(pattern);
+            patternRepository.flush();
+            generateInstances(classId);
         }
     }
 
     @Transactional
     public void deletePatternSingle(Long patternId, Integer week) {
-        ClassSchedulePattern pattern = entityManager.find(ClassSchedulePattern.class, patternId);
+        ClassSchedulePattern pattern = patternRepository.findById(patternId).orElse(null);
         if (pattern != null) {
             Long classId = pattern.getCourseClass().getId();
 
             if (pattern.getFromWeek().equals(week) && pattern.getToWeek().equals(week)) {
-                entityManager.remove(pattern);
+                patternRepository.delete(pattern);
             } else if (pattern.getFromWeek().equals(week)) {
                 pattern.setFromWeek(week + 1);
-                entityManager.merge(pattern);
+                patternRepository.save(pattern);
             } else if (pattern.getToWeek().equals(week)) {
                 pattern.setToWeek(week - 1);
-                entityManager.merge(pattern);
+                patternRepository.save(pattern);
             } else if (week > pattern.getFromWeek() && week < pattern.getToWeek()) {
                 ClassSchedulePattern newPattern = new ClassSchedulePattern();
                 newPattern.setCourseClass(pattern.getCourseClass());
@@ -243,27 +397,29 @@ public class ScheduleService {
                 newPattern.setToWeek(pattern.getToWeek());
 
                 pattern.setToWeek(week - 1);
-                entityManager.merge(pattern);
-                entityManager.persist(newPattern);
+                patternRepository.save(pattern);
+                patternRepository.save(newPattern);
             }
-            entityManager.flush();
+            patternRepository.flush();
             generateInstances(classId);
         }
     }
 
     @Transactional
     public void deletePatternForward(Long patternId, Integer week) {
-        ClassSchedulePattern refPattern = entityManager.find(ClassSchedulePattern.class, patternId);
+        ClassSchedulePattern refPattern = patternRepository.findById(patternId).orElse(null);
         if (refPattern != null) {
-            CourseClass cc = refPattern.getCourseClass();
+            Long classId = refPattern.getCourseClass().getId();
             int dayOfWeek = refPattern.getDayOfWeek();
             int startPeriod = refPattern.getStartPeriod();
 
-            // Xóa tất cả các pattern trùng Thứ và Tiết bắt đầu (xóa toàn bộ tiến độ của buổi đó)
-            cc.getSchedules().removeIf(p -> p.getDayOfWeek().equals(dayOfWeek) && p.getStartPeriod().equals(startPeriod));
+            List<ClassSchedulePattern> toDelete = patternRepository.findByCourseClassId(classId).stream()
+                    .filter(p -> p.getDayOfWeek().equals(dayOfWeek) && p.getStartPeriod().equals(startPeriod))
+                    .collect(Collectors.toList());
 
+            patternRepository.deleteAll(toDelete);
             patternRepository.flush();
-            generateInstances(cc.getId());
+            generateInstances(classId);
         }
     }
 
@@ -275,7 +431,12 @@ public class ScheduleService {
 
         pattern.setStartPeriod(startPeriod);
         pattern.setEndPeriod(endPeriod);
-        pattern.setRoomName(roomName);
+
+        if (roomName != null && !roomName.trim().isEmpty()) {
+            pattern.setRoomName(roomName.trim());
+        } else {
+            pattern.setRoomName(null);
+        }
 
         if (lecturerName != null && !lecturerName.trim().isEmpty()) {
             LecturerProfile lecturer = lecturerRepository.findByUserFullName(lecturerName.trim());
@@ -379,5 +540,168 @@ public class ScheduleService {
             result = 31 * result + content.hashCode();
             return result;
         }
+    }
+    @Transactional
+    public AttendanceSession openAttendanceSession(Long instanceId, String code) {
+        ClassScheduleInstance inst = instanceRepository.findById(instanceId)
+            .orElseThrow(() -> new RuntimeException("Instance not found"));
+        
+        AttendanceSession session = attendanceSessionRepository.findByScheduleInstanceId(instanceId)
+            .orElse(new AttendanceSession());
+        
+        session.setScheduleInstance(inst);
+        session.setAttendanceCode(code);
+        session.setTotalPeriods(inst.getEndPeriod() - inst.getStartPeriod() + 1);
+        session.setIsActive(true);
+        session.setOpenedAt(java.time.LocalDateTime.now());
+        
+        return attendanceSessionRepository.save(session);
+    }
+
+    @Transactional
+    public void submitManualAttendance(AttendanceSubmitDTO dto) {
+        AttendanceSession session = attendanceSessionRepository.findByScheduleInstanceId(dto.getScheduleInstanceId())
+            .orElseGet(() -> {
+                ClassScheduleInstance inst = instanceRepository.findById(dto.getScheduleInstanceId())
+                    .orElseThrow(() -> new RuntimeException("Instance not found"));
+                AttendanceSession s = new AttendanceSession();
+                s.setScheduleInstance(inst);
+                s.setAttendanceCode(""); // Mã để trống
+                s.setTotalPeriods(inst.getEndPeriod() - inst.getStartPeriod() + 1);
+                s.setIsActive(false);
+                s.setClosedAt(java.time.LocalDateTime.now());
+                return attendanceSessionRepository.save(s);
+            });
+
+        // Also update existing session if it was previously open
+        if (session.getIsActive()) {
+            session.setIsActive(false);
+            session.setClosedAt(java.time.LocalDateTime.now());
+            attendanceSessionRepository.save(session);
+        }
+
+        for (AttendanceSubmitDTO.AttendanceRecord record : dto.getRecords()) {
+            Attendance attendance = attendanceRepository.findBySessionIdAndStudentUserId(session.getId(), record.getStudentId())
+                .orElse(new Attendance());
+            
+            attendance.setSession(session);
+            attendance.setStudent(studentRepository.findById(record.getStudentId())
+                .orElseThrow(() -> new RuntimeException("Student not found: " + record.getStudentId())));
+            attendance.setStatus(record.getStatus());
+            attendance.setAbsentPeriods(record.getAbsentPeriods());
+            attendance.setMarkedAt(java.time.LocalDateTime.now());
+            // This is now a manual handle, clear any previously entered student codes
+            attendance.setStudentEnteredCode(null);
+            
+            attendanceRepository.save(attendance);
+        }
+        
+        // Recalculate scores for all students in this class
+        recalculateAttendanceScores(session.getScheduleInstance().getCourseClass().getId());
+    }
+
+    private void recalculateAttendanceScores(Long courseClassId) {
+        List<CourseRegistration> registrations = registrationRepository.findByCourseClassId(courseClassId);
+        for (CourseRegistration reg : registrations) {
+            CourseClass courseClass = reg.getCourseClass();
+            Subject subject = courseClass.getSubject();
+            
+            Integer totalAbsentPeriods = attendanceRepository.sumAbsentPeriodsByStudentAndCourseClass(reg.getStudent().getUserId(), courseClassId);
+            if (totalAbsentPeriods == null) totalAbsentPeriods = 0;
+            
+            int totalSubjectPeriods = (subject.getTheoryPeriods() != null ? subject.getTheoryPeriods() : 0) + 
+                                     (subject.getPracticalPeriods() != null ? subject.getPracticalPeriods() : 0);
+            
+            double attendanceScore = 10.0;
+            if (totalSubjectPeriods > 0) {
+                attendanceScore = 10.0 * (1.0 - (double)totalAbsentPeriods / totalSubjectPeriods);
+                if (attendanceScore < 0) attendanceScore = 0;
+            }
+            
+            reg.setAttendanceScore(Math.round(attendanceScore * 10.0) / 10.0);
+            
+            // Recompute total score
+            double total = reg.getAttendanceScore() * courseClass.getAttendanceWeight() +
+                          reg.getMidtermScore() * courseClass.getMidtermWeight() +
+                          reg.getFinalScore() * courseClass.getFinalWeight();
+            reg.setTotalScore(Math.round(total * 100.0) / 100.0);
+            reg.setScoreUpdatedAt(java.time.LocalDateTime.now());
+            
+            registrationRepository.save(reg);
+        }
+    }
+
+    @Transactional
+    public void selfAttend(String code, Long studentId, Long instanceId) {
+        AttendanceSession session = attendanceSessionRepository.findByScheduleInstanceId(instanceId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy phiên điểm danh cho buổi học này (No session for this instance)"));
+
+        if (!session.getIsActive()) {
+            throw new RuntimeException("Phiên điểm danh đã đóng (Attendance session is closed)");
+        }
+
+        Attendance attendance = attendanceRepository.findBySessionIdAndStudentUserId(session.getId(), studentId)
+            .orElse(new Attendance());
+        
+        attendance.setSession(session);
+        attendance.setStudent(studentRepository.findById(studentId)
+            .orElseThrow(() -> new RuntimeException("Student not found")));
+        
+        // Save the code entered by student
+        attendance.setStudentEnteredCode(code);
+        attendance.setMarkedAt(java.time.LocalDateTime.now());
+        
+        // Student is ALWAYS marked as ABSENT when they enter a code. 
+        // Comparison only happens when lecturer finalizes the session.
+        attendance.setStatus(AttendanceStatus.ABSENT);
+        attendance.setAbsentPeriods(session.getTotalPeriods());
+        
+        attendanceRepository.save(attendance);
+    }
+
+    @Transactional
+    public void finalizeAutoAttendance(Long instanceId) {
+        AttendanceSession session = attendanceSessionRepository.findByScheduleInstanceId(instanceId)
+            .orElseThrow(() -> new RuntimeException("No attendance session found for this instance"));
+        
+        // Mark session as inactive
+        session.setIsActive(false);
+        session.setClosedAt(java.time.LocalDateTime.now());
+        attendanceSessionRepository.save(session);
+        
+        // Process all students in the class
+        List<CourseRegistration> registrations = registrationRepository.findByCourseClassId(session.getScheduleInstance().getCourseClass().getId());
+        for (CourseRegistration reg : registrations) {
+            Attendance att = attendanceRepository.findBySessionIdAndStudentUserId(session.getId(), reg.getStudent().getUserId())
+                .orElse(null);
+            
+            if (att == null) {
+                // Not attended at all -> ABSENT
+                att = new Attendance();
+                att.setSession(session);
+                att.setStudent(reg.getStudent());
+                att.setStatus(AttendanceStatus.ABSENT);
+                att.setAbsentPeriods(session.getTotalPeriods());
+                att.setMarkedAt(java.time.LocalDateTime.now());
+                attendanceRepository.save(att);
+            } else {
+                // Checking the code entered
+                if (att.getStudentEnteredCode() != null && att.getStudentEnteredCode().equals(session.getAttendanceCode())) {
+                    att.setStatus(AttendanceStatus.PRESENT);
+                    att.setAbsentPeriods(0);
+                } else if (att.getStatus() == AttendanceStatus.PRESENT && att.getStudentEnteredCode() == null) {
+                     // Keep as is if manually marked present by lecturer earlier (if we allow that)
+                } else {
+                    // Mismatched code -> ABSENT
+                    att.setStatus(AttendanceStatus.ABSENT);
+                    att.setAbsentPeriods(session.getTotalPeriods());
+                }
+                att.setMarkedAt(java.time.LocalDateTime.now());
+                attendanceRepository.save(att);
+            }
+        }
+        
+        // Final recalculation after closing session
+        recalculateAttendanceScores(session.getScheduleInstance().getCourseClass().getId());
     }
 }

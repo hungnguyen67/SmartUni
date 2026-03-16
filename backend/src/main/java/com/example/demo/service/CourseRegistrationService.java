@@ -6,10 +6,12 @@ import com.example.demo.model.StudentProfile;
 import com.example.demo.repository.CourseClassRepository;
 import com.example.demo.repository.CourseRegistrationRepository;
 import com.example.demo.repository.StudentProfileRepository;
+import com.example.demo.repository.ClassScheduleInstanceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -24,12 +26,16 @@ public class CourseRegistrationService {
     @Autowired
     private StudentProfileRepository studentProfileRepository;
 
+    @Autowired
+    private ClassScheduleInstanceRepository instanceRepository;
+
     public List<com.example.demo.dto.CourseRegistrationDTO> getRegistrationsByStudent(Long studentId) {
         return registrationRepository.findByStudentUserId(studentId)
                 .stream().map(this::convertToDTO).collect(java.util.stream.Collectors.toList());
     }
 
-    public List<com.example.demo.dto.CourseRegistrationDTO> getRegistrationsByStudentAndSemester(Long studentId, Long semesterId) {
+    public List<com.example.demo.dto.CourseRegistrationDTO> getRegistrationsByStudentAndSemester(Long studentId,
+            Long semesterId) {
         return registrationRepository.findByStudentUserIdAndCourseClassSemesterId(studentId, semesterId)
                 .stream().map(this::convertToDTO).collect(java.util.stream.Collectors.toList());
     }
@@ -42,23 +48,49 @@ public class CourseRegistrationService {
         dto.setTotalScore(reg.getTotalScore());
         dto.setGradeLetter(reg.getGradeLetter());
         dto.setGradePoint(reg.getGradePoint());
-        
+
         if (reg.getCourseClass() != null) {
-            dto.setClassId(reg.getCourseClass().getId());
-            dto.setClassCode(reg.getCourseClass().getClassCode());
-            if (reg.getCourseClass().getSubject() != null) {
-                dto.setSubjectName(reg.getCourseClass().getSubject().getName());
-                dto.setCredits(reg.getCourseClass().getSubject().getCredits());
+            CourseClass cc = reg.getCourseClass();
+            dto.setClassId(cc.getId());
+            dto.setClassCode(cc.getClassCode());
+
+            if (cc.getLecturer() != null && cc.getLecturer().getUser() != null) {
+                dto.setLecturerName(cc.getLecturer().getUser().getFullName());
+            }
+
+            if (cc.getSchedules() != null) {
+                dto.setSchedules(cc.getSchedules().stream()
+                        .map(s -> new com.example.demo.dto.CourseClassDTO.ScheduleDTO(
+                                s.getDayOfWeek(), 
+                                s.getStartPeriod(), 
+                                s.getEndPeriod(), 
+                                s.getStartTime(), 
+                                s.getEndTime(), 
+                                s.getRoomName(), 
+                                s.getSessionType()
+                        )).collect(java.util.stream.Collectors.toList()));
+            }
+
+            LocalDate actualStart = instanceRepository.findMinDateByCourseClassId(cc.getId());
+            LocalDate actualEnd = instanceRepository.findMaxDateByCourseClassId(cc.getId());
+            dto.setStartDate(actualStart != null ? actualStart : cc.getStartDate());
+            dto.setEndDate(actualEnd != null ? actualEnd : cc.getEndDate());
+
+            if (cc.getSubject() != null) {
+                dto.setSubjectName(cc.getSubject().getName());
+                dto.setSubjectId(cc.getSubject().getId());
+                dto.setCredits(cc.getSubject().getCredits());
+                dto.setSubjectType("Bắt buộc"); // Mặc định hoặc lấy từ metadata nếu có
             }
         }
-        
+
         if (reg.getStudent() != null) {
             dto.setStudentId(reg.getStudent().getUserId());
             if (reg.getStudent().getUser() != null) {
                 dto.setStudentName(reg.getStudent().getUser().getFullName());
             }
         }
-        
+
         return dto;
     }
 

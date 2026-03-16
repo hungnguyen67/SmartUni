@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { SubjectService, SubjectDTO } from '../../../services/subject.service';
 
 @Component({
@@ -13,12 +13,25 @@ export class SubjectsComponent implements OnInit {
 
     currentPage: number = 1;
     itemsPerPage: number = 10;
+    
+    showFilter: boolean = false;
+    activeDropdown: string = '';
+    selectedStatus: string = 'ALL';
 
     showModal: boolean = false;
     isEditing: boolean = false;
     currentSubject: Partial<SubjectDTO> = {};
 
     constructor(private subjectService: SubjectService) { }
+
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.relative')) {
+            this.showFilter = false;
+            this.activeDropdown = '';
+        }
+    }
 
     ngOnInit(): void {
         this.loadSubjects();
@@ -37,9 +50,17 @@ export class SubjectsComponent implements OnInit {
                 s.subjectCode.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
                 s.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
                 (s.description && s.description.toLowerCase().includes(this.searchTerm.toLowerCase()));
-            return matchesSearch;
+                
+            const matchesStatus = this.selectedStatus === 'ALL' || s.status === this.selectedStatus;
+            return matchesSearch && matchesStatus;
         });
         this.currentPage = 1;
+    }
+    
+    resetFilters(): void {
+        this.searchTerm = '';
+        this.selectedStatus = 'ALL';
+        this.onSearch();
     }
 
     get paginatedSubjects(): SubjectDTO[] {
@@ -110,6 +131,24 @@ export class SubjectsComponent implements OnInit {
             this.subjectService.deleteSubject(subject.id).subscribe(() => {
                 this.loadSubjects();
             });
+        }
+    }
+
+    getStatusLabel(status: string | undefined): string {
+        switch (status) {
+            case 'ACTIVE': return 'Đang hoạt động';
+            case 'DRAFT': return 'Bản nháp';
+            case 'INACTIVE': return 'Ngưng hoạt động';
+            default: return 'Không xác định';
+        }
+    }
+
+    getStatusClass(status: string | undefined): string {
+        switch (status) {
+            case 'ACTIVE': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            case 'DRAFT': return 'bg-amber-50 text-amber-600 border-amber-200';
+            case 'INACTIVE': return 'bg-slate-50 text-slate-600 border-slate-200';
+            default: return 'bg-slate-50 text-slate-600 border-slate-200';
         }
     }
 }

@@ -26,6 +26,7 @@ export class UsersComponent implements OnInit {
   showInviteForm = false;
   showDeleteModal = false;
   activeDropdown = '';
+  showFilter = false;
 
   // Invite/Delete states
   inviteEmail = '';
@@ -99,7 +100,7 @@ export class UsersComponent implements OnInit {
   }
 
   getStatusLabel() {
-    const statuses: any = { 'ACTIVE': 'Hoạt động', 'LOCKED': 'Đã khóa', 'DISABLED': 'Vô hiệu hóa' };
+    const statuses: any = { 'ACTIVE': 'Đang hoạt động', 'LOCKED': 'Đã khóa', 'DISABLED': 'Vô hiệu hóa' };
     return statuses[this.filterStatus] || 'Tất cả Trạng thái';
   }
 
@@ -128,6 +129,13 @@ export class UsersComponent implements OnInit {
   // Modal Handlers
   inviteUser() {
     if (!this.inviteEmail) return;
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    if (!emailRegex.test(this.inviteEmail)) {
+      this.flashMessage.error('Email không đúng định dạng. Vui lòng nhập email hợp lệ (ví dụ: user@example.com)');
+      return;
+    }
+
     this.inviting = true;
     this.http.post('http://localhost:8001/api/admin/users', {
       email: this.inviteEmail,
@@ -189,8 +197,8 @@ export class UsersComponent implements OnInit {
 
   // Display Helpers
   getStatusName(status: string): string {
-    const map: any = { 'ACTIVE': 'Hoạt động', 'LOCKED': 'Đã khóa', 'DISABLED': 'Vô hiệu hóa' };
-    return map[status] || 'Hoạt động';
+    const map: any = { 'ACTIVE': 'Đang hoạt động', 'LOCKED': 'Đã khóa', 'DISABLED': 'Vô hiệu hóa' };
+    return map[status] || 'Đang hoạt động';
   }
 
   getRoleName(role: string): string {

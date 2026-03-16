@@ -34,7 +34,7 @@ public class Major implements Serializable {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum Status {
-        ACTIVE, INACTIVE
+        ACTIVE, INACTIVE, DRAFT
     }
 
     public Major() {}

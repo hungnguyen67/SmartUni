@@ -1,62 +1,141 @@
+
 <div class="bg-white rounded-lg shadow-sm border border-slate-200">
-    <div class="p-6 border-b border-slate-200">
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-bold text-slate-800">Quản lý Giảng viên</h1>
-                <p class="text-sm text-slate-500">Quản lý hồ sơ và học vị của giảng viên</p>
-            </div>
-            <button
-                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm shadow-blue-200">
-                <i class="fas fa-plus text-xs"></i>
-                Thêm Giảng viên
-            </button>
-        </div>
-    </div>
-
     <div class="p-6">
-        <div class="flex flex-col md:flex-row gap-4 mb-8">
-            <div class="flex-1 relative group">
-                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
-                    <i class="fas fa-search text-sm"></i>
-                </span>
-                <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
-                    placeholder="Tìm kiếm mã giảng viên, họ tên..."
-                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md focus:bg-white focus:border-slate-300 focus:ring-0 outline-none transition-all text-sm placeholder:text-slate-400">
-            </div>
-
-            <div class="flex flex-wrap md:flex-nowrap gap-3 items-center w-full md:w-auto">
-                <div class="relative min-w-[200px] flex-1 md:flex-none">
-                    <button
-                        (click)="activeDropdown = activeDropdown === 'faculty' ? '' : 'faculty'; $event.stopPropagation()"
-                        class="appearance-none w-full pl-3 pr-10 py-2.5 bg-white border border-slate-200 rounded-md hover:border-slate-300 focus:border-slate-300 focus:ring-0 outline-none transition-all text-sm cursor-pointer font-medium text-slate-700 shadow-sm shadow-slate-100/50">
-                        <div class="flex items-center gap-2">
-                            <span>{{ getSelectedFacultyName() }}</span>
-                        </div>
-                        <i class="fas fa-chevron-right absolute text-[9px] right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 transition-transform duration-300 ease-in-out"
-                            [class.rotate-90]="activeDropdown === 'faculty'"></i>
-                    </button>
-
-                    <div *ngIf="activeDropdown === 'faculty'"
-                        class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-xl py-1 max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-                        <div (click)="filterFaculty=null; onSearch(); activeDropdown=''"
-                            class="px-4 py-2.5 text-sm hover:text-blue-600 cursor-pointer transition-colors"
-                            [class.text-blue-600]="filterFaculty === null">
-                            Tất cả các khoa
-                        </div>
-                        <div *ngFor="let faculty of faculties"
-                            (click)="filterFaculty=faculty.id; onSearch(); activeDropdown=''"
-                            class="px-4 py-2.5 text-sm hover:text-blue-600 cursor-pointer transition-colors"
-                            [class.text-blue-600]="filterFaculty === faculty.id">
-                            {{ faculty.facultyName }}
-                        </div>
-                    </div>
+        <div class="pb-5 border-b border-slate-100 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Danh sách Giảng viên</h3>
                 </div>
 
-                <button (click)="resetFilters()"
-                    class="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                    title="Đặt lại bộ lọc">
-                    <i class="fas fa-sync-alt text-sm"></i>
-                </button>
+                <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <div class="relative w-full md:w-72 group">
+                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors">
+                            <i class="fas fa-search text-sm"></i>
+                        </span>
+                        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()" placeholder="Tìm kiếm"
+                            class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-md outline-none transition-all text-sm">
+                    </div>
+
+                    <div class="relative">
+                        <button (click)="showFilter = !showFilter"
+                            class="flex items-center gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-medium text-slate-700 transition-all">
+                            <i class="fas fa-filter text-slate-700"></i>
+                            Lọc
+                            <i class="fas fa-chevron-right text-[7px] transition-transform duration-200"
+                                [class.rotate-90]="showFilter"></i>
+                        </button>
+
+                        <div *ngIf="showFilter" (click)="$event.stopPropagation()"
+                            class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-md border border-slate-200 z-50 animate-in fade-in zoom-in-95 duration-200">
+                            <div class="p-4 border-b border-slate-100 rounded-md">
+                                <span class="font-bold text-slate-700">Bộ lọc</span>
+                            </div>
+                            <div class="p-4 space-y-4">
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 text-[14px] font-medium text-slate-600">
+                                        Khoa đào tạo
+                                    </label>
+                                    <div class="relative">
+                                        <button
+                                            (click)="activeDropdown = activeDropdown === 'faculty' ? '' : 'faculty'; $event.stopPropagation()"
+                                            class="w-full flex items-center justify-between pl-4 pr-10 py-3 border border-slate-200 rounded-md outline-none transition-all text-sm cursor-pointer font-medium text-slate-700 shadow-sm shadow-slate-100/50 group">
+                                            <div class="flex items-center gap-2.5">
+                                                <span>{{ getSelectedFacultyName() }}</span>
+                                            </div>
+                                            <i class="fas fa-chevron-right absolute text-[10px] right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 transition-transform duration-300 ease-in-out"
+                                                [class.rotate-90]="activeDropdown === 'faculty'"></i>
+                                        </button>
+                                        <div *ngIf="activeDropdown === 'faculty'"
+                                            class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-2xl max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                            <div (click)="filterFaculty=null; activeDropdown=''; $event.stopPropagation()"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-blue-600 cursor-pointer transition-colors"
+                                                [class.text-blue-600]="filterFaculty === null"
+                                                [class.bg-blue-50]="filterFaculty === null">
+                                                Tất cả các khoa
+                                            </div>
+                                            <div *ngFor="let faculty of faculties"
+                                                (click)="filterFaculty=faculty.id; activeDropdown=''; $event.stopPropagation()"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-blue-600 cursor-pointer transition-colors"
+                                                [class.text-blue-600]="filterFaculty === faculty.id"
+                                                [class.bg-blue-50]="filterFaculty === faculty.id">
+                                                {{ faculty.facultyName }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 text-[14px] font-medium text-slate-600">
+                                        Trạng thái
+                                    </label>
+                                    <div class="relative">
+                                        <button
+                                            (click)="activeDropdown = activeDropdown === 'status' ? '' : 'status'; $event.stopPropagation()"
+                                            class="w-full flex items-center justify-between pl-4 pr-10 py-3 border border-slate-200 rounded-md outline-none transition-all text-sm cursor-pointer font-medium text-slate-700 shadow-sm shadow-slate-100/50 group">
+                                            <div class="flex items-center gap-2.5">
+                                                <span>{{ filterStatus ? getStatusLabel(filterStatus) : 'Tất cả trạng
+                                                    thái' }}</span>
+                                            </div>
+                                            <i class="fas fa-chevron-right absolute text-[10px] right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 transition-transform duration-300 ease-in-out"
+                                                [class.rotate-90]="activeDropdown === 'status'"></i>
+                                        </button>
+                                        <div *ngIf="activeDropdown === 'status'"
+                                            class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-2xl max-h-60 overflow-hidden animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                            <div (click)="filterStatus=''; activeDropdown=''; $event.stopPropagation()"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-blue-600 cursor-pointer transition-colors"
+                                                [class.text-blue-600]="filterStatus === ''"
+                                                [class.bg-blue-50]="filterStatus === ''">
+                                                Tất cả trạng thái
+                                            </div>
+                                            <div (click)="filterStatus='WORKING'; activeDropdown=''; $event.stopPropagation()"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-emerald-600 cursor-pointer transition-colors"
+                                                [class.text-emerald-600]="filterStatus === 'WORKING'"
+                                                [class.bg-emerald-50]="filterStatus === 'WORKING'">
+                                                Đang giảng dạy
+                                            </div>
+                                            <div (click)="filterStatus='ON_LEAVE'; activeDropdown=''; $event.stopPropagation()"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-amber-600 cursor-pointer transition-colors"
+                                                [class.text-amber-600]="filterStatus === 'ON_LEAVE'"
+                                                [class.bg-amber-50]="filterStatus === 'ON_LEAVE'">
+                                                Nghỉ phép
+                                            </div>
+                                            <div (click)="filterStatus='RESIGNED'; activeDropdown=''; $event.stopPropagation()"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-red-600 cursor-pointer transition-colors"
+                                                [class.text-red-600]="filterStatus === 'RESIGNED'"
+                                                [class.bg-red-50]="filterStatus === 'RESIGNED'">
+                                                Thôi việc
+                                            </div>
+                                            <div (click)="filterStatus='RETIRED'; activeDropdown=''; $event.stopPropagation()"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-600 cursor-pointer transition-colors"
+                                                [class.text-slate-600]="filterStatus === 'RETIRED'"
+                                                [class.bg-slate-100]="filterStatus === 'RETIRED'">
+                                                Nghỉ hưu
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border-t border-slate-100 flex justify-end gap-2 rounded-b-xl">
+                                <button (click)="resetFilters(); showFilter = false"
+                                    class="px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-all">
+                                    Đặt lại
+                                </button>
+                                <button (click)="applyFilters(); showFilter = false"
+                                    class="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md transition-all">
+                                    Áp dụng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button (click)="openAddModal()"
+                            class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all shadow-md">
+                            <i class="fas fa-plus text-xs"></i>
+                            Thêm Giảng viên
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -64,58 +143,54 @@
             <table class="w-full table-auto border-collapse">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-200">
-                        <th class="w-[80px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
-                            STT</th>
-                        <th class="w-[120px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
-                            Mã GV</th>
-                        <th class="w-[200px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
-                            Họ tên</th>
-                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
-                            SĐT</th>
-                        <th class="w-[120px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
-                            Giới tính</th>
-                        <th class="w-[200px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
-                            Khoa đào tạo</th>
-                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
-                            Học vị</th>
-                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
-                            Học hàm</th>
-                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">
-                            Lớp cố vấn</th>
-                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">
-                            Hành động</th>
+                        <th class="w-[80px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">STT</th>
+                        <th class="w-[100px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">Mã GV</th>
+                        <th class="w-[160px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">Họ tên</th>
+                        <th class="w-[160px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">Khoa đào tạo</th>
+                        <th class="w-[120px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">Học vị</th>
+                        <th class="w-[120px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">Học hàm</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-left">Lớp cố vấn</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">Trạng thái</th>
+                        <th class="w-[140px] px-4 py-4 text-sm font-semibold text-slate-900 text-center">Hành động</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
-                    <tr *ngFor="let lecturer of paginatedLecturers; let i = index" class="hover:bg-slate-50">
+                    <tr *ngFor="let lecturer of paginatedLecturers; let i = index"
+                        class="hover:bg-slate-50 transition-colors">
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">
-                            {{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+                            {{ (currentPage - 1) * itemsPerPage + i + 1 }}
+                        </td>
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ lecturer.lecturerCode }}</td>
                         <td class="px-4 py-4 text-sm text-slate-900">{{ lecturer.fullName }}</td>
-                        <td class="px-4 py-4 text-sm text-slate-900">{{ lecturer.phone }}</td>
-                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ getGenderName(lecturer.gender) }}
-                        </td>
                         <td class="px-4 py-4 text-sm text-slate-900">{{ lecturer.facultyName }}</td>
-                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ lecturer.degree }}</td>
-                        <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ lecturer.academicRank}}
-                        </td>
+                        <td class="px-4 py-4 text-sm text-slate-900">{{ lecturer.degree }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ lecturer.academicRank}}</td>
                         <td class="px-4 py-4 text-sm text-slate-900 text-left">
-                            {{ lecturer.advisorClasses.join(', ') }}
+                            {{ (lecturer.advisorClasses && lecturer.advisorClasses.length) ?
+                            lecturer.advisorClasses.join(', ') : 'Chưa phân công' }}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-block px-3 py-1 rounded-full text-[10px] font-medium border"
+                                [ngClass]="getStatusClass(lecturer.status)">
+                                {{getStatusLabel(lecturer.status)}}
+                            </span>
                         </td>
                         <td class="px-4 py-4 text-sm text-slate-900 text-center" (click)="$event.stopPropagation()">
-                            <button (click)="editLecturer(lecturer)" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <button (click)="editLecturer(lecturer)"
+                                class="text-blue-600 hover:text-blue-900 mr-3 transition-colors">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button (click)="deleteLecturer(lecturer)" class="text-red-600 hover:text-red-900">
+                            <button (click)="deleteLecturer(lecturer)"
+                                class="text-red-600 hover:text-red-900 transition-colors">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </td>
                     </tr>
                     <tr *ngIf="lecturers.length === 0">
-                        <td colspan="10" class="px-4 py-12 text-center text-slate-500">
+                        <td colspan="9" class="px-4 py-12 text-center text-slate-500">
                             <div class="flex flex-col items-center">
                                 <i class="fas fa-inbox text-4xl text-slate-200 mb-4"></i>
-                                <p class="text-sm font-medium">Không tìm thấy giảng viên nào</p>
+                                <p class="text-sm font-medium">Không tìm thấy giảng viên nào phù hợp</p>
                             </div>
                         </td>
                     </tr>
@@ -123,21 +198,21 @@
             </table>
         </div>
 
-        <div class="flex justify-between items-center mt-4">
+        <div class="flex justify-between items-center p-4 border-t border-slate-100">
             <div class="text-sm text-slate-600">
-                Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ minEnd }} của {{ lecturers.length }}
+                Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ minEnd }} của {{ filteredLecturers.length }}
                 kết quả
             </div>
             <div class="flex space-x-2">
                 <button (click)="prevPage()" [disabled]="currentPage === 1"
-                    class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50">
+                    class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-all">
                     Trước
                 </button>
-                <span class="px-3 py-1 text-sm text-slate-600">
+                <span class="px-3 py-1 text-sm text-slate-600 flex items-center">
                     Trang {{ currentPage }} / {{ totalPages }}
                 </span>
                 <button (click)="nextPage()" [disabled]="currentPage === totalPages"
-                    class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50">
+                    class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-all">
                     Sau
                 </button>
             </div>

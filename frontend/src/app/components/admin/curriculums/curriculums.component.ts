@@ -23,6 +23,7 @@ export class CurriculumsComponent implements OnInit {
     // Pagination
     currentPage: number = 1;
     itemsPerPage: number = 10;
+    showFilter: boolean = false;
 
     constructor(
         private curriculumService: CurriculumService,
@@ -38,7 +39,8 @@ export class CurriculumsComponent implements OnInit {
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent) {
         const target = event.target as HTMLElement;
-        if (!target.closest('.dropdown-container')) {
+        if (!target.closest('.relative')) {
+            this.showFilter = false;
             this.activeDropdown = '';
         }
     }
@@ -93,6 +95,10 @@ export class CurriculumsComponent implements OnInit {
         // Implementation for edit modal or navigation will go here
     }
 
+    openAddModal(): void {
+        console.log('Open Add Curriculum Modal');
+    }
+
     // Navigation & Actions
 
     // Pagination Getters
@@ -111,4 +117,22 @@ export class CurriculumsComponent implements OnInit {
 
     nextPage() { if (this.currentPage < this.totalPages) this.currentPage++; }
     prevPage() { if (this.currentPage > 1) this.currentPage--; }
+
+    getStatusLabel(status: string | undefined): string {
+        switch (status) {
+            case 'ACTIVE': return 'Đang hoạt động';
+            case 'DRAFT': return 'Bản nháp';
+            case 'INACTIVE': return 'Ngưng hoạt động';
+            default: return 'Không xác định';
+        }
+    }
+
+    getStatusClass(status: string | undefined): string {
+        switch (status) {
+            case 'ACTIVE': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            case 'DRAFT': return 'bg-amber-50 text-amber-600 border-amber-200';
+            case 'INACTIVE': return 'bg-slate-50 text-slate-600 border-slate-200';
+            default: return 'bg-slate-50 text-slate-600 border-slate-200';
+        }
+    }
 }

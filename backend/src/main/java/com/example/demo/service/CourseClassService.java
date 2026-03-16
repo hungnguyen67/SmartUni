@@ -2,17 +2,15 @@ package com.example.demo.service;
 
 import com.example.demo.dto.CourseClassDTO;
 import com.example.demo.dto.CourseSubjectGroupDTO;
-import com.example.demo.model.CourseClass;
-import com.example.demo.model.Subject;
-import com.example.demo.model.ClassSchedulePattern;
-import com.example.demo.model.AdministrativeClass;
-import com.example.demo.model.Semester;
+import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,8 +42,35 @@ public class CourseClassService {
     @Autowired
     private AdministrativeClassRepository administrativeClassRepository;
 
-    public List<CourseSubjectGroupDTO> getGroupedSubjectsBySemester(Long semesterId) {
+    @Autowired
+    private ClassScheduleInstanceRepository instanceRepository;
+
+    public List<CourseSubjectGroupDTO> getGroupedSubjectsBySemester(Long semesterId, Long studentId) {
         List<CourseClass> classes = courseClassRepository.findBySemesterId(semesterId);
+
+        // Lấy thông tin môn học trong khung chương trình để biết bắt buộc hay tự chọn
+        java.util.Map<Long, Boolean> subjectRequirementMap = new java.util.HashMap<>();
+        
+        if (studentId != null) {
+            // 1. Chỉ lấy các lớp đang trong trạng thái Mở đăng ký cho sinh viên
+            classes = classes.stream()
+                    .filter(cc -> cc.getClassStatus() == CourseClass.ClassStatus.OPEN_REGISTRATION)
+                    .collect(Collectors.toList());
+
+            // 2. Lọc theo khung chương trình
+            StudentProfile student = studentProfileRepository.findById(studentId).orElse(null);
+            if (student != null && student.getCurriculum() != null) {
+                Long curriculumId = student.getCurriculum().getId();
+                curriculumSubjectRepository.findAll().stream()
+                        .filter(cs -> cs.getCurriculum().getId().equals(curriculumId))
+                        .forEach(cs -> subjectRequirementMap.put(cs.getSubject().getId(), cs.getIsRequired()));
+                
+                // Lọc lớp theo danh sách môn trong khung
+                classes = classes.stream()
+                        .filter(cc -> subjectRequirementMap.containsKey(cc.getSubject().getId()))
+                        .collect(Collectors.toList());
+            }
+        }
 
         Map<Subject, List<CourseClass>> grouped = classes.stream()
                 .collect(Collectors.groupingBy(CourseClass::getSubject));
@@ -54,13 +79,15 @@ public class CourseClassService {
                 .map(entry -> {
                     Subject s = entry.getKey();
                     List<CourseClass> subjectClasses = entry.getValue();
+                    boolean required = subjectRequirementMap.getOrDefault(s.getId(), false);
                     return new CourseSubjectGroupDTO(
                             s.getId(),
                             s.getSubjectCode(),
                             s.getName(),
                             s.getCredits(),
                             subjectClasses.size(),
-                            "ACTIVE");
+                            "ACTIVE",
+                            required);
                 })
                 .collect(Collectors.toList());
     }
@@ -140,6 +167,8 @@ public class CourseClassService {
             cc.setClassStatus(CourseClass.ClassStatus.PLANNING);
             cc.setCurrentEnrolled(0);
             cc.setAllowRegister(true);
+            cc.setStartDate(sem.getStartDate());
+            cc.setEndDate(sem.getEndDate());
 
             toSave.add(cc);
         }
@@ -158,8 +187,12 @@ public class CourseClassService {
         } else {
             cc.setLecturer(null);
         }
-        cc.setSemester(semesterRepository.findById(semesterId)
-                .orElseThrow(() -> new RuntimeException("Semester not found")));
+        cc.setExpectedRoom(dto.getExpectedRoom());
+        
+        Semester sem = semesterRepository.findById(semesterId)
+                .orElseThrow(() -> new RuntimeException("Semester not found"));
+        cc.setSemester(sem);
+
         cc.setMaxStudents(dto.getMaxStudents());
         cc.setCurrentEnrolled(dto.getCurrentEnrolled());
         cc.setAllowRegister(dto.getCurrentEnrolled() < dto.getMaxStudents());
@@ -169,7 +202,10 @@ public class CourseClassService {
         cc.setAttendanceWeight(dto.getAttendanceWeight() != null ? dto.getAttendanceWeight() : 0.10);
         cc.setMidtermWeight(dto.getMidtermWeight() != null ? dto.getMidtermWeight() : 0.30);
         cc.setFinalWeight(dto.getFinalWeight() != null ? dto.getFinalWeight() : 0.60);
-        cc.setExpectedRoom(dto.getExpectedRoom());
+
+        // Cập nhật ngày bắt đầu/kết thúc - Ưu tiên từ DTO, nếu không lấy từ Học kỳ
+        cc.setStartDate(dto.getStartDate() != null ? dto.getStartDate() : sem.getStartDate());
+        cc.setEndDate(dto.getEndDate() != null ? dto.getEndDate() : sem.getEndDate());
 
         if (dto.getTargetClassId() != null) {
             cc.setTargetClass(administrativeClassRepository.findById(dto.getTargetClassId()).orElse(null));
@@ -227,10 +263,17 @@ public class CourseClassService {
                             s.getDayOfWeek(),
                             s.getStartPeriod(),
                             s.getEndPeriod(),
+                            s.getStartTime(),
+                            s.getEndTime(),
                             s.getRoomName(),
                             s.getSessionType()))
                     .collect(Collectors.toList()));
         }
+
+        LocalDate actualStart = instanceRepository.findMinDateByCourseClassId(cc.getId());
+        LocalDate actualEnd = instanceRepository.findMaxDateByCourseClassId(cc.getId());
+        dto.setStartDate(actualStart != null ? actualStart : cc.getStartDate());
+        dto.setEndDate(actualEnd != null ? actualEnd : cc.getEndDate());
 
         if (cc.getMajor() != null) {
             dto.setMajorName(cc.getMajor().getMajorName());

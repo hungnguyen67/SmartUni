@@ -8,6 +8,7 @@ import { MajorService, MajorDTO } from '../../../services/major.service';
 import { AdministrativeClassService, AdministrativeClassDTO } from '../../../services/administrative-class.service';
 import { LecturerService, LecturerDTO } from '../../../services/lecturer.service';
 import { forkJoin, map } from 'rxjs';
+import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
 
 @Component({
     selector: 'app-schedule',
@@ -50,7 +51,8 @@ export class ScheduleComponent implements OnInit {
 
     isResizing = false;
     resizingItem: any = null;
-    resizingItemObject: any = null;
+    resizingItemObject: any = null; // Snapshot của item tại thời điểm bắt đầu resize
+    resizingOriginalDuration: number = 0;
     newEndPeriod: number | null = null;
     periods: number[] = Array.from({ length: 17 }, (_, i) => i + 1);
 
@@ -89,7 +91,8 @@ export class ScheduleComponent implements OnInit {
         private courseClassService: CourseClassService,
         private majorService: MajorService,
         private adminClassService: AdministrativeClassService,
-        private lecturerService: LecturerService
+        private lecturerService: LecturerService,
+        private flashMessage: FlashMessageService
     ) { }
 
     ngOnInit(): void {
@@ -99,6 +102,7 @@ export class ScheduleComponent implements OnInit {
         this.loadLecturers();
         this.updateWeekDays();
     }
+    private draggedCourseClass: CourseClass | null = null;
 
     loadSemesters(): void {
         this.semesterService.getAllSemesters().subscribe(res => {
@@ -187,7 +191,14 @@ export class ScheduleComponent implements OnInit {
             const start = new Date(semester.startDate);
             const day = start.getDay();
             const diff = start.getDate() - (day === 0 ? 6 : day - 1);
-            this.currentDate = new Date(start.getFullYear(), start.getMonth(), diff);
+
+            const startMonday = new Date(start.getFullYear(), start.getMonth(), diff);
+
+            if (day !== 1) {
+                startMonday.setDate(startMonday.getDate() + 7);
+            }
+
+            this.currentDate = startMonday;
             this.updateWeekDays();
         }
     }
@@ -421,6 +432,13 @@ export class ScheduleComponent implements OnInit {
 
     selectScheduleItem(item: any): void {
         this.selectedScheduleItem = item;
+        if (item && item.scheduleDate) {
+            const parts = item.scheduleDate.split('-');
+            if (parts.length === 3) {
+                this.currentDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                this.updateWeekDays();
+            }
+        }
     }
 
     onItemContextMenu(event: MouseEvent, item: any): void {
@@ -505,7 +523,6 @@ export class ScheduleComponent implements OnInit {
             }
 
             if (remainingPeriods <= 0) {
-                alert('Học phần này đã được xếp đủ số tiết (đã hết tiến độ)!');
                 return;
             }
 
@@ -518,6 +535,32 @@ export class ScheduleComponent implements OnInit {
                 toWeek = fromWeek + (weeksNeeded - 1) * step;
             } else {
                 toWeek = fromWeek + weeksNeeded - 1;
+            }
+        }
+
+        // Kiểm tra xem toWeek có vượt quá thời gian học kỳ không
+        if (this.selectedSemesterId && this.semesters.length > 0) {
+            const semester = this.semesters.find(s => s.id === this.selectedSemesterId);
+            if (semester && semester.startDate && semester.endDate) {
+                const start = new Date(semester.startDate);
+                const end = new Date(semester.endDate);
+
+                const day = start.getDay();
+                const diff = start.getDate() - (day === 0 ? 6 : day - 1);
+                const startMonday = new Date(start.getFullYear(), start.getMonth(), diff);
+                startMonday.setHours(0, 0, 0, 0);
+
+                const endDay = end.getDay();
+                const endDiff = end.getDate() - (endDay === 0 ? -6 : 1);
+                const endSunday = new Date(end.getFullYear(), end.getMonth(), endDiff);
+                endSunday.setHours(23, 59, 59, 999);
+
+                const timeDiff = endSunday.getTime() - startMonday.getTime();
+                const totalWeeks = Math.round(timeDiff / (7 * 24 * 60 * 60 * 1000)) + 1;
+
+                if (toWeek > totalWeeks) {
+                    toWeek = totalWeeks;
+                }
             }
         }
 
@@ -547,7 +590,7 @@ export class ScheduleComponent implements OnInit {
                 },
                 error: (err) => {
                     console.error('Lỗi khi sao chép lịch học', err);
-                    alert('Lỗi sao chép: ' + (err.error?.message || err.message));
+                    this.flashMessage.handleError(err);
                 }
             });
         }
@@ -573,7 +616,7 @@ export class ScheduleComponent implements OnInit {
                     this.closeContextMenu();
                 },
                 error: (err) => {
-                    alert('Lỗi: ' + (err.error?.message || err.message));
+                    this.flashMessage.handleError(err);
                 }
             });
         }
@@ -599,7 +642,7 @@ export class ScheduleComponent implements OnInit {
                     this.closeContextMenu();
                 },
                 error: (err) => {
-                    alert('Lỗi: ' + (err.error?.message || err.message));
+                    this.flashMessage.handleError(err);
                 }
             });
         }
@@ -645,13 +688,12 @@ export class ScheduleComponent implements OnInit {
 
         this.scheduleService.addPattern(this.classes[0].id, this.newPattern).subscribe({
             next: () => {
-                alert('Đã tạo lịch mẫu thành công!');
                 this.closePatternModal();
                 this.loadScheduleForAdminClass();
             },
             error: (err) => {
                 console.error('Failed to create pattern', err);
-                alert('Lỗi: ' + (err.error?.message || err.message));
+                this.flashMessage.handleError(err);
             }
         });
     }
@@ -659,7 +701,6 @@ export class ScheduleComponent implements OnInit {
     generateSchedule(): void {
         if (!this.selectedAdminClass || this.classes.length === 0) return;
         this.scheduleService.generateInstances(this.classes[0].id).subscribe(() => {
-            alert('Đã sinh buổi học thành công!');
             this.loadScheduleForAdminClass();
         });
     }
@@ -668,9 +709,6 @@ export class ScheduleComponent implements OnInit {
         if (!this.selectedAdminClass || this.classes.length === 0) return;
         this.scheduleService.getConflicts(this.classes[0].id).subscribe(res => {
             this.conflicts = res;
-            if (this.conflicts.length === 0) {
-                alert('Không có xung đột nào!');
-            }
         });
     }
 
@@ -732,6 +770,11 @@ export class ScheduleComponent implements OnInit {
         const startMonday = new Date(start.getFullYear(), start.getMonth(), diff);
         startMonday.setHours(0, 0, 0, 0);
 
+        if (day !== 1) { // 0 is Sunday, 1 is Monday
+            // Bỏ qua các ngày dư để bắt đầu Tuần 1 từ thứ Hai tiếp theo
+            startMonday.setDate(startMonday.getDate() + 7);
+        }
+
         const end = new Date(semester.endDate);
         const endDay = end.getDay();
         const endDiff = end.getDate() - (endDay === 0 ? -6 : 1);
@@ -744,14 +787,18 @@ export class ScheduleComponent implements OnInit {
         const currentMonday = new Date(current.getFullYear(), current.getMonth(), currDiff);
         currentMonday.setHours(0, 0, 0, 0);
 
-        if (current.getTime() < startMonday.getTime() || current.getTime() > endSunday.getTime()) {
+        if (current.getTime() > endSunday.getTime()) {
             return null;
         }
 
         const timeDiff = currentMonday.getTime() - startMonday.getTime();
-        const weekNum = Math.round(timeDiff / (7 * 24 * 60 * 60 * 1000)) + 1;
+        const weekNum = Math.floor(timeDiff / (7 * 24 * 60 * 60 * 1000)) + 1;
 
-        return weekNum > 0 ? weekNum : 1;
+        if (weekNum <= 0) {
+            return null; // Bỏ qua khỏi tuần 1 đối với các ngày dư
+        }
+
+        return weekNum;
     }
 
     getStatusLabel(status: string): string {
@@ -767,6 +814,7 @@ export class ScheduleComponent implements OnInit {
     }
 
     onDragStart(event: DragEvent, courseClass: CourseClass): void {
+        this.draggedCourseClass = courseClass;
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = 'copy';
             event.dataTransfer.setData('courseClass', JSON.stringify(courseClass));
@@ -778,10 +826,49 @@ export class ScheduleComponent implements OnInit {
         event.dataTransfer?.setData('moveItem', JSON.stringify(item));
     }
 
-    onDragOver(event: DragEvent): void {
+    onDragEnd(): void {
+        this.draggedCourseClass = null;
+    }
+
+    canDrop(isoDate: string, periodNumber: number): boolean {
+        // Kiểm tra nằm trong thời gian học kỳ
+        if (this.selectedSemesterId && this.semesters.length > 0) {
+            const semester = this.semesters.find(s => s.id === this.selectedSemesterId);
+            if (semester && semester.startDate && semester.endDate) {
+                const targetDate = new Date(isoDate);
+                targetDate.setHours(0, 0, 0, 0);
+
+                const startDate = new Date(semester.startDate);
+                startDate.setHours(0, 0, 0, 0);
+
+                const endDate = new Date(semester.endDate);
+                endDate.setHours(23, 59, 59, 999);
+
+                if (targetDate.getTime() < startDate.getTime() || targetDate.getTime() > endDate.getTime()) {
+                    return false;
+                }
+            }
+        }
+
+        if (this.draggedCourseClass) {
+            const currentWeek = this.getCurrentWeek();
+            const patternLength = 3;
+            const remaining = this.getRemainingPeriods(this.draggedCourseClass);
+            if (remaining < patternLength) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    onDragOver(event: DragEvent, isoDate: string, periodNumber: number): void {
         event.preventDefault();
         if (event.dataTransfer) {
-            event.dataTransfer.dropEffect = 'copy';
+            if (this.canDrop(isoDate, periodNumber)) {
+                event.dataTransfer.dropEffect = 'copy';
+            } else {
+                event.dataTransfer.dropEffect = 'none';
+            }
         }
     }
 
@@ -790,11 +877,13 @@ export class ScheduleComponent implements OnInit {
         const courseClassJson = event.dataTransfer?.getData('courseClass');
         const moveItemJson = event.dataTransfer?.getData('moveItem');
 
+        this.draggedCourseClass = null;
+
         if (courseClassJson) {
             const courseClass: any = JSON.parse(courseClassJson);
             this.addNewPattern(courseClass.id, day, periodNumber, {
                 room: courseClass.expectedRoom,
-                lecturer: courseClass.lecturerId ? { id: courseClass.lecturerId } : null
+                lecturer: courseClass.lecturerId ? { userId: courseClass.lecturerId } : null
             });
         } else if (moveItemJson) {
             const item = JSON.parse(moveItemJson);
@@ -802,7 +891,7 @@ export class ScheduleComponent implements OnInit {
         }
     }
 
-    private addNewPattern(classId: number, day: any, periodNumber: number, initialData: any = {}): void {
+    private addNewPattern(classId: number, day: any, periodNumber: number, initialData: any = {}, isReschedule: boolean = false): void {
         const currentWeek = this.getCurrentWeek();
         const pattern = {
             dayOfWeek: this.getDayNumberOfWeek(day.name),
@@ -815,9 +904,20 @@ export class ScheduleComponent implements OnInit {
             toWeek: currentWeek !== null ? currentWeek : 1
         };
 
+        const courseClass = this.classes.find(c => c.id === classId);
+        if (courseClass && !isReschedule) {
+            const remaining = this.getRemainingPeriods(courseClass);
+            const duration = (pattern.endPeriod - pattern.startPeriod + 1);
+            if (remaining < duration) {
+                return;
+            }
+        }
+
         this.scheduleService.addPattern(classId, pattern).subscribe({
-            next: () => this.loadScheduleForAdminClass(),
-            error: (err) => alert('Lỗi: ' + (err.error?.message || err.message))
+            next: () => {
+                this.loadScheduleForAdminClass();
+            },
+            error: (err) => this.flashMessage.handleError(err)
         });
     }
 
@@ -832,7 +932,7 @@ export class ScheduleComponent implements OnInit {
             };
 
             this.scheduleService.deletePattern(item.patternId).subscribe(() => {
-                this.addNewPattern(item.classId, day, periodNumber, initialData);
+                this.addNewPattern(item.classId, day, periodNumber, initialData, true);
             });
         }
     }
@@ -845,16 +945,15 @@ export class ScheduleComponent implements OnInit {
             item.patternId,
             item.startPeriod,
             item.endPeriod,
-            item.room,
-            item.lecturerName
+            item.room || '',
+            item.lecturerName || ''
         ).subscribe({
             next: () => {
                 this.loadScheduleForAdminClass();
             },
             error: (err) => {
                 console.error('Save failed', err);
-                const msg = err.error?.message || err.message || 'Lỗi không xác định';
-                alert('Lỗi khi lưu thông tin: ' + msg);
+                this.flashMessage.handleError(err);
             }
         });
     }
@@ -879,9 +978,12 @@ export class ScheduleComponent implements OnInit {
         const originalItem = this.scheduleItems.find(i => i.id === item.id);
         if (originalItem) {
             this.resizingItem = originalItem;
-            this.resizingItemObject = item;
+            this.resizingItemObject = { ...item }; // Lưu snapshot giá trị ban đầu (cloning object)
+            this.resizingOriginalDuration = item.endPeriod - item.startPeriod + 1;
         } else {
             this.resizingItem = item;
+            this.resizingItemObject = { ...item };
+            this.resizingOriginalDuration = item.endPeriod - item.startPeriod + 1;
         }
 
         const onMouseUp = (e: MouseEvent) => {
@@ -898,6 +1000,21 @@ export class ScheduleComponent implements OnInit {
     onPeriodMouseEnter(period: number): void {
         if (this.isResizing && this.resizingItem) {
             if (period >= this.resizingItem.startPeriod) {
+                // Lấy thông tin lớp học phần để kiểm tra số tiết
+                const courseClass = this.classes.find(c => c.id === this.resizingItem.classId);
+                if (courseClass) {
+                    const remaining = this.getRemainingPeriods(courseClass) + this.resizingOriginalDuration;
+                    const newDuration = period - this.resizingItem.startPeriod + 1;
+
+                    // Nếu thời lượng mới kéo dãn vuợt quá số lượng cho phép, bị chặn lại ở mức tối đa có thể
+                    if (newDuration > remaining) {
+                        const maxAllowedPeriod = this.resizingItem.startPeriod + remaining - 1;
+                        this.newEndPeriod = maxAllowedPeriod;
+                        this.resizingItem.endPeriod = maxAllowedPeriod;
+                        return;
+                    }
+                }
+
                 this.newEndPeriod = period;
                 this.resizingItem.endPeriod = period;
             }
@@ -909,9 +1026,11 @@ export class ScheduleComponent implements OnInit {
             const finalEndPeriod = this.newEndPeriod;
             const patternId = this.resizingItem.patternId;
             const startPeriod = this.resizingItem.startPeriod;
+            const room = this.resizingItem.room || '';
+            const lecturerName = this.resizingItem.lecturerName || '';
 
             if (patternId) {
-                this.scheduleService.updatePattern(patternId, startPeriod, finalEndPeriod)
+                this.scheduleService.updatePattern(patternId, startPeriod, finalEndPeriod, room, lecturerName)
                     .subscribe({
                         next: () => {
                             this.loadScheduleForAdminClass();

@@ -7,6 +7,7 @@ import { MajorService, MajorDTO } from '../../../services/major.service';
 import { StudentService } from '../../../services/student.service';
 import { CurriculumService, CurriculumDTO } from '../../../services/curriculum.service';
 import { AdministrativeClassService, AdministrativeClassDTO } from '../../../services/administrative-class.service';
+import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
 
 @Component({
     selector: 'app-course-classes',
@@ -66,7 +67,7 @@ export class CourseClassesComponent implements OnInit {
     listMajorId: number | null = null;
     listYear: number | null = null;
     listAdminClassId: number | null = null;
-    
+
     selectionSearchTerm = '';
     selectionMajorId: number | null = null;
     selectionYear: number | null = null;
@@ -77,7 +78,7 @@ export class CourseClassesComponent implements OnInit {
 
     allCohorts: number[] = [];
     administrativeClasses: AdministrativeClassDTO[] = [];
-    
+
     listFilteredAdminClasses: AdministrativeClassDTO[] = [];
     selectionFilteredAdminClasses: AdministrativeClassDTO[] = [];
     curriculums: CurriculumDTO[] = [];
@@ -98,7 +99,8 @@ export class CourseClassesComponent implements OnInit {
         private majorService: MajorService,
         private studentService: StudentService,
         private curriculumService: CurriculumService,
-        private adminClassService: AdministrativeClassService
+        private adminClassService: AdministrativeClassService,
+        private flashMessage: FlashMessageService
     ) { }
 
     ngOnInit(): void {
@@ -145,14 +147,14 @@ export class CourseClassesComponent implements OnInit {
     }
 
     onListMajorChange(): void {
-        this.listFilteredAdminClasses = this.listMajorId 
+        this.listFilteredAdminClasses = this.listMajorId
             ? this.administrativeClasses.filter(c => c.majorId == this.listMajorId)
             : this.administrativeClasses;
         this.onListFilterChange();
     }
 
     onSelectionMajorChange(): void {
-        this.selectionFilteredAdminClasses = this.selectionMajorId 
+        this.selectionFilteredAdminClasses = this.selectionMajorId
             ? this.administrativeClasses.filter(c => c.majorId == this.selectionMajorId)
             : this.administrativeClasses;
         this.loadAnalysis();
@@ -217,7 +219,7 @@ export class CourseClassesComponent implements OnInit {
     onSearch(): void {
         this.onListFilterChange();
     }
-    
+
     onSelectionSearch(): void {
         this.onSelectionFilterChange();
     }
@@ -364,7 +366,7 @@ export class CourseClassesComponent implements OnInit {
                 c.subjectName.toLowerCase().includes(search) ||
                 c.subjectCode.toLowerCase().includes(search) ||
                 c.classCode.toLowerCase().includes(search);
-            
+
             return matchesSearch;
         });
 
@@ -383,7 +385,7 @@ export class CourseClassesComponent implements OnInit {
                 d.subjectCode.toLowerCase().includes(search);
 
             const matchesAdminClass = !this.selectionAdminClassId || d.adminClassId == this.selectionAdminClassId;
-            
+
             return matchesSearch && matchesAdminClass;
         });
 
@@ -496,6 +498,7 @@ export class CourseClassesComponent implements OnInit {
         this.courseClassForm.maxStudents = 40;
         this.courseClassForm.classCount = this.selectedDemand.suggestedMoreClasses || 1;
         this.courseClassForm.classStatus = 'PLANNING';
+
         this.onBatchCountChange();
     }
 
@@ -514,8 +517,12 @@ export class CourseClassesComponent implements OnInit {
             attendanceWeight: cc.attendanceWeight || 0.1,
             midtermWeight: cc.midtermWeight || 0.3,
             finalWeight: cc.finalWeight || 0.6,
-            schedules: [...cc.schedules.map((s: any) => ({ ...s }))]
+            expectedRoom: cc.expectedRoom,
+            targetClassId: cc.targetClassId,
+            schedules: cc.schedules ? cc.schedules.map((s: any) => ({ ...s })) : []
         };
+        this.courseClassForm.batchLecturers = [cc.lecturerId];
+        this.courseClassForm.classCount = 1;
         this.isModalOpen = true;
     }
 
@@ -571,10 +578,12 @@ export class CourseClassesComponent implements OnInit {
 
         request.subscribe({
             next: () => {
+                this.flashMessage.success(this.modalMode === 'EDIT' ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
                 this.finishSubmit();
             },
             error: (err) => {
                 console.error('Error saving course class', err);
+                this.flashMessage.error(err.error?.message || 'Có lỗi xảy ra khi lưu thông tin');
                 this.isSubmitting = false;
             }
         });
@@ -651,28 +660,29 @@ export class CourseClassesComponent implements OnInit {
 
     getStatusClass(status: string): string {
         switch (status) {
-            case 'OPEN_REGISTRATION': return 'bg-green-50 text-green-700 border-green-200';
+            case 'PLANNING': return 'bg-slate-50 text-slate-600 border-slate-200';
+            case 'OPEN_REGISTRATION': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
             case 'FULL': return 'bg-orange-50 text-orange-700 border-orange-200';
-            case 'CLOSED': return 'bg-slate-50 text-slate-700 border-slate-200';
             case 'CANCELLED': return 'bg-red-50 text-red-700 border-red-200';
-            default: return 'bg-blue-50 text-blue-700 border-blue-200';
+            case 'CLOSED': return 'bg-blue-50 text-blue-700 border-blue-200';
+            default: return 'bg-slate-50 text-slate-500 border-slate-100';
         }
     }
 
     getStatusLabel(status: string): string {
         switch (status) {
-            case 'OPEN_REGISTRATION': return 'Đang đăng ký';
-            case 'FULL': return 'Đã đầy';
-            case 'CLOSED': return 'Đã khóa';
+            case 'PLANNING': return 'Kế hoạch';
+            case 'OPEN_REGISTRATION': return 'Mở đăng ký';
+            case 'FULL': return 'Lớp đã đầy';
             case 'CANCELLED': return 'Đã hủy';
-            case 'PLANNING': return 'Đang lập kế hoạch';
+            case 'CLOSED': return 'Đã đóng';
             default: return status;
         }
     }
 
     formatSchedule(schedules: any[]): string {
         if (!schedules || schedules.length === 0) return 'Chưa có lịch';
-        return schedules.map(s => `Thứ ${s.dayOfWeek}: Tiết ${s.startPeriod}-${s.endPeriod}`).join(', ');
+        return schedules.map(s => `Thứ ${s.dayOfWeek}: Tiết ${s.startPeriod}-${s.endPeriod}${s.roomName ? ' Phòng ' + s.roomName : ''}`).join(', ');
     }
 
     formatRooms(schedules: any[]): string {

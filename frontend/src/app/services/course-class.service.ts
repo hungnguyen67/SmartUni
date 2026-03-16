@@ -20,6 +20,7 @@ export interface CourseClass {
     subjectCode: string;
     credits: number;
     lecturerName: string;
+    lecturerId?: number;
     maxStudents: number;
     currentEnrolled: number;
     classStatus: string;
@@ -33,6 +34,8 @@ export interface CourseClass {
     majorName?: string;
     targetClassName?: string;
     expectedRoom?: string;
+    startDate?: string;
+    endDate?: string;
     schedules: ClassSchedule[];
 }
 
@@ -40,6 +43,8 @@ export interface ClassSchedule {
     dayOfWeek: number;
     startPeriod: number;
     endPeriod: number;
+    startTime?: string;
+    endTime?: string;
     roomName: string;
     sessionType: string;
 }
@@ -52,8 +57,10 @@ export class CourseClassService {
 
     constructor(private http: HttpClient) { }
 
-    getGroupedSubjects(semesterId: number): Observable<CourseSubjectGroup[]> {
-        return this.http.get<CourseSubjectGroup[]>(`${this.apiUrl}/subjects?semesterId=${semesterId}`);
+    getGroupedSubjects(semesterId: number, studentId?: number): Observable<CourseSubjectGroup[]> {
+        let url = `${this.apiUrl}/subjects?semesterId=${semesterId}`;
+        if (studentId) url += `&studentId=${studentId}`;
+        return this.http.get<CourseSubjectGroup[]>(url);
     }
 
     getClassesBySemester(semesterId: number): Observable<CourseClass[]> {

@@ -1,0 +1,321 @@
+<div class="h-full w-full flex overflow-hidden gap-6">
+    <div class="flex-1 flex flex-col min-w-0 bg-white border border-slate-200 rounded-xl m-4 shadow-md overflow-hidden">
+
+        <header class="bg-white border-b border-slate-200 px-6 h-16 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+                <h1 class="text-xl font-semibold text-slate-900">
+                    Lịch cá nhân
+                </h1>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-auto custom-scrollbar">
+            <table class="w-full border-collapse border-r border-slate-100 table-fixed">
+                <thead class="sticky top-0 z-40">
+                    <tr class="bg-white border-b border-slate-200 shadow-sm">
+                        <th class="w-24 border-r border-slate-100 p-0 bg-white sticky left-0 z-50">
+                            <div class="flex flex-col items-center justify-center py-3 gap-1">
+                                <i class="far fa-clock text-slate-400 text-sm"></i>
+                                <span class="text-[12px] font-semibold text-slate-500">GMT+7</span>
+                            </div>
+                        </th>
+                        <th *ngFor="let day of weekDays"
+                            class="border-r border-slate-100 py-3 text-center bg-white min-w-[180px]">
+                            <div class="text-[16px] font-medium text-slate-900 mb-1">
+                                {{ day.displayDate }}
+                            </div>
+                            <div class="text-[15px] font-medium text-slate-800">
+                                {{ day.label }}
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr *ngFor="let period of periods" class="h-16 group">
+                        <td class="border-r sticky left-0 z-40">
+                            <div class="flex items-center justify-center h-full px-2">
+                                <span class="text-[14px] font-semibold text-slate-900">
+                                    {{ getPeriodTime(period) }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td *ngFor="let day of weekDays" class="border-r border-slate-50 relative transition-all">
+
+                            <div *ngFor="let item of getItemsStartingAt(day.isoDate, period)"
+                                (click)="openSessionDetail(item.id)"
+                                class="absolute left-[2px] right-[2px] z-30 bg-white border border-slate-200 shadow-sm flex flex-col overflow-hidden transition-all hover:shadow-md cursor-pointer group/item"
+                                [style.height.px]="getItemHeight(item) - 4"
+                                [style.border-top-color]="getSubjectColor(item.subjectName)"
+                                [style.border-top-width]="'1px'">
+
+                                <div class="px-3 py-2.5 text-white flex flex-col gap-0.5 shrink-0"
+                                    [style.background-color]="getSubjectColor(item.subjectName)">
+                                    <div class="text-[12px] font-bold leading-tight uppercase truncate">
+                                        {{ item.subjectName }}
+                                    </div>
+                                    <div class="text-[11px] font-medium opacity-90">
+                                        Tiết {{item.startPeriod}} - {{item.endPeriod}} ({{
+                                        getPeriodTime(item.startPeriod) }} - {{ getEndTime(item) }})
+                                    </div>
+                                </div>
+
+                                <div class="p-3 flex-1 flex flex-col justify-between overflow-hidden">
+                                    <div class="flex flex-col gap-1.5">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[11px] text-slate-800 font-bold truncate">
+                                                Phòng: {{ item.roomName }}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[11px] text-slate-500 font-medium truncate">
+                                                GV: {{ item.lecturerName }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex justify-end pt-1 opacity-30">
+                                        <i class="fas fa-info-circle text-[10px]"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <aside class="w-80 flex flex-col shrink-0 gap-4 pr-4 py-4">
+        <app-mini-calendar (dateSelected)="onDateSelected($event)"></app-mini-calendar>
+    </aside>
+
+    <div *ngIf="showModal" class="fixed inset-0 z-[100] flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="closeSessionDetail()"></div>
+
+        <div *ngIf="selectedSession"
+            class="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+
+            <header class="px-6 py-4 border-b border-slate-200 bg-white">
+                <div class="flex justify-between items-start">
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-[17px] font-bold text-slate-800">
+                                Học phần: {{ selectedSession.subjectName }}
+                                <span class="font-normal text-slate-800 mx-2">-</span>
+                                <span class="text-[17px] font-semibold text-slate-600">
+                                    {{ getPeriodTime(selectedSession.startPeriod) }} - {{ getEndTime(selectedSession) }}
+                                    (Tiết {{ selectedSession.startPeriod }}-{{ selectedSession.endPeriod }})
+                                </span>
+                            </h2>
+                            <span *ngIf="!isLecturer && selectedSession.closedAt"
+                                class="text-[17px] font-bold text-slate-700 ml-4">
+                                Có mặt({{ getStudentSessionPeriods() }})
+                            </span>
+                        </div>
+
+                        <div *ngIf="!isLecturer && selectedSession.closedAt" class="text-[17px]">
+                            <span class="font-semibold text-slate-600">Vắng mặt (Số buổi/Số tiết/Tỷ lệ):</span>
+                            <span class="font-bold ml-1 text-slate-800">({{ getAbsentStats() }})</span>
+                        </div>
+                    </div>
+
+                    <button (click)="closeSessionDetail()"
+                        class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="px-6 py-5 bg-white flex justify-between items-center">
+                <div class="space-y-1">
+                    <h3 class="text-[17px] font-bold text-slate-800">
+                        Lớp: {{ selectedSession.classCode }}
+                    </h3>
+                    <div class="flex items-center gap-4">
+                        <p class="text-[16px] text-slate-500 font-medium">
+                            (Phòng học: {{ selectedSession.roomName }})
+                        </p>
+                    </div>
+                </div>
+
+                <div *ngIf="!isLecturer" class="flex items-center gap-3">
+                    <span class="text-[15px] font-medium text-slate-700">Từ khóa điểm danh
+                    </span>
+                    <input type="text" [(ngModel)]="attendanceCodeForStudents"
+                        class="border border-slate-200 px-3 py-1.5 rounded text-[14px] w-40 outline-none"
+                        placeholder="Từ khóa điểm danh">
+                    <button (click)="onSelfAttend()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-[13px] font-medium transition-all">
+                        <i class="far fa-save mr-1"></i> Lưu
+                    </button>
+                </div>
+            </div>
+
+            <ng-container *ngIf="isLecturer">
+                <div class="px-4 bg-white flex flex-col gap-1">
+
+                    <div class="px-8 py-3 bg-[#2d3a82] text-white flex justify-between items-center shadow-sm">
+                        <div class="flex items-center gap-6 flex-1">
+                            <span class="text-[13px] font-black uppercase tracking-widest shrink-0">Điểm danh tự
+                                động</span>
+
+                            <div class="flex-1"></div>
+
+                            <div class="flex items-center gap-3">
+                                <span class="text-[15px] font-medium">Từ khóa điểm danh
+                                </span>
+                                <input type="text" [(ngModel)]="attendanceCodeInput"
+                                    class="bg-white text-slate-900 px-3 py-1 rounded-sm text-[14px] w-40 text-left outline-none"
+                                    placeholder="Từ khóa điểm danh">
+                                <button (click)="onOpenAttendance()"
+                                    class="bg-white/10 hover:bg-white/20 px-4 py-1 rounded border border-white/30 text-[12px] font-medium transition-all">
+                                    <i class="far fa-save mr-1"></i> Lưu từ khóa
+                                </button>
+                            </div>
+                        </div>
+                        <button (click)="onFinalizeAutoAttendance()"
+                            class="ml-6 bg-green-600 hover:bg-green-700 px-5 py-1.5 rounded-sm text-[13px] uppercase font-bold transition-all">
+                            <i class="fas fa-check-double mr-1"></i> Lưu điểm danh tự động
+                        </button>
+                    </div>
+
+                    <div class="px-8 py-2.5 bg-[#f39c12] text-white flex justify-between items-center shadow-sm">
+                        <div class="flex items-center gap-10 flex-1">
+                            <span class="uppercase tracking-widest shrink-0 text-[14px] font-bold">Điểm danh thủ
+                                công</span>
+                            <div class="flex-1"></div>
+
+                            <div class="flex gap-8 text-white text-[14px] font-bold">
+                                <span>Sĩ số: {{ selectedSession.students?.length }}</span>
+                                <span>
+                                    Có mặt: {{ getPresentCount() }}
+                                </span>
+                                <span>
+                                    Vắng: {{ getAbsentCount() }}
+                                </span>
+                            </div>
+                        </div>
+                        <button (click)="onSaveManualAttendance()"
+                            class="ml-6 bg-white text-[#f39c12] px-5 py-1.5 rounded-sm text-[13px] font-bold shadow-md uppercase hover:bg-slate-50 transition-all">
+                            <i class="fas fa-save mr-1"></i> Lưu thủ công
+                        </button>
+                    </div>
+
+                </div>
+            </ng-container>
+
+            <div class="flex-1 overflow-auto custom-scrollbar p-4 bg-white">
+                <div class="overflow-x-auto">
+                    <table class="w-full table-auto border-collapse text-[13px]">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-900">
+                                <th class="px-2 py-4 font-semibold text-center">STT</th>
+                                <th *ngIf="isLecturer" class="px-4 py-4 font-semibold text-left">Vắng mặt (Số
+                                    buổi/Số tiết/Tỷ lệ)</th>
+                                <th class="px-4 py-4 font-semibold text-left">Mã số</th>
+                                <th class="px-4 py-4 font-semibold text-left">Họ đệm</th>
+                                <th class="px-4 py-4 font-semibold text-left">Tên</th>
+                                <th *ngIf="isLecturer" class="px-4 py-4 font-semibold text-center w-28">Tự điểm danh
+                                </th>
+                                <th *ngIf="isLecturer"
+                                    class="px-2 py-4 font-semibold text-center w-24 uppercase text-[11px] leading-tight">
+                                    Vắng có phép <br>
+                                    <input type="checkbox" [checked]="headerCheck === 'EXCUSED'"
+                                        (change)="toggleAllStatus('EXCUSED')"
+                                        class="w-4 h-4 mt-1 accent-blue-500 cursor-pointer">
+                                </th>
+                                <th *ngIf="isLecturer"
+                                    class="px-2 py-4 font-semibold text-center w-20 uppercase text-[11px]">
+                                    Vắng <br>
+                                    <input type="checkbox" [checked]="headerCheck === 'ABSENT'"
+                                        (change)="toggleAllStatus('ABSENT')"
+                                        class="w-4 h-4 mt-1 accent-blue-600 cursor-pointer">
+                                </th>
+                                <th *ngIf="isLecturer"
+                                    class="px-2 py-4 font-semibold text-center w-20 uppercase text-[11px]">
+                                    Có mặt <br>
+                                    <input type="checkbox" [checked]="headerCheck === 'PRESENT'"
+                                        (change)="toggleAllStatus('PRESENT')"
+                                        class="w-4 h-4 mt-1 accent-blue-600 cursor-pointer">
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr *ngFor="let student of selectedSession.students; let i = index"
+                                class="hover:bg-slate-50 transition-colors">
+
+                                <td class="px-4 py-4 text-center">{{ i + 1 }}</td>
+
+                                <td *ngIf="isLecturer" class="px-4 py-4 text-sm text-slate-900">
+                                    ({{ student.absentSessions }}/{{ student.absentPeriods }}/{{
+                                    student.absentPercent }}%)
+                                </td>
+
+                                <td class="px-4 py-4 text-sm text-slate-900 uppercase">{{
+                                    student.studentCode }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 uppercase">{{
+                                    student.lastName }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 uppercase">{{
+                                    student.firstName }}
+                                </td>
+
+                                <ng-container *ngIf="isLecturer">
+                                    <td class="px-4 py-4 text-center">
+                                        <i *ngIf="student.selfAttended" class="fas fa-check text-green-500"></i>
+                                    </td>
+
+                                    <!-- Vắng có phép -->
+                                    <td class="px-2 py-4 text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <input type="checkbox" [checked]="student.excused"
+                                                (change)="onStatusChange(student, 'EXCUSED', $any($event.target).checked)"
+                                                class="w-4 h-4 rounded border-slate-300 accent-blue-400 cursor-pointer">
+                                            <input type="number"
+                                                [ngModel]="student.excused ? student.sessionAbsentPeriods : ''"
+                                                (ngModelChange)="student.sessionAbsentPeriods = $event"
+                                                [disabled]="!student.excused" min="0"
+                                                [max]="(selectedSession.endPeriod - selectedSession.startPeriod + 1)"
+                                                class="w-10 h-8 text-center border border-slate-200 rounded text-[13px] outline-none no-spin disabled:bg-transparent">
+                                        </div>
+                                    </td>
+
+                                    <!-- Vắng -->
+                                    <td class="px-2 py-4 text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <input type="checkbox" [checked]="student.absent"
+                                                (change)="onStatusChange(student, 'ABSENT', $any($event.target).checked)"
+                                                class="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer">
+                                            <input type="number"
+                                                [ngModel]="student.absent ? student.sessionAbsentPeriods : ''"
+                                                (ngModelChange)="student.sessionAbsentPeriods = $event"
+                                                [disabled]="!student.absent" min="0"
+                                                [max]="(selectedSession.endPeriod - selectedSession.startPeriod + 1)"
+                                                class="w-10 h-8 text-center border border-slate-200 rounded text-[13px] outline-none no-spin disabled:bg-transparent">
+                                        </div>
+                                    </td>
+
+                                    <!-- Có mặt -->
+                                    <td class="px-2 py-4 text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <input type="checkbox" [checked]="student.present"
+                                                (change)="onStatusChange(student, 'PRESENT', $any($event.target).checked)"
+                                                class="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer">
+                                            <input type="number"
+                                                [ngModel]="student.present ? ((selectedSession.endPeriod - selectedSession.startPeriod + 1) - (student.sessionAbsentPeriods || 0)) : ''"
+                                                (ngModelChange)="onPresentPeriodsChange(student, $event)"
+                                                [disabled]="!student.present" min="0"
+                                                [max]="(selectedSession.endPeriod - selectedSession.startPeriod + 1)"
+                                                class="w-10 h-8 text-center border border-slate-200 rounded text-[13px] outline-none no-spin disabled:bg-transparent">
+                                        </div>
+                                    </td>
+                                </ng-container>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

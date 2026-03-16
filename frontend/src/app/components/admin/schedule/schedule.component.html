@@ -174,9 +174,10 @@
                                 <td
                                     class="bg-[#e7f3ff] border-r border-slate-300 text-center text-[10px] font-bold text-blue-700 group-hover:bg-blue-100 transition-colors">
                                     {{ period < 10 ? '0' + period : period }} </td>
-                                <td *ngFor="let day of weekDays" (dragover)="onDragOver($event)"
+                                <td *ngFor="let day of weekDays" (dragover)="onDragOver($event, day.isoDate, period)"
                                     (drop)="onDrop($event, day, period)" (mouseenter)="onPeriodMouseEnter(period)"
-                                    class="border-r border-slate-100 relative group-hover:bg-slate-50/50 transition-all cursor-cell">
+                                    class="border-r border-slate-100 relative group-hover:bg-slate-50/50 transition-all"
+                                    [ngClass]="canDrop(day.isoDate, period) ? 'cursor-cell' : 'cursor-not-allowed'">
                                     <div *ngFor="let item of getItemsForDayAndPeriod(day.isoDate, period); trackBy: trackById"
                                         (click)="selectScheduleItem(item)"
                                         (contextmenu)="onItemContextMenu($event, item)" draggable="true"
@@ -207,7 +208,7 @@
                                         </div>
 
                                         <div (mousedown)="onResizeStart($event, item)"
-                                            class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white border border-blue-200 mb-[1px] cursor-ns-resize z-20">
+                                            class="absolute bottom-0 left-0 right-0 h-2 bg-transparent cursor-ns-resize z-20 hover:bg-blue-500 hover:opacity-20 transition-all">
                                         </div>
                                     </div>
                                 </td>
@@ -386,7 +387,6 @@
                 </button>
             </div>
             <div class="flex-1 overflow-auto bg-white custom-scrollbar">
-                <!-- Tab 1: Lớp học phần xếp lịch -->
                 <table *ngIf="activeBottomTab === 'CLASSES'" class="w-full text-left border-collapse">
                     <thead class="sticky top-0 bg-[#f1f3f5] z-20 border-b border-slate-300">
                         <tr class="text-[12px] font-bold text-slate-700 tracking-tighter">
@@ -405,7 +405,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         <tr *ngFor="let c of classes; let i = index" draggable="true"
-                            (dragstart)="onDragStart($event, c)"
+                            (dragstart)="onDragStart($event, c)" (dragend)="onDragEnd()"
                             class="hover:bg-blue-50/50 transition-colors text-[12px] group cursor-grab active:cursor-grabbing">
                             <td class="border-r border-slate-100 py-2 px-3 font-semibold text-slate-700 text-center">
                                 {{ i + 1 }}
@@ -449,7 +449,6 @@
                     </tbody>
                 </table>
 
-                <!-- Tab 2: Lịch học đã xếp -->
                 <table *ngIf="activeBottomTab === 'SCHEDULED'" class="w-full text-left border-collapse">
                     <thead class="sticky top-0 bg-[#f1f3f5] z-20 border-b border-slate-300">
                         <tr class="text-[12px] font-bold text-slate-700 tracking-tighter">

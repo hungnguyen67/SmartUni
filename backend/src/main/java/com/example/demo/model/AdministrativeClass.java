@@ -45,7 +45,7 @@ public class AdministrativeClass implements Serializable {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum ClassStatus {
-        ACTIVE, INACTIVE, GRADUATED
+        ACTIVE, INACTIVE, GRADUATED, DRAFT
     }
 
     public AdministrativeClass() {}

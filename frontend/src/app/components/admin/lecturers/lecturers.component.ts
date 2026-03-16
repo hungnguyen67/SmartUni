@@ -9,11 +9,15 @@ import { FacultyService, FacultyDTO } from '../../../services/faculty.service';
 export class LecturersComponent implements OnInit {
 
     lecturers: LecturerDTO[] = [];
+    filteredLecturers: LecturerDTO[] = [];
     paginatedLecturers: LecturerDTO[] = [];
     faculties: FacultyDTO[] = [];
 
     searchTerm: string = '';
     filterFaculty: number | null = null;
+    filterStatus: string = '';
+    
+    showFilter: boolean = false;
     activeDropdown: string = '';
 
     currentPage: number = 1;
@@ -44,15 +48,22 @@ export class LecturersComponent implements OnInit {
     loadLecturers(): void {
         this.lecturerService.getLecturers(this.searchTerm, this.filterFaculty || undefined).subscribe(data => {
             this.lecturers = data;
-            this.currentPage = 1;
-            this.updatePagination();
+            this.applyFilters();
         });
+    }
+
+    applyFilters(): void {
+        this.filteredLecturers = this.lecturers.filter(l => {
+            return !this.filterStatus || l.status === this.filterStatus;
+        });
+        this.currentPage = 1;
+        this.updatePagination();
     }
 
     updatePagination(): void {
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
-        this.paginatedLecturers = this.lecturers.slice(startIndex, endIndex);
+        this.paginatedLecturers = this.filteredLecturers.slice(startIndex, endIndex);
     }
 
     onSearch(): void {
@@ -62,6 +73,7 @@ export class LecturersComponent implements OnInit {
     resetFilters(): void {
         this.searchTerm = '';
         this.filterFaculty = null;
+        this.filterStatus = '';
         this.loadLecturers();
     }
 
@@ -72,11 +84,11 @@ export class LecturersComponent implements OnInit {
     }
 
     get totalPages(): number {
-        return Math.ceil(this.lecturers.length / this.itemsPerPage) || 1;
+        return Math.ceil(this.filteredLecturers.length / this.itemsPerPage) || 1;
     }
 
     get minEnd(): number {
-        return Math.min(this.currentPage * this.itemsPerPage, this.lecturers.length);
+        return Math.min(this.currentPage * this.itemsPerPage, this.filteredLecturers.length);
     }
 
     nextPage(): void {
@@ -98,6 +110,21 @@ export class LecturersComponent implements OnInit {
         return map[gender] || 'Khác';
     }
 
+    getStatusLabel(status: string): string {
+        const map: any = { 'WORKING': 'Đang giảng dạy', 'ON_LEAVE': 'Nghỉ phép', 'RESIGNED': 'Thôi việc', 'RETIRED': 'Nghỉ hưu' };
+        return map[status] || status || 'Chưa cập nhật';
+    }
+
+    getStatusClass(status: string): string {
+        switch (status) {
+            case 'WORKING': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            case 'ON_LEAVE': return 'bg-amber-50 text-amber-600 border-amber-200';
+            case 'RESIGNED': return 'bg-red-50 text-red-600 border-red-200';
+            case 'RETIRED': return 'bg-slate-100 text-slate-600 border-slate-200';
+            default: return 'bg-slate-50 text-slate-600 border-slate-200';
+        }
+    }
+
     editLecturer(lecturer: LecturerDTO): void {
         console.log('Edit', lecturer);
     }
@@ -107,4 +134,8 @@ export class LecturersComponent implements OnInit {
             console.log('Delete', lecturer.id);
         }
     }
-}
+
+    openAddModal(): void {
+        console.log('Open Add Modal');
+    }
+}

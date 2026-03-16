@@ -131,4 +131,22 @@ export class FacultiesComponent implements OnInit {
             });
         }
     }
+
+    getStatusLabel(status: string | undefined): string {
+        switch (status) {
+            case 'ACTIVE': return 'Đang hoạt động';
+            case 'INACTIVE': return 'Ngưng hoạt động';
+            case 'DRAFT': return 'Bản nháp';
+            default: return 'Không xác định';
+        }
+    }
+
+    getStatusClass(status: string | undefined): string {
+        switch (status) {
+            case 'ACTIVE': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            case 'DRAFT': return 'bg-amber-50 text-amber-600 border-amber-200';
+            case 'INACTIVE': return 'bg-slate-50 text-slate-600 border-slate-200';
+            default: return 'bg-slate-50 text-slate-600 border-slate-200';
+        }
+    }
 }

@@ -59,4 +59,32 @@ export class ScheduleService {
 
         return this.http.patch<void>(`${this.apiUrl}/patterns/${patternId}`, {}, { params });
     }
+
+    getStudentSchedule(studentId: number, semesterId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/student/${studentId}/semester/${semesterId}`);
+    }
+
+    getLecturerSchedule(lecturerId: number, semesterId: number): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/lecturer/${lecturerId}/semester/${semesterId}`);
+    }
+
+    getSessionDetail(instanceId: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/sessions/${instanceId}?t=${new Date().getTime()}`);
+    }
+
+    openAttendance(instanceId: number, code: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/attendance/open`, {}, { params: { instanceId, code } });
+    }
+
+    submitManualAttendance(dto: any): Observable<void> {
+        return this.http.post<void>(`${this.apiUrl}/attendance/manual`, dto);
+    }
+
+    selfAttend(code: string, studentId: number, instanceId: number): Observable<void> {
+        return this.http.post<void>(`${this.apiUrl}/attendance/self`, {}, { params: { code, studentId, instanceId } });
+    }
+
+    finalizeAttendance(instanceId: number): Observable<void> {
+        return this.http.post<void>(`${this.apiUrl}/attendance/finalize`, {}, { params: { instanceId } });
+    }
 }

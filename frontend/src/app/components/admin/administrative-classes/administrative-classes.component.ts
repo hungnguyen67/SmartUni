@@ -23,6 +23,7 @@ export class AdministrativeClassesComponent implements OnInit {
 
     // UI states
     activeDropdown: string = '';
+    showFilter: boolean = false;
     loading: boolean = false;
 
     // Pagination
@@ -137,7 +138,7 @@ export class AdministrativeClassesComponent implements OnInit {
     nextPage() {
         if (this.currentPage < this.totalPages) {
             this.currentPage++;
-            this.loadClasses(); // Hoặc applyLocalFilters nếu không gọi API lại
+            this.loadClasses();
         }
     }
 
@@ -148,6 +149,27 @@ export class AdministrativeClassesComponent implements OnInit {
         }
     }
 
+    getStatusLabel(status: string): string {
+        const map: any = { 
+            'ACTIVE': 'Đang hoạt động', 
+            'INACTIVE': 'Ngưng hoạt động', 
+            'GRADUATED': 'Đã tốt nghiệp',
+            'DRAFT': 'Bản nháp'
+        };
+        return map[status] || status || 'Không xác định';
+    }
+
+    getStatusClass(status: string): string {
+        switch (status) {
+            case 'ACTIVE': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            case 'INACTIVE': return 'bg-red-50 text-red-600 border-red-200';
+            case 'GRADUATED': return 'bg-blue-50 text-blue-600 border-blue-200';
+            case 'DRAFT': return 'bg-amber-50 text-amber-600 border-amber-200';
+            default: return 'bg-slate-50 text-slate-600 border-slate-200';
+        }
+    }
+
     editClass(item: any) { console.log('Edit', item); }
     deleteClass(item: any) { if (confirm('Xác nhận xóa lớp này?')) console.log('Delete', item); }
+    openAddModal() { console.log('Open Add Class Modal'); }
 }

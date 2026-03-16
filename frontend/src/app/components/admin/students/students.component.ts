@@ -14,6 +14,7 @@ export class StudentsComponent implements OnInit {
     classes: AdministrativeClassDTO[] = [];
 
     activeDropdown: string = '';
+    showFilter: boolean = false;
 
     filters = {
         searchTerm: '',
@@ -128,11 +129,12 @@ export class StudentsComponent implements OnInit {
 
     getStatusBadgeClass(status: string): string {
         switch (status) {
-            case 'STUDYING': return 'bg-blue-100 text-blue-700';
-            case 'GRADUATED': return 'bg-green-100 text-green-700';
-            case 'ACADEMIC_RESERVE': return 'bg-yellow-100 text-yellow-700';
-            case 'DROPPED_OUT': return 'bg-red-100 text-red-700';
-            default: return 'bg-slate-100 text-slate-700';
+            case 'STUDYING': return 'bg-blue-50 text-blue-600 border-blue-200';
+            case 'GRADUATED': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            case 'ACADEMIC_RESERVE': return 'bg-amber-50 text-amber-600 border-amber-200';
+            case 'DROPPED_OUT': 
+            case 'SUSPENDED': return 'bg-red-50 text-red-600 border-red-200';
+            default: return 'bg-slate-50 text-slate-600 border-slate-200';
         }
     }
 
@@ -155,4 +157,8 @@ export class StudentsComponent implements OnInit {
             console.log('Delete', student.id);
         }
     }
-}
+
+    openAddModal(): void {
+        console.log('Open Add Modal');
+    }
+}

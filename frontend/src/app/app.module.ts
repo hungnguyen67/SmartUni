@@ -6,7 +6,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { AppComponent } from './app.component';
-import { HomeComponent } from './components/user/home/home.component';
+
 import { LoginPasswordComponent } from './components/login-password/login-password.component';
 import { DashboardComponent } from './components/admin/dashboard/dashboard.component';
 import { DashboardLayoutComponent } from './shared/layouts/dashboard-layout/dashboard-layout.component';
@@ -35,6 +35,7 @@ import { CurriculumsComponent } from './components/admin/curriculums/curriculums
 import { AdministrativeClassesComponent } from './components/admin/administrative-classes/administrative-classes.component';
 import { FacultiesComponent } from './components/admin/faculties/faculties.component';
 import { SubjectsComponent } from './components/admin/subjects/subjects.component';
+import { UserScheduleComponent } from './components/user/user-schedule/user-schedule.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -46,10 +47,12 @@ const routes: Routes = [
     component: UserLayoutComponent,
     canActivate: [AuthGuard],
     children: [
-      { path: '', component: HomeComponent },
-      { path: 'grades', component: HomeComponent },
+      { path: '', redirectTo: 'curriculum', pathMatch: 'full' },
       { path: 'curriculum', component: CurriculumComponent },
-      { path: 'register-course', component: RegistrationComponent }
+      { path: 'register-course', component: RegistrationComponent },
+      { path: 'grades', component: DashboardComponent },
+      { path: 'schedule', component: UserScheduleComponent },
+      { path: 'exams', component: DashboardComponent }
     ]
   },
   {
@@ -93,7 +96,7 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent,
+
     LoginPasswordComponent,
     DashboardComponent,
     DashboardLayoutComponent,
@@ -119,7 +122,8 @@ const routes: Routes = [
     PasswordChecklistComponent,
     PasswordInputComponent,
     CurriculumComponent,
-    RegistrationComponent
+    RegistrationComponent,
+    UserScheduleComponent
   ],
   imports: [
     BrowserModule,

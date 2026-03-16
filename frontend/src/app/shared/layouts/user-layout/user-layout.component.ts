@@ -26,7 +26,9 @@ export class UserLayoutComponent implements OnInit {
 
   autoOpenMenuBasedOnUrl(url: string) {
     if (url.includes('/home/grades') || url.includes('/home/curriculum')) {
-      this.openMenuName = 'learning';
+      this.openMenuName = 'study';
+    } else if (url.includes('/home/schedule') || url.includes('/home/exams')) {
+      this.openMenuName = 'schedule';
     } else if (url.includes('/home/register-course')) {
       this.openMenuName = 'registration';
     } else {

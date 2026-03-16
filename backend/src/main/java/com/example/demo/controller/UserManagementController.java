@@ -136,6 +136,12 @@ public class UserManagementController {
             String roleName = userData.get("role");
             String facultyName = userData.get("facultyName");
 
+            if (email == null || !email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Email không đúng định dạng. Vui lòng sử dụng định dạng chuẩn (ví dụ: user@example.com)!"
+                ));
+            }
+
             if (userRepository.findByEmail(email).isPresent()) {
                 return ResponseEntity.badRequest().body(Map.of(
                         "error", "Email này đã tồn tại trong hệ thống. Vui lòng sử dụng email khác!"

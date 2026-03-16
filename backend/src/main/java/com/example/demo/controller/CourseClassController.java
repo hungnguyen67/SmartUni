@@ -18,8 +18,10 @@ public class CourseClassController {
     private CourseClassService courseClassService;
 
     @GetMapping("/subjects")
-    public ResponseEntity<List<CourseSubjectGroupDTO>> getGroupedSubjects(@RequestParam Long semesterId) {
-        return ResponseEntity.ok(courseClassService.getGroupedSubjectsBySemester(semesterId));
+    public ResponseEntity<List<CourseSubjectGroupDTO>> getGroupedSubjects(
+            @RequestParam Long semesterId,
+            @RequestParam(required = false) Long studentId) {
+        return ResponseEntity.ok(courseClassService.getGroupedSubjectsBySemester(semesterId, studentId));
     }
 
     @GetMapping

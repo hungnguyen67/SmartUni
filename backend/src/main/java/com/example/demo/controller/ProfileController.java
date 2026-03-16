@@ -47,9 +47,18 @@ public class ProfileController {
 
             Optional<com.example.demo.model.StudentProfile> studentOpt = studentProfileRepository.findById(user.getId());
             if (studentOpt.isPresent()) {
-                profile.put("studentCode", studentOpt.get().getStudentCode());
-                if (studentOpt.get().getCurriculum() != null) {
-                    profile.put("curriculumId", studentOpt.get().getCurriculum().getId());
+                com.example.demo.model.StudentProfile student = studentOpt.get();
+                profile.put("studentCode", student.getStudentCode());
+                if (student.getCurriculum() != null) {
+                    profile.put("curriculumId", student.getCurriculum().getId());
+                    profile.put("curriculumName", student.getCurriculum().getCurriculumName());
+                }
+                if (student.getAdministrativeClass() != null) {
+                    profile.put("classId", student.getAdministrativeClass().getId());
+                    profile.put("className", student.getAdministrativeClass().getClassName());
+                    if (student.getAdministrativeClass().getMajor() != null) {
+                        profile.put("majorName", student.getAdministrativeClass().getMajor().getMajorName());
+                    }
                 }
             }
             return ResponseEntity.ok(profile);
