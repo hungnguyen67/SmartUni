@@ -1,10 +1,9 @@
-<div class="max-w-full mx-auto space-y-10">
-    <h1 class="text-lg font-bold text-[#1e3a8a] uppercase tracking-tight mb-6"> ĐĂNG KÝ HỌC PHẦN {{
-        getSelectedSemesterName() }}
+<div class="max-w-full mx-auto space-y-6">
+    <h1 class="text-lg font-bold text-[#1e3a8a] uppercase tracking-tight mb-6"> {{ getSelectedSemesterName() }}
     </h1>
 
     <div class="bg-white rounded-md border border-slate-200 shadow-sm p-4 md:p-6 space-y-10">
-        <div class="relative border border-slate-300 rounded-[15px] px-3 py-1.5 bg-white max-w-2xl">
+        <div class="relative border border-slate-300 rounded-md px-3 py-1.5 bg-white max-w-2xl">
             <label class="absolute -top-2.5 left-4 bg-white px-1.5 text-[11px] text-slate-500 font-medium">
                 Chương trình đào tạo
             </label>
@@ -57,8 +56,7 @@
                                 Bắt buộc
                             </td>
                         </tr>
-                        <tr *ngFor="let item of mandatoryClasses; let i = index"
-                            class="hover:bg-slate-50 transition-colors">
+                        <tr *ngFor="let item of mandatoryClasses; let i = index" class="transition-colors">
                             <td class="px-4 py-4 text-sm text-slate-900 text-center border-b border-slate-50">{{ i + 1
                                 }}</td>
                             <td class="px-4 py-4 text-sm text-slate-900 text-left border-b border-slate-50">{{
@@ -71,7 +69,7 @@
                                 item.classCount }}</td>
                             <td class="py-2 text-center border-b border-slate-50">
                                 <button (click)="onSelectSubject(item)"
-                                    class="inline-flex items-center px-4 py-2 border border-blue-200 rounded-full text-[11px] font-bold text-blue-700 transition-all shadow-sm whitespace-nowrap">
+                                    class="inline-flex items-center px-4 py-2 border border-slate-300 hover:bg-slate-100 rounded-full text-[11px] font-bold text-blue-700 transition-all shadow-sm whitespace-nowrap">
                                     Đăng ký
                                 </button>
                             </td>
@@ -96,7 +94,7 @@
                                 item.classCount }}</td>
                             <td class="py-2 text-center border-b border-slate-50">
                                 <button (click)="onSelectSubject(item)"
-                                    class="inline-flex items-center gap-2 px-6 py-1.5 border border-blue-200 rounded-full text-[11px] font-bold text-blue-700 hover:bg-blue-50 transition-all shadow-sm whitespace-nowrap">
+                                    class="inline-flex items-center gap-2 px-6 py-1.5 border border-slate-300 hover:bg-slate-100 rounded-full text-[11px] font-bold text-blue-700 hover:bg-blue-50 transition-all shadow-sm whitespace-nowrap">
                                     Đăng ký
                                 </button>
                             </td>
@@ -127,7 +125,7 @@
                     </thead>
                     <tbody class="text-[14px]">
                         <tr *ngFor="let cc of subjectClasses"
-                            class="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
+                            class="border-b border-slate-100 transition-colors cursor-pointer"
                             (click)="selectedClassId = cc.id">
                             <td class="px-3 py-4 text-center">
                                 <input type="radio" name="classSelect" [value]="cc.id" [(ngModel)]="selectedClassId"
@@ -147,11 +145,11 @@
             </div>
 
             <div class="flex justify-center md:justify-end gap-3 px-4 pt-10 pb-2"> <button (click)="onBackToSubjects()"
-                    class="inline-flex items-center px-4 py-2 border border-slate-200 rounded-full text-[11px] font-bold text-slate-700 transition-all shadow-sm whitespace-nowrap">
+                    class="inline-flex items-center px-4 py-2 border border-slate-300 hover:bg-slate-100 rounded-full text-[11px] font-bold text-slate-700 transition-all shadow-sm whitespace-nowrap">
                     Quay lại
                 </button>
                 <button (click)="register()" [disabled]="!selectedClassId"
-                    class="inline-flex items-center px-4 py-2 border border-blue-200 rounded-full text-[11px] font-bold text-blue-700 transition-all shadow-sm whitespace-nowrap disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed">
+                    class="inline-flex items-center px-4 py-2 border border-slate-300 hover:bg-slate-100 rounded-full text-[11px] font-bold text-blue-700 transition-all shadow-sm whitespace-nowrap disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed">
                     Đăng ký
                 </button>
             </div>
@@ -177,7 +175,7 @@
                     </thead>
                     <tbody class="text-[13px]">
                         <tr *ngFor="let reg of registeredClasses; let i = index"
-                            class="hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
+                            class="transition-colors border-b border-slate-50 last:border-0">
                             <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ i + 1 }}</td>
                             <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ reg.classCode }}</td>
                             <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ reg.subjectName }}</td>
@@ -190,11 +188,11 @@
                             <td class="px-4 py-4 text-center">
                                 <div class="flex items-center justify-center gap-1.5">
                                     <button (click)="changeClass(reg)"
-                                        class="inline-flex items-center px-3 py-2 border border-blue-200 rounded-full text-[11px] font-bold text-blue-700 transition-all shadow-sm whitespace-nowrap">
+                                        class="inline-flex items-center px-3 py-2 border border-slate-300 hover:bg-slate-100 rounded-full text-[11px] font-bold text-blue-700 transition-all shadow-sm whitespace-nowrap">
                                         Chuyển LHP
                                     </button>
                                     <button (click)="drop(reg.id)"
-                                        class="inline-flex items-center px-4 py-2 border border-slate-200 rounded-full text-[11px] font-bold text-slate-700 transition-all shadow-sm whitespace-nowrap">
+                                        class="inline-flex items-center px-4 py-2 border border-slate-300 hover:bg-slate-100 rounded-full text-[11px] font-bold text-slate-700 transition-all shadow-sm whitespace-nowrap">
                                         Hủy
                                     </button>
                                 </div>

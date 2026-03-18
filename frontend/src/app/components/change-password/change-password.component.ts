@@ -66,7 +66,9 @@ export class ChangePasswordComponent {
         this.loading = false;
         this.flashMessage.success(res.message || 'Thay đổi mật khẩu thành công!');
 
-        this.router.navigate(['/dashboard/settings/profile']);
+        const role = localStorage.getItem('user_role');
+        const target = role === 'ADMIN' ? '/dashboard' : '/home/schedule';
+        this.router.navigate([target]);
       },
       error: (err) => {
         this.loading = false;

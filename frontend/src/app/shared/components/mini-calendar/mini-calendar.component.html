@@ -9,9 +9,9 @@
         </button>
     </div>
 </div>
-<div class="bg-white rounded-b-2xl p-4 shadow-lg">
+<div class="bg-white rounded-b-2xl p-4 shadow-md">
     <div class="grid grid-cols-7 gap-1 text-center mb-2">
-        <div *ngFor="let day of weekDays" class="text-xs font-bold text-slate-900 py-2">
+        <div *ngFor="let day of weekDays" class="text-sm font-bold text-slate-900 py-2">
             {{ day }}
         </div>
     </div>
@@ -21,8 +21,8 @@
             [style.color]="(isSelected(day, i) || (isToday(day) && isCurrentMonth(i) && !isSelected(day, i))) ? '#ffffff' : (isCurrentMonth(i) ? '#0f172a' : '#cbd5e1')"
             [ngClass]="{
            'font-medium': isCurrentMonth(i) && !isSelected(day, i) && !(isToday(day) && isCurrentMonth(i)),
-           'bg-blue-600 shadow-md font-bold': isSelected(day, i),
-           'bg-orange-500 shadow-sm font-bold': isToday(day) && isCurrentMonth(i) && !isSelected(day, i)
+           'bg-blue-600 shadow-md font-semibold': isSelected(day, i),
+           'bg-orange-500 shadow-sm font-semibold': isToday(day) && isCurrentMonth(i) && !isSelected(day, i)
          }">
             {{ day }}
         </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { ScheduleService } from '../../../services/schedule.service';
 import { SemesterService } from '../../../services/semester.service';
 import { AuthService } from '../../../auth.service';
@@ -34,7 +34,8 @@ export class UserScheduleComponent implements OnInit {
   constructor(
     private scheduleService: ScheduleService,
     private semesterService: SemesterService,
-    private authService: AuthService
+    private authService: AuthService,
+    private renderer: Renderer2
   ) { }
 
   ngOnInit(): void {
@@ -159,6 +160,7 @@ export class UserScheduleComponent implements OnInit {
 
   openSessionDetail(instanceId: number): void {
     this.showModal = true;
+    this.renderer.addClass(document.body, 'overflow-hidden');
     this.loadingModal = true;
     this.selectedSession = null;
     this.headerCheck = '';
@@ -185,12 +187,14 @@ export class UserScheduleComponent implements OnInit {
         console.error('Lỗi tải chi tiết buổi học:', err);
         this.loadingModal = false;
         this.showModal = false;
+        this.renderer.removeClass(document.body, 'overflow-hidden');
       }
     });
   }
 
   closeSessionDetail(): void {
     this.showModal = false;
+    this.renderer.removeClass(document.body, 'overflow-hidden');
     this.selectedSession = null;
     this.headerCheck = '';
   }

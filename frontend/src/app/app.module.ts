@@ -13,8 +13,6 @@ import { DashboardLayoutComponent } from './shared/layouts/dashboard-layout/dash
 import { UserLayoutComponent } from './shared/layouts/user-layout/user-layout.component';
 import { UsersComponent } from './components/admin/users/users.component';
 import { SemestersComponent } from './components/admin/semesters/semesters.component';
-import { SettingsComponent } from './shared/layouts/setting-layout/setting-layout.component';
-import { ProfileComponent } from './components/admin/profile/profile.component';
 import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
 import { FlashMessageComponent } from './shared/components/flash-message/flash-message.component';
@@ -48,17 +46,18 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     children: [
       { path: '', redirectTo: 'curriculum', pathMatch: 'full' },
-      { path: 'curriculum', component: CurriculumComponent },
-      { path: 'register-course', component: RegistrationComponent },
-      { path: 'grades', component: DashboardComponent },
-      { path: 'schedule', component: UserScheduleComponent },
-      { path: 'exams', component: DashboardComponent }
+      { path: 'curriculum', component: CurriculumComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },
+      { path: 'register-course', component: RegistrationComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },
+      { path: 'grades', component: DashboardComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },
+      { path: 'schedule', component: UserScheduleComponent, canActivate: [AuthGuard] },
+      { path: 'exams', component: DashboardComponent, canActivate: [AuthGuard] }
     ]
   },
   {
     path: 'dashboard',
     component: DashboardLayoutComponent,
     canActivate: [AuthGuard],
+    data: { role: 'ADMIN' },
     children: [
       { path: '', component: DashboardComponent },
       { path: 'users', component: UsersComponent },
@@ -76,19 +75,10 @@ const routes: Routes = [
       { path: 'exams', component: DashboardComponent },
       { path: 'grades', component: DashboardComponent },
       { path: 'reports', component: DashboardComponent },
-      { path: 'notifications', component: DashboardComponent },
-      {
-        path: 'settings',
-        component: SettingsComponent,
-        children: [
-          { path: '', redirectTo: 'profile', pathMatch: 'full' },
-          { path: 'profile', component: ProfileComponent },
-          { path: 'change-password', component: ChangePasswordComponent },
-          { path: 'notifications', component: ProfileComponent }
-        ]
-      }
+      { path: 'notifications', component: DashboardComponent }
     ]
   },
+  { path: 'change-password', component: ChangePasswordComponent, canActivate: [AuthGuard] },
   { path: 'oauth2/redirect', component: LoginPasswordComponent },
   { path: '**', redirectTo: '' }
 ];
@@ -106,8 +96,6 @@ const routes: Routes = [
     CourseClassesComponent,
     CurriculumsComponent,
     AdministrativeClassesComponent,
-    SettingsComponent,
-    ProfileComponent,
     ForgotPasswordComponent,
     ResetPasswordComponent,
     ChangePasswordComponent,

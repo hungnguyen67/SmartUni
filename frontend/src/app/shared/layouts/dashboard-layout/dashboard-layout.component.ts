@@ -57,9 +57,6 @@ export class DashboardLayoutComponent implements OnInit {
     else if (this.isGroupActive(['/dashboard/semesters', '/dashboard/sections', '/dashboard/schedules', '/dashboard/exams'])) {
       this.openMenuName = 'operation';
     }
-    else if (this.isGroupActive(['/dashboard/registrations', '/dashboard/grades', '/dashboard/attendance'])) {
-      this.openMenuName = 'learning';
-    }
     else {
       this.openMenuName = null;
     }
