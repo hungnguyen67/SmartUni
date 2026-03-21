@@ -8,6 +8,7 @@ import java.util.List;
 public class CourseClassDTO {
     private Long id;
     private String classCode;
+    private String className;
     private Long subjectId;
     private Long lecturerId;
     private Long targetClassId;
@@ -128,6 +129,14 @@ public class CourseClassDTO {
 
     public void setClassCode(String classCode) {
         this.classCode = classCode;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
     }
 
     public Long getSubjectId() {

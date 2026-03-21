@@ -45,7 +45,7 @@ const routes: Routes = [
     component: UserLayoutComponent,
     canActivate: [AuthGuard],
     children: [
-      { path: '', redirectTo: 'curriculum', pathMatch: 'full' },
+      { path: '', redirectTo: 'schedule', pathMatch: 'full' },
       { path: 'curriculum', component: CurriculumComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },
       { path: 'register-course', component: RegistrationComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },
       { path: 'grades', component: DashboardComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },

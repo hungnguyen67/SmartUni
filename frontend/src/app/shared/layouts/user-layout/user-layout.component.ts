@@ -21,7 +21,24 @@ export class UserLayoutComponent implements OnInit {
 
   ngOnInit() {
     this.loadUserData();
-    this.autoOpenMenuBasedOnUrl(this.router.url);
+
+    // Khôi phục trạng thái sidebar
+    const sidebarState = sessionStorage.getItem('userSidebarState');
+    if (sidebarState !== null) {
+      this.isSidebarOpen = sidebarState === 'open';
+    }
+
+    // Khôi phục trạng thái menu
+    if (this.isSidebarOpen) {
+      const savedMenu = sessionStorage.getItem('userMenuState');
+      if (savedMenu !== null) {
+        this.openMenuName = savedMenu === 'closed' ? null : savedMenu;
+      } else {
+        this.autoOpenMenuBasedOnUrl(this.router.url);
+      }
+    } else {
+      this.openMenuName = null;
+    }
   }
 
   autoOpenMenuBasedOnUrl(url: string) {
@@ -30,7 +47,9 @@ export class UserLayoutComponent implements OnInit {
     } else if (url.includes('/home/schedule') || url.includes('/home/exams')) {
       this.openMenuName = 'schedule';
     } else if (url.includes('/home/register-course')) {
-      this.openMenuName = 'registration';
+      this.openMenuName = 'register';
+    } else if (url.includes('/home/course-classes') || url.includes('/home/administrative-classes')) {
+      this.openMenuName = 'teaching';
     } else {
       this.openMenuName = null;
     }
@@ -42,10 +61,17 @@ export class UserLayoutComponent implements OnInit {
 
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
+    sessionStorage.setItem('userSidebarState', this.isSidebarOpen ? 'open' : 'closed');
+
     if (!this.isSidebarOpen) {
       this.openMenuName = null;
     } else {
-      this.autoOpenMenuBasedOnUrl(this.router.url);
+      const savedMenu = sessionStorage.getItem('userMenuState');
+      if (savedMenu !== null) {
+         this.openMenuName = savedMenu === 'closed' ? null : savedMenu;
+      } else {
+         this.autoOpenMenuBasedOnUrl(this.router.url);
+      }
     }
   }
 
@@ -53,10 +79,12 @@ export class UserLayoutComponent implements OnInit {
     event.stopPropagation();
     if (!this.isSidebarOpen) {
       this.isSidebarOpen = true;
+      sessionStorage.setItem('userSidebarState', 'open');
       this.openMenuName = menuName;
     } else {
       this.openMenuName = this.openMenuName === menuName ? null : menuName;
     }
+    sessionStorage.setItem('userMenuState', this.openMenuName ? this.openMenuName : 'closed');
   }
 
   isMenuOpen(menuName: string): boolean {
@@ -89,6 +117,7 @@ export class UserLayoutComponent implements OnInit {
 
   logout() {
     localStorage.clear();
+    sessionStorage.clear();
     this.currentUser = null;
     this.router.navigate(['/login'], {
       queryParams: { message: 'Đăng xuất thành công!' }

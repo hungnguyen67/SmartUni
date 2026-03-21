@@ -23,9 +23,9 @@ public class CurriculumController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CurriculumDTO> getCurriculumById(@PathVariable Long id) {
-        return curriculumService.getCurriculumById(id) != null ?
-                ResponseEntity.ok(curriculumService.getCurriculumById(id)) :
-                ResponseEntity.notFound().build();
+        return curriculumService.getCurriculumById(id) != null
+                ? ResponseEntity.ok(curriculumService.getCurriculumById(id))
+                : ResponseEntity.notFound().build();
     }
 
     @GetMapping("/major/{majorId}")
@@ -36,6 +36,16 @@ public class CurriculumController {
     @GetMapping("/{id}/details")
     public List<com.example.demo.dto.KnowledgeBlockDetailDTO> getCurriculumDetails(@PathVariable Long id) {
         return curriculumService.getCurriculumDetails(id);
+    }
+
+    @PostMapping
+    public CurriculumDTO createCurriculum(@RequestBody CurriculumDTO curriculumDTO) {
+        return curriculumService.createCurriculum(curriculumDTO);
+    }
+
+    @PutMapping("/{id}")
+    public CurriculumDTO updateCurriculum(@PathVariable Long id, @RequestBody CurriculumDTO curriculumDTO) {
+        return curriculumService.updateCurriculum(id, curriculumDTO);
     }
 
     @DeleteMapping("/{id}")

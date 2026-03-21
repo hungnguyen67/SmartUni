@@ -12,18 +12,6 @@
 
         <nav class="flex-1 py-4 px-3 overflow-y-auto custom-sidebar">
             <div class="space-y-1.5">
-                <!-- Đăng ký học phần (Link trực tiếp giống Tổng quan) -->
-                <a *ngIf="currentUser?.role === 'STUDENT'" routerLink="/home/register-course"
-                    routerLinkActive="bg-blue-50 text-blue-700 !rounded-lg" #rlaReg="routerLinkActive"
-                    class="flex items-center px-4 py-2 gap-2 text-slate-600 font-semibold hover:bg-slate-50 hover:text-blue-600 transition-all rounded-lg group">
-                    <i class="fas fa-edit text-lg w-6 transition-colors pt-0.5"
-                        [class.text-blue-700]="rlaReg.isActive"></i>
-                    <span *ngIf="isSidebarOpen" class="text-[14px] leading-tight flex-1 transition-colors"
-                        [class.text-blue-700]="rlaReg.isActive">
-                        Đăng ký học phần
-                    </span>
-                </a>
-
                 <!-- Góc học tập -->
                 <div *ngIf="currentUser?.role === 'STUDENT'" class="relative">
                     <div (click)="toggleMenu('study', $event)"
@@ -55,7 +43,65 @@
                     </div>
                 </div>
 
-                <!-- Thời khóa biểu -->
+                <div *ngIf="currentUser?.role === 'STUDENT'" class="relative">
+                    <div (click)="toggleMenu('register', $event)"
+                        [class.bg-blue-50]="isParentActive(['/home/register-course'])"
+                        [class.text-blue-700]="isParentActive(['/home/register-course'])"
+                        class="w-full flex items-center px-4 py-2 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all font-semibold cursor-pointer rounded-lg group">
+                        <div class="flex items-center gap-2 flex-1">
+                            <i class="fas fa-edit text-lg w-6 pt-0.5 transition-colors"
+                                [class.text-blue-700]="isParentActive(['/home/register-course'])"></i>
+                            <span *ngIf="isSidebarOpen" class="text-[14px] flex-1 transition-colors"
+                                [class.text-blue-700]="isParentActive(['/home/register-course'])">
+                                Đăng ký trực tuyến
+                            </span>
+                        </div>
+                        <i *ngIf="isSidebarOpen" class="fas fa-chevron-right text-[10px] transition-all ml-2"
+                            [class.rotate-90]="openMenuName === 'register'"
+                            [class.text-blue-700]="isParentActive(['/home/register-course'])"></i>
+                    </div>
+
+                    <div *ngIf="isMenuOpen('register')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+                        <a routerLink="/home/register-course"
+                            routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                            class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                            Đăng ký học phần
+                        </a>
+                    </div>
+                </div>
+
+                <div *ngIf="currentUser?.role === 'LECTURER'" class="relative">
+                    <div (click)="toggleMenu('teaching', $event)"
+                        [class.bg-blue-50]="isParentActive(['/home/course-classes', '/home/administrative-classes'])"
+                        [class.text-blue-700]="isParentActive(['/home/course-classes', '/home/administrative-classes'])"
+                        class="w-full flex items-center px-4 py-2 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all font-semibold cursor-pointer rounded-lg group">
+                        <div class="flex items-center gap-2 flex-1">
+                            <i class="fas fa-chalkboard-teacher text-lg w-6 pt-0.5 transition-colors"
+                                [class.text-blue-700]="isParentActive(['/home/course-classes', '/home/administrative-classes'])"></i>
+                            <span *ngIf="isSidebarOpen" class="text-[14px] flex-1 transition-colors leading-tight"
+                                [class.text-blue-700]="isParentActive(['/home/course-classes', '/home/administrative-classes'])">
+                                Quản lý Giảng dạy
+                            </span>
+                        </div>
+                        <i *ngIf="isSidebarOpen" class="fas fa-chevron-right text-[10px] transition-all ml-2"
+                            [class.rotate-90]="openMenuName === 'teaching'"
+                            [class.text-blue-700]="isParentActive(['/home/course-classes', '/home/administrative-classes'])"></i>
+                    </div>
+
+                    <div *ngIf="isMenuOpen('teaching')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+                        <a routerLink="/home/course-classes"
+                            routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                            class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                            Quản lý Lớp HP
+                        </a>
+                        <a routerLink="/home/administrative-classes"
+                            routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                            class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                            Quản lý Lớp HC
+                        </a>
+                    </div>
+                </div>
+
                 <div class="relative">
                     <div (click)="toggleMenu('schedule', $event)"
                         [class.bg-blue-50]="isParentActive(['/home/schedule', '/home/exams'])"
@@ -121,12 +167,12 @@
                         </div>
                         <div class="px-1.5 space-y-0.5">
                             <a routerLink="/change-password"
-                                class="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-slate-50 transition-colors">
-                                <i class="fas fa-key text-[12px]"></i> <span>Đổi mật khẩu</span>
+                                class="flex items-center gap-3 px-3 py-2 text-sm hover:bg-slate-100 transition-colors">
+                                <i class="fas fa-key text-[12px]"></i> <span>Thay đổi mật khẩu</span>
                             </a>
                             <div class="pt-1 mt-1 border-t border-slate-100">
                                 <button (click)="logout()"
-                                    class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-slate-50 transition-colors">
+                                    class="flex w-full items-center gap-3 px-3 py-2 text-sm hover:bg-slate-100 transition-colors">
                                     <i class="fas fa-right-from-bracket text-[12px]"></i> <span>Đăng xuất</span>
                                 </button>
                             </div>

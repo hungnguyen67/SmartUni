@@ -61,14 +61,14 @@ public class CourseRegistrationService {
             if (cc.getSchedules() != null) {
                 dto.setSchedules(cc.getSchedules().stream()
                         .map(s -> new com.example.demo.dto.CourseClassDTO.ScheduleDTO(
-                                s.getDayOfWeek(), 
-                                s.getStartPeriod(), 
-                                s.getEndPeriod(), 
-                                s.getStartTime(), 
-                                s.getEndTime(), 
-                                s.getRoomName(), 
-                                s.getSessionType()
-                        )).collect(java.util.stream.Collectors.toList()));
+                                s.getDayOfWeek(),
+                                s.getStartPeriod(),
+                                s.getEndPeriod(),
+                                s.getStartTime(),
+                                s.getEndTime(),
+                                s.getRoomName(),
+                                s.getSessionType()))
+                        .collect(java.util.stream.Collectors.toList()));
             }
 
             LocalDate actualStart = instanceRepository.findMinDateByCourseClassId(cc.getId());
@@ -80,7 +80,8 @@ public class CourseRegistrationService {
                 dto.setSubjectName(cc.getSubject().getName());
                 dto.setSubjectId(cc.getSubject().getId());
                 dto.setCredits(cc.getSubject().getCredits());
-                dto.setSubjectType("Bắt buộc"); // Mặc định hoặc lấy từ metadata nếu có
+                dto.setSubjectType("Bắt buộc");
+                dto.setClassStatus(cc.getClassStatus().name());
             }
         }
 

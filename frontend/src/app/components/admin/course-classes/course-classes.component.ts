@@ -111,9 +111,17 @@ export class CourseClassesComponent implements OnInit {
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent) {
         const target = event.target as HTMLElement;
-        if (!target.closest('.relative')) {
+        if (!target.closest('.filter-menu-wrapper') && !target.closest('.relative')) {
             this.showFilter = false;
             this.activeDropdown = '';
+        }
+    }
+
+    handleBackdropClick(event: MouseEvent): void {
+        if (event.target === event.currentTarget) {
+            this.closeModal();
+            this.isDeleteModalOpen = false;
+            this.isSelectionModalOpen = false;
         }
     }
 
@@ -660,20 +668,26 @@ export class CourseClassesComponent implements OnInit {
 
     getStatusClass(status: string): string {
         switch (status) {
-            case 'PLANNING': return 'bg-slate-50 text-slate-600 border-slate-200';
-            case 'OPEN_REGISTRATION': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-            case 'FULL': return 'bg-orange-50 text-orange-700 border-orange-200';
-            case 'CANCELLED': return 'bg-red-50 text-red-700 border-red-200';
-            case 'CLOSED': return 'bg-blue-50 text-blue-700 border-blue-200';
+            case 'PLANNING': return 'bg-[#f3f4f6] text-[#6b7280] border-[#d1d5db]';
+            case 'OPEN_REGISTRATION': return 'bg-[#f0fdf4] text-[#16a34a] border-[#22c55e]';
+            case 'FULL': return 'bg-[#fff7ed] text-[#ea580c] border-[#f97316]';
+            case 'ONGOING': return 'bg-[#eff6ff] text-[#2563eb] border-[#3b82f6]';
+            case 'GRADING': return 'bg-[#faf5ff] text-[#9333ea] border-[#a855f7]';
+            case 'COMPLETED': return 'bg-[#f0fdfa] text-[#0d9488] border-[#14b8a6]';
+            case 'CANCELLED': return 'bg-[#fef2f2] text-[#dc2626] border-[#ef4444]';
+            case 'CLOSED': return 'bg-[#f9fafb] text-[#4b5563] border-[#9ca3af]';
             default: return 'bg-slate-50 text-slate-500 border-slate-100';
         }
     }
 
     getStatusLabel(status: string): string {
         switch (status) {
-            case 'PLANNING': return 'Kế hoạch';
+            case 'PLANNING': return 'Lên kế hoạch';
             case 'OPEN_REGISTRATION': return 'Mở đăng ký';
-            case 'FULL': return 'Lớp đã đầy';
+            case 'FULL': return 'Đã đầy';
+            case 'ONGOING': return 'Đang học';
+            case 'GRADING': return 'Đang lên điểm';
+            case 'COMPLETED': return 'Đã hoàn thành';
             case 'CANCELLED': return 'Đã hủy';
             case 'CLOSED': return 'Đã đóng';
             default: return status;

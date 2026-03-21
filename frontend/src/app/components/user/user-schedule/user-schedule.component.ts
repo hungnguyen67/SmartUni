@@ -23,6 +23,16 @@ export class UserScheduleComponent implements OnInit {
     6: '12:00', 7: '13:00', 8: '14:00', 9: '15:00', 10: '16:00',
     11: '17:00', 12: '18:00', 13: '19:00', 14: '20:00', 15: '21:00', 16: '22:00', 17: '23:00'
   };
+  realPeriodTimes: { [key: number]: string } = {
+    1: '07:00', 2: '07:55', 3: '08:50', 4: '09:45', 5: '10:40',
+    6: '13:00', 7: '13:55', 8: '14:50', 9: '15:45', 10: '16:40',
+    11: '17:35', 12: '18:30', 13: '19:25', 14: '20:20', 15: '21:15', 16: '22:10', 17: '23:05'
+  };
+  periodEndTimes: { [key: number]: string } = {
+    1: '07:50', 2: '08:45', 3: '09:40', 4: '10:35', 5: '11:30',
+    6: '13:55', 7: '14:50', 8: '15:45', 9: '16:40', 10: '17:30',
+    11: '18:25', 12: '19:20', 13: '20:15', 14: '21:10', 15: '22:05', 16: '23:00', 17: '23:55'
+  };
   weekDays: any[] = [];
   currentWeekStart: Date = new Date();
   attendanceCodeInput: string = '';
@@ -88,8 +98,9 @@ export class UserScheduleComponent implements OnInit {
       next: (res) => {
         this.scheduleItems = res;
         this.loading = false;
+        this.updateDisplayedPeriods();
         if (this.scheduleItems.length === 0) {
-          this.errorMessage = 'Không có lịch nào trong học kỳ này.';
+          this.errorMessage = 'Không có lịch nào trong trần này.';
         }
       },
       error: (err) => {
@@ -125,6 +136,47 @@ export class UserScheduleComponent implements OnInit {
         fullDate: new Date(d)
       });
     }
+    this.updateDisplayedPeriods();
+  }
+
+  updateDisplayedPeriods(): void {
+    if (!this.scheduleItems || this.scheduleItems.length === 0) {
+      this.periods = [];
+      return;
+    }
+
+    const currentWeekDates = this.weekDays.map(d => d.isoDate);
+    const itemsThisWeek = this.scheduleItems.filter(i => currentWeekDates.includes(i.scheduleDate));
+
+    if (itemsThisWeek.length === 0) {
+      this.periods = [];
+      return;
+    }
+
+    let minMins = 24 * 60;
+    let maxMins = 0;
+
+    for (const item of itemsThisWeek) {
+      const sMins = this.timeToMinutes(this.getStartTime(item));
+      const eMins = this.timeToMinutes(this.getEndTime(item));
+      if (sMins < minMins) minMins = sMins;
+      if (eMins > maxMins) maxMins = eMins;
+    }
+
+    let minHour = Math.floor(minMins / 60);
+    let maxHour = Math.ceil(maxMins / 60);
+
+    if (minHour < 7) minHour = 7;
+    if (maxHour > 23) maxHour = 23;
+
+    const startP = Math.max(1, minHour - 6);
+    const endP = Math.min(17, maxHour - 6);
+
+    const newPeriods = [];
+    for (let i = startP; i <= endP; i++) {
+       newPeriods.push(i);
+    }
+    this.periods = newPeriods;
   }
 
   previousWeek(): void {
@@ -207,8 +259,22 @@ export class UserScheduleComponent implements OnInit {
   }
 
   getItemHeight(item: any): number {
-    const span = (item.endPeriod - item.startPeriod) + 1;
-    return span * 64;
+    const startMins = this.timeToMinutes(this.getStartTime(item));
+    const endMins = this.timeToMinutes(this.getEndTime(item));
+    return ((endMins - startMins) / 60) * 64;
+  }
+
+  getTopOffset(item: any): number {
+    const startMins = this.timeToMinutes(this.getStartTime(item));
+    const rowMins = this.timeToMinutes(this.getPeriodTime(item.startPeriod));
+    // Cộng 32px do label thời gian ở cột bên trái đã được căn nguyên bản ở Vertical Center (nửa dòng h-16)
+    return ((startMins - rowMins) / 60) * 64 + 32;
+  }
+
+  timeToMinutes(timeStr: string): number {
+    if (!timeStr) return 0;
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + m;
   }
 
   getSubjectColor(subjectName: string): string {
@@ -220,12 +286,30 @@ export class UserScheduleComponent implements OnInit {
     return colors[Math.abs(hash) % colors.length];
   }
 
-  getEndTime(item: any): string {
-    const endPeriod = item.endPeriod;
-    if (this.periodTimes[endPeriod + 1]) {
-      return this.periodTimes[endPeriod + 1];
+  formatBackendTime(time: any): string {
+    if (!time) return '';
+    if (Array.isArray(time)) {
+      return `${String(time[0]).padStart(2, '0')}:${String(time[1]).padStart(2, '0')}`;
     }
-    const [h, m] = this.periodTimes[endPeriod].split(':').map(Number);
+    return time.length > 5 ? time.substring(0, 5) : time;
+  }
+
+  getStartTime(item: any): string {
+    if (item.startTime) {
+      return this.formatBackendTime(item.startTime);
+    }
+    return this.realPeriodTimes[item.startPeriod] || '';
+  }
+
+  getEndTime(item: any): string {
+    if (item.endTime) {
+      return this.formatBackendTime(item.endTime);
+    }
+    const endPeriod = item.endPeriod;
+    if (this.periodEndTimes[endPeriod]) {
+      return this.periodEndTimes[endPeriod];
+    }
+    const [h, m] = (this.realPeriodTimes[endPeriod] || '07:00').split(':').map(Number);
     return `${h + 1}:${m.toString().padStart(2, '0')}`;
   }
 
@@ -282,7 +366,7 @@ export class UserScheduleComponent implements OnInit {
 
   onStatusChange(student: any, status: string, isChecked: boolean, isBulk: boolean = false): void {
     if (!isBulk) {
-      this.headerCheck = ''; 
+      this.headerCheck = '';
     }
 
     // Reset everything first
@@ -292,9 +376,9 @@ export class UserScheduleComponent implements OnInit {
     student.tempStatus = null;
 
     if (!isChecked && !isBulk) {
-        // Toggled off
-        student.sessionAbsentPeriods = 0;
-        return;
+      // Toggled off
+      student.sessionAbsentPeriods = 0;
+      return;
     }
 
     // Set new status
@@ -319,16 +403,16 @@ export class UserScheduleComponent implements OnInit {
   }
   toggleAllStatus(status: string): void {
     if (!this.selectedSession || !this.selectedSession.students) return;
-    
+
     if (this.headerCheck === status) {
       // Second click on same header checkbox -> CLEAR EVERYONE
       this.headerCheck = '';
       this.selectedSession.students.forEach((student: any) => {
-          student.excused = false;
-          student.absent = false;
-          student.present = false;
-          student.tempStatus = null;
-          student.sessionAbsentPeriods = 0;
+        student.excused = false;
+        student.absent = false;
+        student.present = false;
+        student.tempStatus = null;
+        student.sessionAbsentPeriods = 0;
       });
     } else {
       const targetStatus = status;

@@ -1,8 +1,9 @@
-import { Component, OnInit, HostListener } from '@angular/core'; // Thêm HostListener
+import { Component, OnInit, HostListener, ChangeDetectorRef } from '@angular/core'; // Thêm ChangeDetectorRef
 import { AuthService } from '../../../auth.service';
 import { HttpClient } from '@angular/common/http';
 import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
 import { MajorService } from '../../../services/major.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-users',
@@ -28,6 +29,7 @@ export class UsersComponent implements OnInit {
   activeDropdown = '';
   showFilter = false;
 
+
   // Invite/Delete states
   inviteEmail = '';
   inviteRole = 'STUDENT';
@@ -41,7 +43,9 @@ export class UsersComponent implements OnInit {
     private http: HttpClient,
     private auth: AuthService,
     private flashMessage: FlashMessageService,
-    private majorService: MajorService
+    private majorService: MajorService,
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) { }
 
   ngOnInit() {
@@ -54,7 +58,16 @@ export class UsersComponent implements OnInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (!target.closest('.relative')) {
+    if (!target.closest('.filter-menu-wrapper')) {
+      this.showFilter = false;
+      this.activeDropdown = '';
+    }
+  }
+
+  toggleFilter(event: MouseEvent) {
+    event.stopPropagation();
+    this.showFilter = !this.showFilter;
+    if (!this.showFilter) {
       this.activeDropdown = '';
     }
   }
@@ -145,6 +158,7 @@ export class UsersComponent implements OnInit {
       next: (res: any) => {
         this.inviting = false;
         this.flashMessage.success(res.message);
+        this.resetFilters();
         this.closeInviteModal();
         this.loadUsers();
       },
@@ -161,6 +175,7 @@ export class UsersComponent implements OnInit {
     this.auth.deleteUser(this.userToDelete.id).subscribe({
       next: () => {
         this.flashMessage.success(`Đã xóa ${this.userToDelete.name}`);
+        this.resetFilters();
         this.closeDeleteModal();
         this.loadUsers();
       },
@@ -195,6 +210,7 @@ export class UsersComponent implements OnInit {
     }
   }
 
+
   // Display Helpers
   getStatusName(status: string): string {
     const map: any = { 'ACTIVE': 'Đang hoạt động', 'LOCKED': 'Đã khóa', 'DISABLED': 'Vô hiệu hóa' };
@@ -212,4 +228,13 @@ export class UsersComponent implements OnInit {
       next: (res: any) => this.availableRoles = res.roles || []
     });
   }
-}
+
+  resetFilters() {
+    this.searchTerm = '';
+    this.filterRole = '';
+    this.filterStatus = '';
+    this.filterVerified = '';
+    this.filterFaculty = '';
+    this.onSearch();
+  }
+}

@@ -18,15 +18,22 @@ public class CourseRegistrationDTO {
     private Double totalScore;
     private String gradeLetter;
     private Double gradePoint;
-
-    // New fields
     private String lecturerName;
     private List<CourseClassDTO.ScheduleDTO> schedules;
     private LocalDate startDate;
     private LocalDate endDate;
-    private String subjectType; // Bắt buộc / Tự chọn
+    private String subjectType;
+    private String classStatus;
 
     public CourseRegistrationDTO() {
+    }
+
+    public String getClassStatus() {
+        return classStatus;
+    }
+
+    public void setClassStatus(String classStatus) {
+        this.classStatus = classStatus;
     }
 
     public Long getId() {

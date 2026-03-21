@@ -5,15 +5,17 @@ import java.util.List;
 public class KnowledgeBlockDetailDTO {
     private Long blockId;
     private String blockName;
+    private String blockCode;
     private Integer creditsRequired;
     private String blockType;
     private List<CurriculumSubjectComponentDTO> subjects;
 
     public KnowledgeBlockDetailDTO() {}
 
-    public KnowledgeBlockDetailDTO(Long blockId, String blockName, Integer creditsRequired, String blockType, List<CurriculumSubjectComponentDTO> subjects) {
+    public KnowledgeBlockDetailDTO(Long blockId, String blockName, String blockCode, Integer creditsRequired, String blockType, List<CurriculumSubjectComponentDTO> subjects) {
         this.blockId = blockId;
         this.blockName = blockName;
+        this.blockCode = blockCode;
         this.creditsRequired = creditsRequired;
         this.blockType = blockType;
         this.subjects = subjects;
@@ -24,6 +26,9 @@ public class KnowledgeBlockDetailDTO {
 
     public String getBlockName() { return blockName; }
     public void setBlockName(String blockName) { this.blockName = blockName; }
+
+    public String getBlockCode() { return blockCode; }
+    public void setBlockCode(String blockCode) { this.blockCode = blockCode; }
 
     public Integer getCreditsRequired() { return creditsRequired; }
     public void setCreditsRequired(Integer creditsRequired) { this.creditsRequired = creditsRequired; }

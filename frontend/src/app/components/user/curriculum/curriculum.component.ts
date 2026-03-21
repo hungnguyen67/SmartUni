@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { CurriculumService, CurriculumDTO, KnowledgeBlockDetailDTO } from '../../../services/curriculum.service';
+import { CurriculumService, CurriculumDTO, KnowledgeBlockDetailDTO, CurriculumSubjectComponentDTO } from '../../../services/curriculum.service';
 import { AuthService } from '../../../auth.service';
 
 @Component({
@@ -12,13 +12,8 @@ export class CurriculumComponent implements OnInit {
     selectedCurriculumId: number | null = null;
     curriculumDetails: KnowledgeBlockDetailDTO[] = [];
 
-    optionalBlocks = [
-        { name: 'QP&AN', details: 'Tổng số HP: 1; Tổng số TC: 8' },
-        { name: 'GDTC', details: 'Tổng số HP: 8; Tổng số TC: 8; Số TC bắt buộc: 3' },
-        { name: 'Tiếng Anh', details: 'Tổng số HP: 20; Tổng số TC: 96' },
-        { name: 'Chuyên ngành (Tự chọn)', details: 'Tổng số HP: 20; Tổng số TC: 60; Số TC bắt buộc: 12' }
-    ];
-
+    mandatoryBlocks: any[] = [];
+    electiveBlocks: any[] = [];
     loading = false;
     error: string | null = null;
     totalCredits = 0;
@@ -89,12 +84,53 @@ export class CurriculumComponent implements OnInit {
         });
     }
 
+    flatSubjects: CurriculumSubjectComponentDTO[] = [];
+
     onCurriculumChange(): void {
         if (this.selectedCurriculumId) {
             this.loading = true;
             this.curriculumService.getCurriculumDetails(this.selectedCurriculumId).subscribe({
                 next: (data) => {
                     this.curriculumDetails = data || [];
+                    this.flatSubjects = [];
+
+                    // Phân loại các khối kiến thức
+                    this.mandatoryBlocks = this.curriculumDetails.filter(b => b.blockType === 'MANDATORY').map(b => {
+                        const totalHP = b.subjects?.length || 0;
+                        const totalTC = b.subjects?.reduce((sum, s) => sum + (s.credits || 0), 0) || 0;
+                        return {
+                            blockId: b.blockId,
+                            name: b.blockName,
+                            details: `Tổng số HP: ${totalHP} ; Tổng số TC: ${totalTC}`
+                        };
+                    });
+
+                    this.electiveBlocks = this.curriculumDetails.filter(b => b.blockType === 'ELECTIVE').map(b => {
+                        const totalHP = b.subjects?.length || 0;
+                        const totalTC = b.subjects?.reduce((sum, s) => sum + (s.credits || 0), 0) || 0;
+                        const required = b.creditsRequired ? `; Số TC bắt buộc: ${b.creditsRequired}` : '';
+                        return {
+                            blockId: b.blockId,
+                            name: b.blockName,
+                            details: `Tổng số HP: ${totalHP}; Tổng số TC: ${totalTC} ${required}`
+                        };
+                    });
+
+                    // Gộp tất cả môn học thành danh sách phẳng (giữ logic cũ)
+                    this.curriculumDetails.forEach(block => {
+                        if (block.subjects) {
+                            block.subjects.forEach(subject => {
+                                this.flatSubjects.push({
+                                    ...subject,
+                                    blockCode: block.blockCode
+                                });
+                            });
+                        }
+                    });
+
+                    // Sắp xếp toàn bộ môn học theo học kỳ dự kiến tăng dần
+                    this.flatSubjects.sort((a, b) => a.semester - b.semester);
+
                     this.calculateTotalCredits();
                     this.loading = false;
                 },
@@ -104,6 +140,14 @@ export class CurriculumComponent implements OnInit {
                 }
             });
         }
+    }
+
+    getGlobalIndex(blockIndex: number, subjectIndex: number): number {
+        let count = 0;
+        for (let i = 0; i < blockIndex; i++) {
+            count += this.curriculumDetails[i].subjects?.length || 0;
+        }
+        return count + subjectIndex + 1;
     }
 
     calculateTotalCredits(): void {

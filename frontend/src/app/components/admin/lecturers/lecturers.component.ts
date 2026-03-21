@@ -1,6 +1,7 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { LecturerService, LecturerDTO } from '../../../services/lecturer.service';
 import { FacultyService, FacultyDTO } from '../../../services/faculty.service';
+import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
 
 @Component({
     selector: 'app-lecturers',
@@ -19,13 +20,15 @@ export class LecturersComponent implements OnInit {
     
     showFilter: boolean = false;
     activeDropdown: string = '';
+    loading: boolean = false;
 
     currentPage: number = 1;
     itemsPerPage: number = 10;
 
     constructor(
         private lecturerService: LecturerService,
-        private facultyService: FacultyService
+        private facultyService: FacultyService,
+        private flashMessage: FlashMessageService
     ) { }
 
     ngOnInit(): void {
@@ -36,19 +39,33 @@ export class LecturersComponent implements OnInit {
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent) {
         const target = event.target as HTMLElement;
-        if (!target.closest('.relative')) {
+        if (!target.closest('.filter-menu-wrapper')) {
+            this.showFilter = false;
             this.activeDropdown = '';
         }
     }
 
+    toggleFilter(event: MouseEvent): void {
+        event.stopPropagation();
+        this.showFilter = !this.showFilter;
+    }
+
     loadFaculties(): void {
-        this.facultyService.getFaculties().subscribe(data => this.faculties = data);
+        this.facultyService.getFaculties().subscribe((data: FacultyDTO[]) => this.faculties = data);
     }
 
     loadLecturers(): void {
-        this.lecturerService.getLecturers(this.searchTerm, this.filterFaculty || undefined).subscribe(data => {
-            this.lecturers = data;
-            this.applyFilters();
+        this.loading = true;
+        this.lecturerService.getLecturers(this.searchTerm, this.filterFaculty || undefined).subscribe({
+            next: (data: LecturerDTO[]) => {
+                this.lecturers = data;
+                this.applyFilters();
+                this.loading = false;
+            },
+            error: (err: any) => {
+                this.loading = false;
+                this.flashMessage.handleError(err);
+            }
         });
     }
 
@@ -111,8 +128,15 @@ export class LecturersComponent implements OnInit {
     }
 
     getStatusLabel(status: string): string {
-        const map: any = { 'WORKING': 'Đang giảng dạy', 'ON_LEAVE': 'Nghỉ phép', 'RESIGNED': 'Thôi việc', 'RETIRED': 'Nghỉ hưu' };
-        return map[status] || status || 'Chưa cập nhật';
+        const s = status || 'ALL';
+        const map: any = { 
+            'WORKING': 'Đang giảng dạy', 
+            'ON_LEAVE': 'Nghỉ phép', 
+            'RESIGNED': 'Thôi việc', 
+            'RETIRED': 'Nghỉ hưu',
+            'ALL': 'Tất cả trạng thái'
+        };
+        return map[s] || s;
     }
 
     getStatusClass(status: string): string {
@@ -138,4 +162,4 @@ export class LecturersComponent implements OnInit {
     openAddModal(): void {
         console.log('Open Add Modal');
     }
-}
+}

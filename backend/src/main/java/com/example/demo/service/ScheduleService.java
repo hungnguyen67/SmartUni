@@ -218,6 +218,7 @@ public class ScheduleService {
         if (inst.getCourseClass() != null) {
             detail.setClassId(inst.getCourseClass().getId());
             detail.setClassCode(inst.getCourseClass().getClassCode());
+            detail.setClassName(inst.getCourseClass().getClassName());
             if (inst.getCourseClass().getSubject() != null) {
                 detail.setSubjectName(inst.getCourseClass().getSubject().getName());
             }
@@ -334,6 +335,7 @@ public class ScheduleService {
         if (inst.getCourseClass() != null) {
             dto.setClassId(inst.getCourseClass().getId());
             dto.setClassCode(inst.getCourseClass().getClassCode());
+            dto.setClassName(inst.getCourseClass().getClassName());
             if (inst.getCourseClass().getSubject() != null) {
                 dto.setSubjectName(inst.getCourseClass().getSubject().getName());
                 dto.setSubjectId(inst.getCourseClass().getSubject().getId());

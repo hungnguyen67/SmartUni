@@ -15,6 +15,9 @@ public class CourseClass {
     @Column(name = "class_code", unique = true, nullable = false, length = 100)
     private String classCode;
 
+    @Column(name = "class_name", nullable = false, length = 200)
+    private String className;
+
     @ManyToOne
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
@@ -87,7 +90,7 @@ public class CourseClass {
     private List<ClassSchedulePattern> schedules;
 
     public enum ClassStatus {
-        PLANNING, OPEN_REGISTRATION, FULL, CANCELLED, CLOSED
+        PLANNING, OPEN_REGISTRATION, FULL, ONGOING, GRADING, COMPLETED, CANCELLED, CLOSED
     }
 
     public CourseClass() {
@@ -107,6 +110,14 @@ public class CourseClass {
 
     public void setClassCode(String classCode) {
         this.classCode = classCode;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
     }
 
     public Subject getSubject() {

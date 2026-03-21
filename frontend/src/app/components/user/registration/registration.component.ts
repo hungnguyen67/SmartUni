@@ -59,7 +59,6 @@ export class RegistrationComponent implements OnInit {
         this.semesterService.getAllSemesters().subscribe(res => {
             this.semesters = res;
             if (this.semesters.length > 0) {
-                // Cố gắng chọn học kỳ đang diễn ra hoặc học kỳ mới nhất
                 const ongoing = this.semesters.find(s => s.semesterStatus === 'ONGOING' || s.semesterStatus === 'UPCOMING');
                 this.selectedSemesterId = ongoing ? ongoing.id : this.semesters[0].id;
                 this.onSemesterChange();
@@ -94,7 +93,10 @@ export class RegistrationComponent implements OnInit {
     loadRegisteredClasses() {
         if (!this.selectedSemesterId || !this.currentUser) return;
         this.registrationService.getRegistrationsByStudentAndSemester(this.currentUser.id, this.selectedSemesterId).subscribe(res => {
-            this.registeredClasses = res;
+            this.registeredClasses = (res || []).filter(reg => {
+                const status = (reg.classStatus || '').toUpperCase();
+                return status !== 'CLOSED' && status !== 'CANCELLED';
+            });
         });
     }
 
@@ -108,7 +110,18 @@ export class RegistrationComponent implements OnInit {
         this.currentSubject = subject;
         this.courseClassService.getClassDetails(this.selectedSemesterId, subject.subjectId).subscribe({
             next: (res) => {
-                this.subjectClasses = res;
+                const filtered = (res || []).filter((cc: any) => {
+                    const status = (cc.classStatus || '').toUpperCase();
+                    return status === 'OPEN_REGISTRATION' || status === 'FULL';
+                });
+
+                if (filtered.length === 0) {
+                    this.flashMessage.error('Học phần này hiện không có lớp mở đăng ký');
+                    this.loading = false;
+                    return;
+                }
+
+                this.subjectClasses = filtered;
                 this.isClassSelectionMode = true;
                 this.loading = false;
             },
@@ -147,7 +160,7 @@ export class RegistrationComponent implements OnInit {
 
     formatSchedule(schedules: any[], startDate?: string, endDate?: string): string {
         if (!schedules || schedules.length === 0) return 'Chưa có lịch';
-        
+
         const dayNames: { [key: number]: string } = {
             2: 'Thứ Hai', 3: 'Thứ Ba', 4: 'Thứ Tư', 5: 'Thứ Năm', 6: 'Thứ Sáu', 7: 'Thứ Bảy', 8: 'Chủ Nhật'
         };
@@ -161,19 +174,19 @@ export class RegistrationComponent implements OnInit {
         const getEndTime = (startTime: string) => {
             if (!startTime) return '??:??';
             const [h, m] = startTime.split(':').map(Number);
-            const totalMinutes = h * 60 + m + 50; // Mỗi tiết 50 phút
+            const totalMinutes = h * 60 + m + 50;
             const endH = Math.floor(totalMinutes / 60);
             const endM = totalMinutes % 60;
             return `${endH < 10 ? '0' + endH : endH}:${endM < 10 ? '0' + endM : endM}`;
         };
-        
-        const dateRange = (startDate && endDate) 
-            ? `, ${new Date(startDate).toLocaleDateString('en-GB')}->${new Date(endDate).toLocaleDateString('en-GB')}` 
+
+        const dateRange = (startDate && endDate)
+            ? `, ${new Date(startDate).toLocaleDateString('en-GB')}->${new Date(endDate).toLocaleDateString('en-GB')}`
             : '';
 
         const scheduleStrings = schedules.map(s => {
             const dayName = dayNames[s.dayOfWeek] || `Thứ ${s.dayOfWeek}`;
-            
+
             const formatTimeStr = (timeStr: string) => {
                 if (!timeStr) return '';
                 const parts = timeStr.split(':');
@@ -190,13 +203,12 @@ export class RegistrationComponent implements OnInit {
             } else {
                 timeDisplay = 'Chưa xác định';
             }
-                
+
             return `${dayName}, ${timeDisplay}, ${s.roomName || 'N/A'}`;
         });
 
-        // Deduplicate strings in case there are identical entries
         const uniqueSchedules = [...new Set(scheduleStrings)];
-        
+
         return uniqueSchedules.join('; ') + dateRange;
     }
 
@@ -206,7 +218,7 @@ export class RegistrationComponent implements OnInit {
             next: () => {
                 this.flashMessage.success('Hủy đăng ký thành công!');
                 this.loadRegisteredClasses();
-                this.loadAvailableClasses(); // Cập nhật sĩ số
+                this.loadAvailableClasses();
             },
             error: (err) => {
                 this.flashMessage.error('Lỗi khi hủy đăng ký');
@@ -216,9 +228,9 @@ export class RegistrationComponent implements OnInit {
 
     changeClass(reg: any) {
         if (!reg.subjectId) return;
-        const mockSubject = { 
-            subjectId: reg.subjectId, 
-            subjectName: reg.subjectName 
+        const mockSubject = {
+            subjectId: reg.subjectId,
+            subjectName: reg.subjectName
         };
         this.onSelectSubject(mockSubject);
     }

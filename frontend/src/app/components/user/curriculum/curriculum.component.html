@@ -1,151 +1,149 @@
-<div class="bg-white rounded-lg shadow-sm border border-slate-200">
-    <div class="flex flex-col h-full p-4 font-sans bg-white">
-        <div class="text-[12px] text-slate-500 mb-4 flex items-center">
-            Góc học tập &nbsp; <i class="fas fa-chevron-right text-[8px] mx-1"></i> &nbsp;
-            <span class="font-bold text-[#1f2f5c]">Chương trình học</span>
-        </div>
+<div class="flex flex-col lg:flex-row gap-6 items-start">
+    <div class="flex-1 w-full lg:w-[72%] bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <h1 class="text-lg font-bold text-[#2d3a82]">Nội dung học phần theo chương trình</h1>
 
-        <div class="flex flex-col lg:flex-row gap-6 items-start">
-            <div class="flex-1 w-full lg:w-[72%] bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
-                    <h2 class="text-[15px] font-bold text-semibold">Nội dung học phần theo chương trình:</h2>
-
-                    <div *ngIf="curriculums.length > 0" class="min-w-[250px]">
-                        <div *ngIf="curriculums.length === 1"
-                            class="px-4 py-1.5 bg-blue-50 text-blue-700 font-bold rounded-lg text-[13px] border border-blue-100 text-center">
-                            {{ curriculums[0].curriculumName }}
-                        </div>
-                        <select *ngIf="curriculums.length > 1" [(ngModel)]="selectedCurriculumId"
-                            (change)="onCurriculumChange()"
-                            class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-[13px] text-slate-700 outline-none focus:ring-2 focus:ring-blue-100 cursor-pointer">
-                            <option *ngFor="let curr of curriculums" [value]="curr.id">{{ curr.curriculumName }}
-                            </option>
-                        </select>
+            <div *ngIf="curriculums.length > 0" class="min-w-[500px]">
+                <div class="relative border border-slate-300 rounded-md px-3 py-1 bg-white w-full">
+                    <div *ngIf="curriculums.length === 1"
+                        class="w-full bg-transparent border-none text-[13px] text-slate-700 font-semibold py-1 px-2.5">
+                        {{ curriculums[0].curriculumName }}
                     </div>
-                </div>
-
-                <div *ngIf="!loading; else loader" class="border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full table-auto border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200">
-                                    <th
-                                        class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-r border-slate-100 text-center">
-                                        STT</th>
-                                    <th
-                                        class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-r border-slate-100 text-center">
-                                        Mã học phần</th>
-                                    <th
-                                        class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-r border-slate-100">
-                                        Tên học phần</th>
-                                    <th
-                                        class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-r border-slate-100">
-                                        Khối KT</th>
-                                    <th
-                                        class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-r border-slate-100 text-center">
-                                        Số tín học phần</th>
-                                    <th
-                                        class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-r border-slate-100">
-                                        Điều kiện ràng buộc</th>
-                                    <th
-                                        class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-r border-slate-100">
-                                        Học kỳ dự kiến</th>
-                                    <th
-                                        class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-r border-slate-100 text-center">
-                                        Chi tiết</th>
-                                </tr>
-                            </thead>
-
-                            <tbody *ngFor="let block of curriculumDetails" class="divide-y divide-slate-100">
-                                <tr *ngFor="let subject of block.subjects; let i = index"
-                                    class="hover:bg-blue-50/30 transition-colors border-b border-slate-100">
-                                    <td class="px-4 py-3 text-sm text-slate-900 border-r border-slate-100 text-center">
-                                        {{ i + 1 }}
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-slate-900 border-r border-slate-100 text-center">
-                                        {{ subject.subjectCode }}</td>
-                                    <td class="px-4 py-3 text-sm text-slate-900 border-r border-slate-100">{{
-                                        subject.subjectName }}</td>
-                                    <td class="px-4 py-3 text-sm text-slate-900 border-r border-slate-100 text-center">
-                                        CNTC
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-slate-900 border-r border-slate-100 text-center">
-                                        {{ subject.credits }}</td>
-                                    <td class="px-4 py-3 text-sm text-slate-900 border-r border-slate-100 text-center">
-                                        <span *ngIf="subject.prerequisites?.length">Học trước: {{
-                                            subject.prerequisites.join(', ') }}</span>
-                                    </td>
-                                    <td class="px-2 py-3 text-center border-r border-slate-100 text-slate-500">{{
-                                        subject.semester }}</td>
-                                    <td class="px-2 py-3 text-center border-r border-slate-100">
-                                        <button (click)="navigateToDetail(subject.subjectId)"
-                                            class="text-slate-300 hover:text-blue-600 transition-all">
-                                            <i class="fas fa-external-link-alt"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="mt-5 p-4 bg-slate-50 rounded-lg flex justify-between items-center border border-slate-100">
-                    <span class="text-[14px] text-slate-600 font-medium">Tổng kết chương trình đào tạo:</span>
-                    <span class="text-[16px] font-bold text-blue-600">{{ totalCredits }} Tín chỉ</span>
                 </div>
             </div>
+        </div>
 
-            <aside class="w-full lg:w-[28%] space-y-5">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-[#1f2f5c] px-4 py-3.5 flex items-center gap-2 text-white text-[13px] font-bold">
-                        <i class="fas fa-list-ul text-[10px]"></i> Các khối lựa chọn bắt buộc
-                    </div>
-                    <div class="p-1">
-                        <div *ngFor="let block of curriculumDetails" (click)="scrollToBlock(block.blockId)"
-                            class="flex items-center p-3 rounded-lg hover:bg-blue-50 cursor-pointer group transition-all border-b border-slate-50 last:border-0">
-                            <div
-                                class="w-8 h-8 shrink-0 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                <i class="fas fa-book-open text-xs"></i>
-                            </div>
-                            <div class="ml-3 overflow-hidden">
-                                <div
-                                    class="text-[13px] font-bold text-slate-700 group-hover:text-blue-600 truncate transition-colors">
-                                    {{ block.blockName }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div *ngIf="!loading; else loader" class="border border-slate-200 overflow-hidden mb-6">
+            <div class="max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar bg-white">
+                <table class="w-full table-auto border-collapse text-[13px]">
+                    <thead class="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 shadow-sm">
+                        <tr>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">STT</th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">Mã học phần</th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">Tên học phần</th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Khối KT</th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Số TC</th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Điều kiện ràng buộc
+                            </th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Học kỳ dự kiến</th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Chi tiết</th>
+                        </tr>
+                    </thead>
 
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-orange-500 px-4 py-3.5 flex items-center gap-2 text-white text-[13px] font-bold">
-                        <i class="fas fa-layer-group text-[10px]"></i> Các khối lựa chọn đơn
-                    </div>
-                    <div class="p-1">
-                        <div *ngFor="let item of optionalBlocks"
-                            class="flex items-center p-3 rounded-lg hover:bg-orange-50 cursor-pointer group transition-all border-b border-slate-50 last:border-0">
-                            <div
-                                class="w-8 h-8 shrink-0 bg-orange-50 rounded-lg flex items-center justify-center text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all">
-                                <i class="fas fa-star text-xs"></i>
-                            </div>
-                            <div class="ml-3">
-                                <div
-                                    class="text-[13px] font-bold text-slate-700 group-hover:text-orange-600 transition-colors">
-                                    {{ item.name }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </aside>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr *ngFor="let subject of flatSubjects; let i = index"
+                            class="transition-colors border-b border-slate-100">
+                            <td class="px-4 py-4 text-sm text-slate-900 text-center">
+                                {{ i + 1 }}
+                            </td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-left">
+                                {{ subject.subjectCode }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-left">{{
+                                subject.subjectName }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-center">
+                                {{ subject.blockCode }}
+                            </td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-center">
+                                {{ subject.credits }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-left">
+                                <span *ngIf="subject.prerequisites?.length">Học trước({{
+                                    subject.prerequisites.join(', ') }})</span>
+                            </td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-center">
+                                {{ subject.semester }}
+                            </td>
+                            <td class="px-2 py-4 text-center">
+                                <button (click)="navigateToDetail(subject.subjectId)"
+                                    class="text-slate-700 hover:text-blue-600 transition-all">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-5 mb-2">
+            <span class="text-[16px] font-semibold text-slate-800">
+                Tổng số tín chỉ: {{ totalCredits }}
+            </span>
         </div>
     </div>
 
-    <ng-template #loader>
-        <div
-            class="flex flex-col items-center justify-center py-24 text-slate-400 gap-4 bg-white rounded-xl border border-slate-200">
-            <div class="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
-            <p class="text-[14px] font-semibold text-slate-500 tracking-wide">Đang tải dữ liệu...</p>
+    <aside class="w-full lg:w-[20%] space-y-5">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-[#1f2f5c] px-4 py-3.5 flex items-center gap-2 text-white text-[15px] font-bold">
+                <i class="fas fa-list-ul text-[12px]"></i> Các khối lựa chọn bắt buộc
+            </div>
+            <div class="p-1">
+                <div *ngFor="let block of mandatoryBlocks" (click)="scrollToBlock(block.blockId)"
+                    class="flex items-start px-3 py-3 cursor-pointer group transition-all border-b border-slate-50">
+                    <div class="w-8 h-8 shrink-0 flex items-center justify-center text-slate-500 transition-all mt-0.5">
+                        <i class="fas fa-layer-group text-xs"></i>
+                    </div>
+                    <div class="ml-3 overflow-hidden">
+                        <div
+                            class="text-[14px] font-semibold text-slate-900 truncate transition-colors group-hover:text-blue-600">
+                            {{ block.name }}
+                        </div>
+                        <div class="text-[12px] text-slate-600 mt-0.5 leading-relaxed">
+                            {{ block.details }}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </ng-template>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-orange-500 px-4 py-3.5 flex items-center gap-2 text-white text-[15px] font-bold">
+                <i class="fas fa-layer-group text-[12px]"></i> Các khối lựa chọn đơn
+            </div>
+            <div class="p-1">
+                <div *ngFor="let item of electiveBlocks" (click)="scrollToBlock(item.blockId)"
+                    class="flex items-start px-3 py-3 cursor-pointer group transition-all border-b border-slate-50">
+                    <div class="w-8 h-8 shrink-0 flex items-center justify-center text-slate-500 transition-all mt-0.5">
+                        <i class="fas fa-layer-group text-xs"></i>
+                    </div>
+                    <div class="ml-3 overflow-hidden">
+                        <div
+                            class="text-[14px] font-semibold text-slate-900 truncate transition-colors group-hover:text-blue-600">
+                            {{ item.name }}
+                        </div>
+                        <div class="text-[12px] text-slate-600 mt-0.5 leading-relaxed">
+                            {{ item.details }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
 </div>
+
+
+<ng-template #loader>
+    <div class="flex flex-col items-center justify-center py-24 text-slate-400 gap-4 bg-white border-slate-200">
+        <div class="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+        <p class="text-[14px] font-semibold text-slate-500 tracking-wide">Đang tải dữ liệu...</p>
+    </div>
+</ng-template>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 0;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>

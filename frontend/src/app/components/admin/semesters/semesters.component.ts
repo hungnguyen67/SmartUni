@@ -1,5 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { Semester, SemesterService } from '../../../services/semester.service';
+import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
 
 @Component({
     selector: 'app-semesters',
@@ -8,7 +9,6 @@ import { Semester, SemesterService } from '../../../services/semester.service';
 export class SemestersComponent implements OnInit {
     semesters: Semester[] = [];
     filteredSemesters: Semester[] = [];
-    paginatedSemesters: Semester[] = [];
     loading = true;
 
     currentPage: number = 1;
@@ -17,19 +17,24 @@ export class SemestersComponent implements OnInit {
     searchTerm: string = '';
     selectedYear: string = '';
     selectedStatus: string = '';
+    selectedSemesterOrder: number | '' = '';
     academicYears: string[] = [];
 
+    showModal: boolean = false;
+    isEditing: boolean = false;
+    showFilter: boolean = false;
+    showDeleteModal: boolean = false;
+    deletingSemester: boolean = false;
     activeDropdown: string = '';
-
-    isEditModalOpen = false;
-    isDeleteModalOpen = false;
-    showFilter = false;
-    modalMode: 'ADD' | 'EDIT' = 'ADD';
     currentSemester: any = this.getEmptySemester();
     semesterToDeleteId: number | null = null;
-    isSubmitting = false;
+    savingSemester: boolean = false;
+    originalSemester: any = null;
 
-    constructor(private semesterService: SemesterService) { }
+    constructor(
+        private semesterService: SemesterService,
+        private flashMessage: FlashMessageService
+    ) { }
 
     ngOnInit(): void {
         this.loadSemesters();
@@ -38,9 +43,24 @@ export class SemestersComponent implements OnInit {
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent) {
         const target = event.target as HTMLElement;
-        if (!target.closest('.relative')) {
+        if (!target.closest('.filter-menu-wrapper')) {
             this.showFilter = false;
             this.activeDropdown = '';
+        }
+    }
+
+    toggleFilter(event: MouseEvent) {
+        event.stopPropagation();
+        this.showFilter = !this.showFilter;
+        if (!this.showFilter) {
+            this.activeDropdown = '';
+        }
+    }
+
+    handleBackdropClick(event: MouseEvent): void {
+        if (event.target === event.currentTarget) {
+            this.closeModal();
+            this.closeDeleteModal();
         }
     }
 
@@ -60,9 +80,7 @@ export class SemestersComponent implements OnInit {
                     return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
                 });
                 this.extractAcademicYears();
-                if (!this.selectedYear && this.academicYears.length > 0) {
-                    this.selectedYear = this.academicYears[0];
-                }
+                this.selectedYear = '';
                 this.onFilterChange();
                 this.loading = false;
             },
@@ -87,38 +105,36 @@ export class SemestersComponent implements OnInit {
 
             const matchesYear = !this.selectedYear || s.academicYear === this.selectedYear;
             const matchesStatus = !this.selectedStatus || s.semesterStatus === this.selectedStatus;
+            const matchesOrder = this.selectedSemesterOrder === '' || s.semesterOrder === this.selectedSemesterOrder;
 
-            return matchesSearch && matchesYear && matchesStatus;
+            return matchesSearch && matchesYear && matchesStatus && matchesOrder;
         });
 
         this.currentPage = 1;
-        this.updatePagination();
     }
 
     resetFilters(): void {
         this.searchTerm = '';
-        this.selectedYear = this.academicYears.length > 0 ? this.academicYears[0] : '';
+        this.selectedYear = '';
         this.selectedStatus = '';
+        this.selectedSemesterOrder = '';
         this.onFilterChange();
     }
 
-    updatePagination(): void {
-        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-        const endIndex = startIndex + this.itemsPerPage;
-        this.paginatedSemesters = this.filteredSemesters.slice(startIndex, endIndex);
+    get paginatedSemesters(): Semester[] {
+        const start = (this.currentPage - 1) * this.itemsPerPage;
+        return this.filteredSemesters.slice(start, start + this.itemsPerPage);
     }
 
     nextPage(): void {
         if (this.currentPage < this.totalPages) {
             this.currentPage++;
-            this.updatePagination();
         }
     }
 
     prevPage(): void {
         if (this.currentPage > 1) {
             this.currentPage--;
-            this.updatePagination();
         }
     }
 
@@ -135,65 +151,94 @@ export class SemestersComponent implements OnInit {
     }
 
     openAddModal(): void {
-        this.modalMode = 'ADD';
+        this.isEditing = false;
         this.currentSemester = this.getEmptySemester();
-        this.isEditModalOpen = true;
+        this.showModal = true;
     }
 
     openEditModal(semester: Semester): void {
-        this.modalMode = 'EDIT';
+        this.isEditing = true;
         this.currentSemester = { ...semester };
-        this.isEditModalOpen = true;
+        this.originalSemester = { ...semester };
+        this.showModal = true;
     }
 
-    closeEditModal(): void {
-        this.isEditModalOpen = false;
+    closeModal(): void {
+        this.showModal = false;
     }
 
     saveSemester(): void {
-        if (!this.currentSemester.name || !this.currentSemester.academicYear) return;
-        this.isSubmitting = true;
-        const obs = this.modalMode === 'ADD'
+        if (!this.currentSemester.name) {
+            this.flashMessage.error('Vui lòng nhập tên học kỳ');
+            return;
+        }
+        if (!this.currentSemester.academicYear) {
+            this.flashMessage.error('Vui lòng nhập năm học');
+            return;
+        }
+
+        if (this.isEditing && this.isUnchanged()) {
+            this.flashMessage.info('Không có thay đổi nào để cập nhật');
+            return;
+        }
+
+        this.savingSemester = true;
+        const obs = !this.isEditing
             ? this.semesterService.createSemester(this.currentSemester)
             : this.semesterService.updateSemester(this.currentSemester.id, this.currentSemester);
 
         obs.subscribe({
             next: () => {
                 this.loadSemesters();
-                this.closeEditModal();
-                this.isSubmitting = false;
+                this.closeModal();
+                this.savingSemester = false;
+                this.flashMessage.success(this.isEditing ? 'Cập nhật học kỳ thành công' : 'Thêm học kỳ thành công');
             },
             error: (err) => {
                 console.error('Error saving semester', err);
-                this.isSubmitting = false;
+                this.savingSemester = false;
+                this.flashMessage.error('Có lỗi xảy ra khi lưu học kỳ');
             }
         });
     }
 
     openDeleteConfirmation(id: number): void {
         this.semesterToDeleteId = id;
-        this.isDeleteModalOpen = true;
+        this.currentSemester = this.semesters.find(s => s.id === id) || this.getEmptySemester();
+        this.showDeleteModal = true;
     }
 
     closeDeleteModal(): void {
-        this.isDeleteModalOpen = false;
+        this.showDeleteModal = false;
         this.semesterToDeleteId = null;
+        this.deletingSemester = false;
     }
 
     confirmDelete(): void {
         if (this.semesterToDeleteId === null) return;
-        this.isSubmitting = true;
+        this.deletingSemester = true;
         this.semesterService.deleteSemester(this.semesterToDeleteId).subscribe({
             next: () => {
                 this.loadSemesters();
                 this.closeDeleteModal();
-                this.isSubmitting = false;
+                this.flashMessage.success('Xóa học kỳ thành công');
             },
             error: (err) => {
                 console.error('Error deleting semester', err);
-                this.isSubmitting = false;
+                this.deletingSemester = false;
+                this.flashMessage.error('Không thể xóa học kỳ này. Vui lòng thử lại sau');
             }
         });
+    }
+
+    private isUnchanged(): boolean {
+        if (!this.originalSemester) return false;
+        return this.currentSemester.name === this.originalSemester.name &&
+            this.currentSemester.academicYear === this.originalSemester.academicYear &&
+            this.currentSemester.semesterOrder === this.originalSemester.semesterOrder &&
+            this.currentSemester.startDate === this.originalSemester.startDate &&
+            this.currentSemester.endDate === this.originalSemester.endDate &&
+            this.currentSemester.semesterStatus === this.originalSemester.semesterStatus;
     }
 
     getStatusClass(status: string): string {

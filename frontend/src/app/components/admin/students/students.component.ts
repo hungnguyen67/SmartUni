@@ -2,6 +2,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { StudentDTO, StudentService } from '../../../services/student.service';
 import { MajorDTO, MajorService } from '../../../services/major.service';
 import { AdministrativeClassDTO, AdministrativeClassService } from '../../../services/administrative-class.service';
+import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
 
 @Component({
     selector: 'app-students',
@@ -12,9 +13,11 @@ export class StudentsComponent implements OnInit {
     paginatedStudents: StudentDTO[] = [];
     majors: MajorDTO[] = [];
     classes: AdministrativeClassDTO[] = [];
+    enrollmentYears: number[] = [];
 
     activeDropdown: string = '';
     showFilter: boolean = false;
+    loading: boolean = false;
 
     filters = {
         searchTerm: '',
@@ -27,56 +30,76 @@ export class StudentsComponent implements OnInit {
     };
 
     currentPage = 1;
-    pageSize = 10;
+    itemsPerPage = 10;
 
     constructor(
         private studentService: StudentService,
         private majorService: MajorService,
-        private classService: AdministrativeClassService
+        private classService: AdministrativeClassService,
+        private flashMessage: FlashMessageService
     ) { }
 
     ngOnInit(): void {
         this.loadMajors();
         this.loadClasses();
+        this.loadEnrollmentYears();
         this.loadStudents();
     }
 
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent) {
         const target = event.target as HTMLElement;
-        if (!target.closest('.relative')) {
+        if (!target.closest('.filter-menu-wrapper')) {
+            this.showFilter = false;
             this.activeDropdown = '';
         }
     }
 
+    toggleFilter(event: MouseEvent): void {
+        event.stopPropagation();
+        this.showFilter = !this.showFilter;
+    }
+
     loadMajors(): void {
-        this.majorService.getMajors().subscribe(data => this.majors = data);
+        this.majorService.getMajors().subscribe((data: MajorDTO[]) => this.majors = data);
     }
 
     loadClasses(): void {
-        this.classService.getClasses().subscribe(data => this.classes = data);
+        this.classService.getClasses().subscribe((data: AdministrativeClassDTO[]) => this.classes = data);
+    }
+
+    loadEnrollmentYears(): void {
+        this.studentService.getEnrollmentYears().subscribe((data: number[]) => this.enrollmentYears = data);
     }
 
     loadStudents(): void {
-        this.studentService.getStudents(this.filters).subscribe(data => {
-            this.students = data;
-            this.currentPage = 1;
-            this.updatePagination();
+        this.loading = true;
+        this.studentService.getStudents(this.filters).subscribe({
+            next: (data: StudentDTO[]) => {
+                this.students = data;
+                this.currentPage = 1;
+                this.updatePagination();
+                this.loading = false;
+            },
+            error: (err: any) => {
+                this.loading = false;
+                this.flashMessage.handleError(err);
+            }
         });
     }
 
     updatePagination(): void {
-        const startIndex = (this.currentPage - 1) * this.pageSize;
-        const endIndex = startIndex + this.pageSize;
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
         this.paginatedStudents = this.students.slice(startIndex, endIndex);
     }
 
     get totalPages(): number {
-        return Math.ceil(this.students.length / this.pageSize) || 1;
+        return Math.ceil(this.students.length / this.itemsPerPage) || 1;
     }
 
     get minEnd(): number {
-        return Math.min(this.currentPage * this.pageSize, this.students.length);
+        return Math.min(this.currentPage * this.itemsPerPage, this.students.length);
     }
 
     applyFilters(): void {
@@ -122,17 +145,22 @@ export class StudentsComponent implements OnInit {
         return clazz ? clazz.classCode : 'Tất cả các lớp';
     }
 
-    getSelectedStatusName(): string {
+    getSelectedYearLabel(): string {
+        if (!this.filters.enrollmentYear) return 'Tất cả các khóa';
+        return 'Khóa ' + this.filters.enrollmentYear;
+    }
+
+    getSelectedStatusLabel(): string {
         if (!this.filters.status) return 'Tất cả trạng thái';
         return this.getStatusName(this.filters.status);
     }
 
     getStatusBadgeClass(status: string): string {
         switch (status) {
-            case 'STUDYING': return 'bg-blue-50 text-blue-600 border-blue-200';
-            case 'GRADUATED': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            case 'STUDYING': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+            case 'GRADUATED': return 'bg-blue-50 text-blue-600 border-blue-200';
             case 'ACADEMIC_RESERVE': return 'bg-amber-50 text-amber-600 border-amber-200';
-            case 'DROPPED_OUT': 
+            case 'DROPPED_OUT':
             case 'SUSPENDED': return 'bg-red-50 text-red-600 border-red-200';
             default: return 'bg-slate-50 text-slate-600 border-slate-200';
         }
@@ -161,4 +189,4 @@ export class StudentsComponent implements OnInit {
     openAddModal(): void {
         console.log('Open Add Modal');
     }
-}
+}

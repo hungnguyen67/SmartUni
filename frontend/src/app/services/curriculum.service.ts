@@ -27,11 +27,13 @@ export interface CurriculumSubjectComponentDTO {
     prerequisites: string[];
     corequisites: string[];
     equivalents: string[];
+    blockCode?: string;
 }
 
 export interface KnowledgeBlockDetailDTO {
     blockId: number;
     blockName: string;
+    blockCode: string;
     creditsRequired: number;
     blockType: string;
     subjects: CurriculumSubjectComponentDTO[];
@@ -60,6 +62,14 @@ export class CurriculumService {
 
     getCurriculumDetails(id: number): Observable<KnowledgeBlockDetailDTO[]> {
         return this.http.get<KnowledgeBlockDetailDTO[]>(`${this.apiUrl}/${id}/details`);
+    }
+
+    createCurriculum(curriculum: CurriculumDTO): Observable<CurriculumDTO> {
+        return this.http.post<CurriculumDTO>(this.apiUrl, curriculum);
+    }
+
+    updateCurriculum(id: number, curriculum: CurriculumDTO): Observable<CurriculumDTO> {
+        return this.http.put<CurriculumDTO>(`${this.apiUrl}/${id}`, curriculum);
     }
 
     deleteCurriculum(id: number): Observable<void> {

@@ -19,6 +19,9 @@ public class KnowledgeBlock implements Serializable {
     @Column(name = "block_name", nullable = false)
     private String blockName;
 
+    @Column(name = "block_code")
+    private String blockCode;
+
     @Column(name = "credits_required")
     private Integer creditsRequired = 0;
 
@@ -40,6 +43,9 @@ public class KnowledgeBlock implements Serializable {
 
     public String getBlockName() { return blockName; }
     public void setBlockName(String blockName) { this.blockName = blockName; }
+
+    public String getBlockCode() { return blockCode; }
+    public void setBlockCode(String blockCode) { this.blockCode = blockCode; }
 
     public Integer getCreditsRequired() { return creditsRequired; }
     public void setCreditsRequired(Integer creditsRequired) { this.creditsRequired = creditsRequired; }

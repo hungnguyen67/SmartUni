@@ -2,6 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+export interface SubjectRelationDTO {
+    relationType: 'PREREQUISITE' | 'COREQUISITE' | 'EQUIVALENT';
+    subjectCode: string;
+    subjectName: string;
+}
+
 export interface SubjectDTO {
     id: number;
     subjectCode: string;
@@ -15,6 +21,7 @@ export interface SubjectDTO {
     status: string;
     createdAt?: string;
     updatedAt?: string;
+    relations?: SubjectRelationDTO[];
 }
 
 @Injectable({

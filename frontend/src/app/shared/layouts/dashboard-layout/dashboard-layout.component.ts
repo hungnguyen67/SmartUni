@@ -26,11 +26,33 @@ export class DashboardLayoutComponent implements OnInit {
 
   ngOnInit() {
     this.loadUserData();
-    this.autoOpenMenuBasedOnUrl(this.router.url);
+
+    const sidebarState = sessionStorage.getItem('adminSidebarState');
+    if (sidebarState !== null) {
+      this.isSidebarOpen = sidebarState === 'open';
+    }
+
+    if (this.isSidebarOpen) {
+      const savedMenu = sessionStorage.getItem('adminMenuState');
+      if (savedMenu !== null) {
+        this.openMenuName = savedMenu === 'closed' ? null : savedMenu;
+      } else {
+        this.autoOpenMenuBasedOnUrl(this.router.url);
+      }
+    } else {
+      this.openMenuName = null;
+    }
+
+    let isFirstLoad = true;
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
-      this.autoOpenMenuBasedOnUrl(event.urlAfterRedirects);
+      if (isFirstLoad) {
+        isFirstLoad = false;
+      } else {
+        this.autoOpenMenuBasedOnUrl(event.urlAfterRedirects);
+        sessionStorage.setItem('adminMenuState', this.openMenuName ? this.openMenuName : 'closed');
+      }
       this.updateTitle();
       this.cdr.detectChanges();
     });
@@ -88,8 +110,15 @@ export class DashboardLayoutComponent implements OnInit {
 
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
+    sessionStorage.setItem('adminSidebarState', this.isSidebarOpen ? 'open' : 'closed');
+
     if (this.isSidebarOpen) {
-      this.autoOpenMenuBasedOnUrl(this.router.url);
+      const savedMenu = sessionStorage.getItem('adminMenuState');
+      if (savedMenu !== null) {
+        this.openMenuName = savedMenu === 'closed' ? null : savedMenu;
+      } else {
+        this.autoOpenMenuBasedOnUrl(this.router.url);
+      }
     } else {
       this.openMenuName = null;
     }
@@ -99,10 +128,12 @@ export class DashboardLayoutComponent implements OnInit {
     event.stopPropagation();
     if (!this.isSidebarOpen) {
       this.isSidebarOpen = true;
+      sessionStorage.setItem('adminSidebarState', 'open');
       this.openMenuName = menuName;
     } else {
       this.openMenuName = this.openMenuName === menuName ? null : menuName;
     }
+    sessionStorage.setItem('adminMenuState', this.openMenuName ? this.openMenuName : 'closed');
   }
 
   toggleUserDropdown(event: Event) {
@@ -117,6 +148,7 @@ export class DashboardLayoutComponent implements OnInit {
 
   logout() {
     localStorage.clear();
+    sessionStorage.clear();
     this.currentUser = null;
     this.router.navigate(['/login'], {
       queryParams: { message: 'Đăng xuất thành công!' }

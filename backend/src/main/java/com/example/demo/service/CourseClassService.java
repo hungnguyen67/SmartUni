@@ -146,8 +146,8 @@ public class CourseClassService {
             AdministrativeClass ac = administrativeClassRepository.findById(d.getAdminClassId())
                     .orElseThrow(() -> new RuntimeException("Admin class not found"));
 
-            String semPart = sem.getAcademicYear().replace("-", "") + "K" + sem.getSemesterOrder();
-            String code = s.getSubjectCode() + "_" + ac.getClassCode() + "_" + semPart;
+            String code = s.getSubjectCode() + "." + sem.getSemesterOrder() + "." + sem.getStartDate().getYear() + "/" + ac.getClassCode();
+            String name = s.getName() + "." + sem.getSemesterOrder() + "." + sem.getStartDate().getYear() + "/" + ac.getClassCode();
 
             if (courseClassRepository.findByClassCode(code).isPresent())
                 continue;
@@ -160,6 +160,7 @@ public class CourseClassService {
             cc.setCurriculum(ac.getCurriculum());
             cc.setMaxStudents(40);
             cc.setClassCode(code);
+            cc.setClassName(name);
             cc.setLecturer(null);
             cc.setAttendanceWeight(0.10);
             cc.setMidtermWeight(0.30);
@@ -179,6 +180,21 @@ public class CourseClassService {
 
     private void updateEntityFromDTO(CourseClass cc, CourseClassDTO dto, Long semesterId) {
         cc.setClassCode(dto.getClassCode());
+        
+        Semester sem = semesterRepository.findById(semesterId)
+                .orElseThrow(() -> new RuntimeException("Semester not found"));
+
+        if (dto.getClassName() != null && !dto.getClassName().trim().isEmpty()) {
+            cc.setClassName(dto.getClassName());
+        } else if (cc.getClassName() == null || cc.getClassName().trim().isEmpty()) {
+            // Nếu chưa có tên lớp và DTO không gửi lên, tự sinh theo format chuẩn
+            String autoName = (cc.getSubject() != null ? cc.getSubject().getName() : "");
+            if (cc.getTargetClass() != null) {
+                autoName += "." + sem.getSemesterOrder() + "." + sem.getStartDate().getYear() + "/" + cc.getTargetClass().getClassCode();
+            }
+            cc.setClassName(autoName);
+        }
+        
         cc.setSubject(subjectRepository.findById(dto.getSubjectId())
                 .orElseThrow(() -> new RuntimeException("Subject not found")));
         if (dto.getLecturerId() != null) {
@@ -189,10 +205,6 @@ public class CourseClassService {
         }
         cc.setExpectedRoom(dto.getExpectedRoom());
         
-        Semester sem = semesterRepository.findById(semesterId)
-                .orElseThrow(() -> new RuntimeException("Semester not found"));
-        cc.setSemester(sem);
-
         cc.setMaxStudents(dto.getMaxStudents());
         cc.setCurrentEnrolled(dto.getCurrentEnrolled());
         cc.setAllowRegister(dto.getCurrentEnrolled() < dto.getMaxStudents());
@@ -237,6 +249,7 @@ public class CourseClassService {
         CourseClassDTO dto = new CourseClassDTO();
         dto.setId(cc.getId());
         dto.setClassCode(cc.getClassCode());
+        dto.setClassName(cc.getClassName());
         dto.setSubjectId(cc.getSubject().getId());
         dto.setSubjectName(cc.getSubject().getName());
         dto.setSubjectCode(cc.getSubject().getSubjectCode());

@@ -9,6 +9,7 @@ public class SessionDetailDTO {
     private Long classId;
     private String subjectName;
     private String classCode;
+    private String className;
     private LocalDate scheduleDate;
     private Integer startPeriod;
     private Integer endPeriod;
@@ -34,6 +35,9 @@ public class SessionDetailDTO {
 
     public String getClassCode() { return classCode; }
     public void setClassCode(String classCode) { this.classCode = classCode; }
+
+    public String getClassName() { return className; }
+    public void setClassName(String className) { this.className = className; }
 
     public LocalDate getScheduleDate() { return scheduleDate; }
     public void setScheduleDate(LocalDate scheduleDate) { this.scheduleDate = scheduleDate; }

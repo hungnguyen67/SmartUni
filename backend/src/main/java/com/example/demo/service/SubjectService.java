@@ -2,10 +2,14 @@ package com.example.demo.service;
 
 import com.example.demo.dto.SubjectDTO;
 import com.example.demo.model.Subject;
+import com.example.demo.dto.SubjectRelationDTO;
+import com.example.demo.repository.SubjectEquivalentRepository;
+import com.example.demo.repository.SubjectPrerequisiteRepository;
 import com.example.demo.repository.SubjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,6 +18,12 @@ public class SubjectService {
 
     @Autowired
     private SubjectRepository subjectRepository;
+
+    @Autowired
+    private SubjectPrerequisiteRepository prerequisiteRepository;
+
+    @Autowired
+    private SubjectEquivalentRepository equivalentRepository;
 
     public List<SubjectDTO> getAllSubjects() {
         return subjectRepository.findAll().stream()
@@ -68,6 +78,28 @@ public class SubjectService {
         dto.setStatus(subject.getStatus().name());
         dto.setCreatedAt(subject.getCreatedAt());
         dto.setUpdatedAt(subject.getUpdatedAt());
+
+        List<SubjectRelationDTO> relations = new ArrayList<>();
+        
+        // Fetch Prerequisites & Corequisites
+        prerequisiteRepository.findBySubjectId(subject.getId()).stream()
+                .map(p -> new SubjectRelationDTO(
+                        p.getIsCorequisite() ? "COREQUISITE" : "PREREQUISITE",
+                        p.getPrerequisiteSubject().getSubjectCode(),
+                        p.getPrerequisiteSubject().getName()
+                ))
+                .forEach(relations::add);
+        
+        // Fetch Equivalents
+        equivalentRepository.findBySubjectId(subject.getId()).stream()
+                .map(e -> new SubjectRelationDTO(
+                        "EQUIVALENT",
+                        e.getEquivalentSubject().getSubjectCode(),
+                        e.getEquivalentSubject().getName()
+                ))
+                .forEach(relations::add);
+
+        dto.setRelations(relations);
         return dto;
     }
 }

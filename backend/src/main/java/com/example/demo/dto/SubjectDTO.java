@@ -1,6 +1,7 @@
 package com.example.demo.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class SubjectDTO {
     private Long id;
@@ -15,6 +16,7 @@ public class SubjectDTO {
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<SubjectRelationDTO> relations;
 
     public SubjectDTO() {}
 
@@ -61,4 +63,7 @@ public class SubjectDTO {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public List<SubjectRelationDTO> getRelations() { return relations; }
+    public void setRelations(List<SubjectRelationDTO> relations) { this.relations = relations; }
 }

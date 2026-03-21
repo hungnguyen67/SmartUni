@@ -371,9 +371,22 @@ export class ScheduleComponent implements OnInit {
             11: '17:35', 12: '18:30', 13: '19:25', 14: '20:20', 15: '21:15', 16: '22:10', 17: '23:05'
         };
 
+        const periodEndTimes: { [key: number]: string } = {
+            1: '07:50', 2: '08:45', 3: '09:40', 4: '10:35', 5: '11:30',
+            6: '13:55', 7: '14:50', 8: '15:45', 9: '16:40', 10: '17:30',
+            11: '18:25', 12: '19:20', 13: '20:15', 14: '21:10', 15: '22:05', 16: '23:00', 17: '23:55'
+        };
+
         return data.map((item) => {
             const startTime = this.formatBackendTime(item.startTime || periodTimes[item.startPeriod] || '07:00');
-            const endTime = this.formatBackendTime(item.endTime || periodTimes[item.endPeriod] || '17:35');
+            
+            // Lấy thời gian bắt đầu của tiết tiếp theo làm mốc kết thúc cho tiết hiện tại
+            let defaultEndTime = periodEndTimes[item.endPeriod];
+            if (!defaultEndTime) {
+                const [h, m] = (periodTimes[item.endPeriod] || '07:00').split(':').map(Number);
+                defaultEndTime = `${h + 1}:${m.toString().padStart(2, '0')}`;
+            }
+            const endTime = this.formatBackendTime(item.endTime || defaultEndTime);
             const scheduleDate = this.formatBackendDate(item.scheduleDate);
 
             const startMinutes = this.timeToMinutes(startTime);

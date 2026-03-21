@@ -7,6 +7,7 @@ public class ClassScheduleInstanceDTO {
     private Long id;
     private Long classId;
     private String classCode;
+    private String className;
     private String subjectName;
     private LocalDate scheduleDate;
     private LocalTime startTime;
@@ -61,6 +62,14 @@ public class ClassScheduleInstanceDTO {
 
     public void setClassCode(String classCode) {
         this.classCode = classCode;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
     }
 
     public String getSubjectName() {

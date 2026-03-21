@@ -1,5 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { FacultyService, FacultyDTO } from '../../../services/faculty.service';
+import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
 
 @Component({
     selector: 'app-faculties',
@@ -18,18 +19,44 @@ export class FacultiesComponent implements OnInit {
     showModal: boolean = false;
     isEditing: boolean = false;
     showFilter: boolean = false;
+    showDeleteModal: boolean = false;
+    deletingFaculty: boolean = false;
     activeDropdown: string = '';
     currentFaculty: Partial<FacultyDTO> = {};
+    originalFaculty: FacultyDTO | null = null;
+    facultyToDelete: FacultyDTO | null = null;
+    savingFaculty: boolean = false;
+    selectedFaculty: FacultyDTO | null = null;
 
-    constructor(private facultyService: FacultyService) { }
+    constructor(
+        private facultyService: FacultyService,
+        private flashMessage: FlashMessageService
+    ) { }
 
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent) {
         const target = event.target as HTMLElement;
-        if (!target.closest('.relative')) {
+        if (!target.closest('.filter-menu-wrapper')) {
             this.showFilter = false;
             this.activeDropdown = '';
         }
+    }
+
+    toggleFilter(event: MouseEvent) {
+        event.stopPropagation();
+        this.showFilter = !this.showFilter;
+        if (!this.showFilter) {
+            this.activeDropdown = '';
+        }
+    }
+
+    getSelectedStatusLabel(): string {
+        const map: any = {
+            'ACTIVE': 'Đang hoạt động',
+            'INACTIVE': 'Ngưng hoạt động',
+            'DRAFT': 'Bản nháp'
+        };
+        return map[this.selectedStatus] || 'Tất cả Trạng thái';
     }
 
     ngOnInit(): void {
@@ -102,34 +129,107 @@ export class FacultiesComponent implements OnInit {
 
     editFaculty(faculty: FacultyDTO): void {
         this.isEditing = true;
+        this.originalFaculty = { ...faculty };
         this.currentFaculty = { ...faculty };
         this.showModal = true;
     }
 
-    closeModal(): void {
-        this.showModal = false;
+    hasChanges(): boolean {
+        if (!this.isEditing) return true;
+        if (!this.originalFaculty) return false;
+
+        return this.currentFaculty.facultyCode !== this.originalFaculty.facultyCode ||
+            this.currentFaculty.facultyName !== this.originalFaculty.facultyName ||
+            this.currentFaculty.description !== this.originalFaculty.description ||
+            this.currentFaculty.status !== this.originalFaculty.status;
     }
 
+    closeModal(): void {
+        this.showModal = false;
+        this.originalFaculty = null;
+    }
+
+    handleBackdropClick(event: MouseEvent): void {
+        if (event.target === event.currentTarget) {
+            this.closeModal();
+            this.closeDeleteModal();
+        }
+    }
+
+
     saveFaculty(): void {
+        if (!this.currentFaculty.facultyCode) {
+            this.flashMessage.error('Vui lòng nhập mã khoa');
+            return;
+        }
+        if (!this.currentFaculty.facultyName) {
+            this.flashMessage.error('Vui lòng nhập tên khoa');
+            return;
+        }
+
         if (this.isEditing) {
-            this.facultyService.updateFaculty(this.currentFaculty.id!, this.currentFaculty).subscribe(() => {
-                this.loadFaculties();
-                this.closeModal();
+            if (!this.hasChanges()) {
+                this.flashMessage.info('Không có thay đổi nào để cập nhật');
+                return;
+            }
+            this.savingFaculty = true;
+            this.facultyService.updateFaculty(this.currentFaculty.id!, this.currentFaculty).subscribe({
+                next: () => {
+                    this.flashMessage.success('Cập nhật khoa thành công');
+                    this.resetFilters();
+                    this.loadFaculties();
+                    this.closeModal();
+                    this.savingFaculty = false;
+                },
+                error: (err) => {
+                    this.savingFaculty = false;
+                    this.flashMessage.handleError(err);
+                }
             });
         } else {
-            this.facultyService.createFaculty(this.currentFaculty).subscribe(() => {
-                this.loadFaculties();
-                this.closeModal();
+            this.savingFaculty = true;
+            this.facultyService.createFaculty(this.currentFaculty).subscribe({
+                next: () => {
+                    this.flashMessage.success('Thêm khoa thành công');
+                    this.resetFilters();
+                    this.loadFaculties();
+                    this.closeModal();
+                    this.savingFaculty = false;
+                },
+                error: (err) => {
+                    this.savingFaculty = false;
+                    this.flashMessage.handleError(err);
+                }
             });
         }
     }
 
     deleteFaculty(faculty: FacultyDTO): void {
-        if (confirm(`Bạn có chắc chắn muốn xóa khoa ${faculty.facultyName}? Thao tác này có thể ảnh hưởng đến các chuyên ngành thuộc khoa này.`)) {
-            this.facultyService.deleteFaculty(faculty.id).subscribe(() => {
+        this.facultyToDelete = faculty;
+        this.showDeleteModal = true;
+    }
+
+    closeDeleteModal(): void {
+        this.showDeleteModal = false;
+        this.facultyToDelete = null;
+        this.deletingFaculty = false;
+    }
+
+    confirmDelete(): void {
+        if (!this.facultyToDelete) return;
+        this.deletingFaculty = true;
+        this.facultyService.deleteFaculty(this.facultyToDelete.id).subscribe({
+            next: () => {
+                this.flashMessage.success(`Đã xóa khoa ${this.facultyToDelete?.facultyName}`);
+                this.resetFilters();
                 this.loadFaculties();
-            });
-        }
+                this.closeDeleteModal();
+            },
+            error: (err) => {
+                this.deletingFaculty = false;
+                this.flashMessage.handleError(err);
+            }
+        });
     }
 
     getStatusLabel(status: string | undefined): string {
