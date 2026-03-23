@@ -34,6 +34,9 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
 
     long countByAdministrativeClassId(Long classId);
     
+    @Query("SELECT AVG(s.currentGpa) FROM StudentProfile s WHERE s.administrativeClass.id = :classId")
+    Double findAverageGpaByClassId(@Param("classId") Long classId);
+    
     @Query("SELECT DISTINCT s.enrollmentYear FROM StudentProfile s ORDER BY s.enrollmentYear ASC")
     List<Integer> findDistinctEnrollmentYears();
 }

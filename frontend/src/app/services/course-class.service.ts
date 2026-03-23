@@ -15,6 +15,7 @@ export interface CourseSubjectGroup {
 export interface CourseClass {
     id: number;
     classCode: string;
+    className: string;
     subjectId: number;
     subjectName: string;
     subjectCode: string;
@@ -36,6 +37,7 @@ export interface CourseClass {
     expectedRoom?: string;
     startDate?: string;
     endDate?: string;
+    cohort?: number;
     schedules: ClassSchedule[];
 }
 
@@ -65,6 +67,10 @@ export class CourseClassService {
 
     getClassesBySemester(semesterId: number): Observable<CourseClass[]> {
         return this.http.get<CourseClass[]>(`${this.apiUrl}?semesterId=${semesterId}`);
+    }
+
+    getClassesByLecturer(lecturerId: number, semesterId: number): Observable<CourseClass[]> {
+        return this.http.get<CourseClass[]>(`${this.apiUrl}/lecturer/${lecturerId}?semesterId=${semesterId}`);
     }
 
     getClassDetails(semesterId: number, subjectId: number): Observable<CourseClass[]> {
@@ -97,5 +103,9 @@ export class CourseClassService {
 
     generateAutoBatch(semesterId: number, demands: any[]): Observable<CourseClass[]> {
         return this.http.post<CourseClass[]>(`${this.apiUrl}/auto-batch?semesterId=${semesterId}`, demands);
+    }
+
+    updateStatus(id: number, status: string): Observable<void> {
+        return this.http.put<void>(`${this.apiUrl}/${id}/status?status=${status}`, {});
     }
 }

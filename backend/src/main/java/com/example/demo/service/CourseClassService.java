@@ -54,7 +54,7 @@ public class CourseClassService {
         if (studentId != null) {
             // 1. Chỉ lấy các lớp đang trong trạng thái Mở đăng ký cho sinh viên
             classes = classes.stream()
-                    .filter(cc -> cc.getClassStatus() == CourseClass.ClassStatus.OPEN_REGISTRATION)
+                    .filter(cc -> cc.getClassStatus() == CourseClass.ClassStatus.OPEN)
                     .collect(Collectors.toList());
 
             // 2. Lọc theo khung chương trình
@@ -102,6 +102,11 @@ public class CourseClassService {
         return classes.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
+    public List<CourseClassDTO> getClassesByLecturerAndSemester(Long lecturerId, Long semesterId) {
+        List<CourseClass> classes = courseClassRepository.findByLecturerUserIdAndSemesterId(lecturerId, semesterId);
+        return classes.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
     public CourseClassDTO createCourseClass(Long semesterId, CourseClassDTO dto) {
         CourseClass cc = new CourseClass();
         updateEntityFromDTO(cc, dto, semesterId);
@@ -112,9 +117,59 @@ public class CourseClassService {
     public CourseClassDTO updateCourseClass(Long id, CourseClassDTO dto) {
         CourseClass cc = courseClassRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Course class not found"));
+        
+        CourseClass.ClassStatus oldStatus = cc.getClassStatus();
         updateEntityFromDTO(cc, dto, cc.getSemester().getId());
+        CourseClass.ClassStatus newStatus = cc.getClassStatus();
+
         CourseClass updated = courseClassRepository.save(cc);
+
+        // Xử lý logic chuyển đổi trạng thái sinh viên
+        handleStatusTransition(updated, oldStatus, newStatus);
+        
         return convertToDTO(updated);
+    }
+
+    @Transactional
+    public void updateStatus(Long id, String statusStr) {
+        CourseClass cc = courseClassRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Course class not found"));
+        
+        CourseClass.ClassStatus oldStatus = cc.getClassStatus();
+        CourseClass.ClassStatus newStatus = CourseClass.ClassStatus.valueOf(statusStr);
+        
+        if (oldStatus == newStatus) return;
+
+        cc.setClassStatus(newStatus);
+        courseClassRepository.save(cc);
+        
+        handleStatusTransition(cc, oldStatus, newStatus);
+    }
+
+    private void handleStatusTransition(CourseClass cc, CourseClass.ClassStatus oldStatus, CourseClass.ClassStatus newStatus) {
+        // Giai đoạn 3: Giảng dạy (ONGOING)
+        // Khi lớp chuyển sang ONGOING, toàn bộ SV có status = 'REGISTERED' tự động chuyển sang STUDYING.
+        if (newStatus == CourseClass.ClassStatus.ONGOING) {
+            List<CourseRegistration> regs = registrationRepository.findByCourseClassId(cc.getId());
+            for (CourseRegistration reg : regs) {
+                if (reg.getStatus() == CourseRegistration.RegistrationStatus.REGISTERED) {
+                    reg.setStatus(CourseRegistration.RegistrationStatus.STUDYING);
+                    registrationRepository.save(reg);
+                }
+            }
+        }
+        
+        // Giai đoạn 5: Khóa sổ (CLOSED)
+        // Khi lớp chuyển sang CLOSED, toàn bộ SV có status = 'STUDYING' chuyển sang COMPLETED.
+        if (newStatus == CourseClass.ClassStatus.CLOSED) {
+            List<CourseRegistration> regs = registrationRepository.findByCourseClassId(cc.getId());
+            for (CourseRegistration reg : regs) {
+                if (reg.getStatus() == CourseRegistration.RegistrationStatus.STUDYING) {
+                    reg.setStatus(CourseRegistration.RegistrationStatus.COMPLETED);
+                    registrationRepository.save(reg);
+                }
+            }
+        }
     }
 
     public void deleteCourseClass(Long id) {
@@ -298,6 +353,7 @@ public class CourseClassService {
             if (cc.getTargetClass().getMajor() != null && dto.getMajorName() == null) {
                 dto.setMajorName(cc.getTargetClass().getMajor().getMajorName());
             }
+            dto.setCohort(cc.getTargetClass().getCohort());
         }
 
         return dto;

@@ -34,6 +34,8 @@ import { AdministrativeClassesComponent } from './components/admin/administrativ
 import { FacultiesComponent } from './components/admin/faculties/faculties.component';
 import { SubjectsComponent } from './components/admin/subjects/subjects.component';
 import { UserScheduleComponent } from './components/user/user-schedule/user-schedule.component';
+import { CourseClassComponent } from './components/user/course-class/course-class.component';
+import { AdministrativeClassComponent } from './components/user/administrative-class/administrative-class.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -50,6 +52,8 @@ const routes: Routes = [
       { path: 'register-course', component: RegistrationComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },
       { path: 'grades', component: DashboardComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },
       { path: 'schedule', component: UserScheduleComponent, canActivate: [AuthGuard] },
+      { path: 'course-classes', component: CourseClassComponent, canActivate: [AuthGuard], data: { role: 'LECTURER' } },
+      { path: 'administrative-classes', component: AdministrativeClassComponent, canActivate: [AuthGuard], data: { role: 'LECTURER' } },
       { path: 'exams', component: DashboardComponent, canActivate: [AuthGuard] }
     ]
   },
@@ -111,7 +115,9 @@ const routes: Routes = [
     PasswordInputComponent,
     CurriculumComponent,
     RegistrationComponent,
-    UserScheduleComponent
+    UserScheduleComponent,
+    CourseClassComponent,
+    AdministrativeClassComponent
   ],
   imports: [
     BrowserModule,

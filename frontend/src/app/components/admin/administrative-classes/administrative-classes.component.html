@@ -160,6 +160,11 @@
                     </div>
 
                     <div class="flex items-center gap-2">
+                        <button (click)="refreshData()"
+                            class="flex items-center bg-white hover:bg-slate-50 text-slate-700 gap-2 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all shadow-sm">
+                            <i class="fas fa-sync-alt text-xs" [class.fa-spin]="loading"></i>
+                            Làm mới
+                        </button>
                         <button (click)="openAddModal()"
                             class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all shadow-md">
                             <i class="fas fa-plus text-xs"></i>

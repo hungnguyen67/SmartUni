@@ -45,7 +45,7 @@ public class SecurityConfig {
                 })
             .and()
             .authorizeRequests()
-                .antMatchers("/api/auth/**", "/oauth2/**", "/login/**", "/api/lecturer-profiles").permitAll()
+                .antMatchers("/api/auth/**", "/oauth2/**", "/login/**", "/api/lecturer-profiles", "/ws/**").permitAll()
                 .anyRequest().authenticated()
             .and()
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

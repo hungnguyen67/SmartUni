@@ -13,12 +13,13 @@
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
+    "skipLibCheck": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "ES2022",
+    "target": "ES2021",
     "module": "es2020",
     "lib": [
-      "es2022",
+      "ES2021",
       "dom"
     ]
   },

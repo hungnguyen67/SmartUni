@@ -12,9 +12,13 @@ public class CourseRegistrationDTO {
     private Long subjectId;
     private Integer credits;
     private Long studentId;
+    private String studentCode;
     private String studentName;
     private LocalDateTime enrollmentDate;
     private String status;
+    private Double attendanceScore;
+    private Double midtermScore;
+    private Double finalScore;
     private Double totalScore;
     private String gradeLetter;
     private Double gradePoint;
@@ -90,6 +94,14 @@ public class CourseRegistrationDTO {
 
     public void setStudentId(Long studentId) {
         this.studentId = studentId;
+    }
+
+    public String getStudentCode() {
+        return studentCode;
+    }
+
+    public void setStudentCode(String studentCode) {
+        this.studentCode = studentCode;
     }
 
     public String getStudentName() {
@@ -170,6 +182,30 @@ public class CourseRegistrationDTO {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public Double getAttendanceScore() {
+        return attendanceScore;
+    }
+
+    public void setAttendanceScore(Double attendanceScore) {
+        this.attendanceScore = attendanceScore;
+    }
+
+    public Double getMidtermScore() {
+        return midtermScore;
+    }
+
+    public void setMidtermScore(Double midtermScore) {
+        this.midtermScore = midtermScore;
+    }
+
+    public Double getFinalScore() {
+        return finalScore;
+    }
+
+    public void setFinalScore(Double finalScore) {
+        this.finalScore = finalScore;
     }
 
     public String getSubjectType() {

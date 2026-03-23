@@ -112,7 +112,7 @@ export class RegistrationComponent implements OnInit {
             next: (res) => {
                 const filtered = (res || []).filter((cc: any) => {
                     const status = (cc.classStatus || '').toUpperCase();
-                    return status === 'OPEN_REGISTRATION' || status === 'FULL';
+                    return status === 'OPEN';
                 });
 
                 if (filtered.length === 0) {

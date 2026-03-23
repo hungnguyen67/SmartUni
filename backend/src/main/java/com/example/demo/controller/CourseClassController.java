@@ -29,6 +29,13 @@ public class CourseClassController {
         return ResponseEntity.ok(courseClassService.getClassesBySemester(semesterId));
     }
 
+    @GetMapping("/lecturer/{lecturerId}")
+    public ResponseEntity<List<CourseClassDTO>> getLecturerClasses(
+            @PathVariable Long lecturerId, 
+            @RequestParam Long semesterId) {
+        return ResponseEntity.ok(courseClassService.getClassesByLecturerAndSemester(lecturerId, semesterId));
+    }
+
     @GetMapping("/analysis")
     public ResponseEntity<List<com.example.demo.dto.CourseClassDemandAnalysisDTO>> getDemandAnalysis(
             @RequestParam Long semesterId,
@@ -71,6 +78,14 @@ public class CourseClassController {
             @PathVariable Long id, 
             @RequestBody CourseClassDTO dto) {
         return ResponseEntity.ok(courseClassService.updateCourseClass(id, dto));
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Void> updateStatus(
+            @PathVariable Long id, 
+            @RequestParam String status) {
+        courseClassService.updateStatus(id, status);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")

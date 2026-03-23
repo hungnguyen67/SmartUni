@@ -13,6 +13,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import com.example.demo.dto.ClassScheduleInstanceDTO;
+import com.example.demo.repository.ClassSchedulePatternRepository;
+import com.example.demo.repository.ClassScheduleInstanceRepository;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -186,7 +194,8 @@ public class ScheduleService {
 
     public List<com.example.demo.dto.ClassScheduleInstanceDTO> getStudentSchedule(Long studentId, Long semesterId) {
         List<CourseClass.ClassStatus> activeStatuses = java.util.Arrays.asList(
-                CourseClass.ClassStatus.CLOSED);
+                CourseClass.ClassStatus.CLOSED,
+                CourseClass.ClassStatus.ONGOING);
         List<ClassScheduleInstance> instances = instanceRepository.findByStudentIdAndSemesterIdAndStatusIn(studentId,
                 semesterId, activeStatuses);
         return instances.stream().map(this::convertToDTO).collect(Collectors.toList());
@@ -194,7 +203,8 @@ public class ScheduleService {
 
     public List<com.example.demo.dto.ClassScheduleInstanceDTO> getLecturerSchedule(Long lecturerId, Long semesterId) {
         List<CourseClass.ClassStatus> activeStatuses = java.util.Arrays.asList(
-                CourseClass.ClassStatus.CLOSED);
+                CourseClass.ClassStatus.CLOSED,
+                CourseClass.ClassStatus.ONGOING);
         // Assuming schedules are also generated based on OPEN_REGISTRATION, FULL,
         // CLOSED statuses similar to students.
         List<ClassScheduleInstance> instances = instanceRepository.findByLecturerIdAndSemesterIdAndStatusIn(lecturerId,

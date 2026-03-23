@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { FlashMessageComponent } from './shared/components/flash-message/flash-message.component';
+import { WebSocketService } from './services/websocket.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html'
 })
 export class AppComponent {
+  constructor(private webSocketService: WebSocketService) {}
   title = 'SmartUni';
 }

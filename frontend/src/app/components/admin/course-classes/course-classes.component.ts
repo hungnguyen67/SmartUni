@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CourseClassService, CourseSubjectGroup, CourseClass, ClassSchedule } from '../../../services/course-class.service';
 import { Semester, SemesterService } from '../../../services/semester.service';
 import { SubjectService, SubjectDTO } from '../../../services/subject.service';
@@ -7,13 +7,18 @@ import { MajorService, MajorDTO } from '../../../services/major.service';
 import { StudentService } from '../../../services/student.service';
 import { CurriculumService, CurriculumDTO } from '../../../services/curriculum.service';
 import { AdministrativeClassService, AdministrativeClassDTO } from '../../../services/administrative-class.service';
+import { RegistrationService } from '../../../services/registration.service';
 import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-course-classes',
     templateUrl: './course-classes.component.html'
 })
-export class CourseClassesComponent implements OnInit {
+export class CourseClassesComponent implements OnInit, OnDestroy {
+    private registrationSub?: Subscription;
+
+    // Data lists
     subjects: CourseSubjectGroup[] = [];
     filteredSubjects: CourseSubjectGroup[] = [];
     allCourseClasses: CourseClass[] = [];
@@ -100,12 +105,30 @@ export class CourseClassesComponent implements OnInit {
         private studentService: StudentService,
         private curriculumService: CurriculumService,
         private adminClassService: AdministrativeClassService,
+        private registrationService: RegistrationService,
         private flashMessage: FlashMessageService
     ) { }
 
     ngOnInit(): void {
         this.loadSemesters();
         this.loadInitialData();
+        
+        // 1. Tự động cập nhật khi có tín hiệu từ RegistrationService (trong cùng phiên)
+        this.registrationSub = this.registrationService.registrationUpdates$.subscribe(() => {
+            console.log('Phát hiện thay đổi sĩ số, đang cập nhật...');
+            this.loadAllClasses();
+            if (this.selectedSubject) {
+                this.loadClassDetails(this.selectedSubject.subjectId);
+            }
+        });
+
+        // 2. Polling đã được thay thế bằng WebSocket thực thụ (qua WebSocketService)
+    }
+
+    ngOnDestroy(): void {
+        if (this.registrationSub) {
+            this.registrationSub.unsubscribe();
+        }
     }
 
     @HostListener('document:click', ['$event'])
@@ -179,7 +202,15 @@ export class CourseClassesComponent implements OnInit {
         this.listAdminClassId = null;
         this.listMajorId = null;
         this.listSearchTerm = '';
-        this.onListMajorChange();
+        this.loadAllClasses();
+        this.loadSubjects();
+    }
+
+    refreshData(): void {
+        this.loadSemesters();
+        this.loadInitialData();
+        this.loadSubjects();
+        this.loadAllClasses();
     }
 
     resetSelectionFilters(): void {
@@ -504,7 +535,6 @@ export class CourseClassesComponent implements OnInit {
         const nextNum = (this.selectedDemand.openedClasses || 0) + 1;
         this.courseClassForm.classCode = `${subjectCode}_${nextNum.toString().padStart(2, '0')}`;
         this.courseClassForm.maxStudents = 40;
-        this.courseClassForm.classCount = this.selectedDemand.suggestedMoreClasses || 1;
         this.courseClassForm.classStatus = 'PLANNING';
 
         this.onBatchCountChange();
@@ -580,9 +610,16 @@ export class CourseClassesComponent implements OnInit {
             return;
         }
 
+        // Sanitize date fields to prevent Jackson parsing errors (400 Bad Request)
+        const payload = { ...this.courseClassForm };
+        if (!payload.registrationStart) payload.registrationStart = null;
+        if (!payload.registrationEnd) payload.registrationEnd = null;
+        if (!payload.startDate) payload.startDate = null;
+        if (!payload.endDate) payload.endDate = null;
+
         const request = this.modalMode === 'ADD'
-            ? this.courseClassService.createCourseClass(this.selectedSemesterId, this.courseClassForm)
-            : this.courseClassService.updateCourseClass(this.courseClassForm.id, this.courseClassForm);
+            ? this.courseClassService.createCourseClass(this.selectedSemesterId!, payload)
+            : this.courseClassService.updateCourseClass(this.courseClassForm.id, payload);
 
         request.subscribe({
             next: () => {
@@ -669,27 +706,21 @@ export class CourseClassesComponent implements OnInit {
     getStatusClass(status: string): string {
         switch (status) {
             case 'PLANNING': return 'bg-[#f3f4f6] text-[#6b7280] border-[#d1d5db]';
-            case 'OPEN_REGISTRATION': return 'bg-[#f0fdf4] text-[#16a34a] border-[#22c55e]';
-            case 'FULL': return 'bg-[#fff7ed] text-[#ea580c] border-[#f97316]';
+            case 'OPEN': return 'bg-[#ecfdf5] text-[#059669] border-[#10b981]';
             case 'ONGOING': return 'bg-[#eff6ff] text-[#2563eb] border-[#3b82f6]';
-            case 'GRADING': return 'bg-[#faf5ff] text-[#9333ea] border-[#a855f7]';
-            case 'COMPLETED': return 'bg-[#f0fdfa] text-[#0d9488] border-[#14b8a6]';
-            case 'CANCELLED': return 'bg-[#fef2f2] text-[#dc2626] border-[#ef4444]';
             case 'CLOSED': return 'bg-[#f9fafb] text-[#4b5563] border-[#9ca3af]';
+            case 'CANCELLED': return 'bg-[#fef2f2] text-[#dc2626] border-[#ef4444]';
             default: return 'bg-slate-50 text-slate-500 border-slate-100';
         }
     }
 
     getStatusLabel(status: string): string {
         switch (status) {
-            case 'PLANNING': return 'Lên kế hoạch';
-            case 'OPEN_REGISTRATION': return 'Mở đăng ký';
-            case 'FULL': return 'Đã đầy';
+            case 'PLANNING': return 'Kế hoạch';
+            case 'OPEN': return 'Mở đăng ký';
             case 'ONGOING': return 'Đang học';
-            case 'GRADING': return 'Đang lên điểm';
-            case 'COMPLETED': return 'Đã hoàn thành';
+            case 'CLOSED': return 'Đã khóa sổ';
             case 'CANCELLED': return 'Đã hủy';
-            case 'CLOSED': return 'Đã đóng';
             default: return status;
         }
     }

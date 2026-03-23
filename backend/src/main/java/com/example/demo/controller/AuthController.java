@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
 import com.example.demo.model.PasswordResetToken;
 import com.example.demo.model.User;
 import com.example.demo.repository.PasswordResetTokenRepository;
@@ -66,9 +65,7 @@ public class AuthController {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.get("email"),
-                            loginRequest.get("password")
-                    )
-            );
+                            loginRequest.get("password")));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -113,7 +110,8 @@ public class AuthController {
             passwordResetTokenRepository.deleteByUser(user);
 
             String codeStr = String.valueOf((int) (Math.random() * 900000) + 100000);
-            PasswordResetToken prt = new PasswordResetToken(user, codeStr, PasswordResetToken.TokenType.OTP, LocalDateTime.now().plusMinutes(15));
+            PasswordResetToken prt = new PasswordResetToken(user, codeStr, PasswordResetToken.TokenType.OTP,
+                    LocalDateTime.now().plusMinutes(15));
 
             passwordResetTokenRepository.save(prt);
             emailService.sendResetCode(user.getEmail(), codeStr);

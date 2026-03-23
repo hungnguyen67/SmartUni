@@ -1,14 +1,17 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { AdministrativeClassDTO, AdministrativeClassService } from '../../../services/administrative-class.service';
 import { MajorDTO, MajorService } from '../../../services/major.service';
 import { LecturerDTO, LecturerService } from '../../../services/lecturer.service';
+import { RegistrationService } from '../../../services/registration.service';
 import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-administrative-classes',
     templateUrl: './administrative-classes.component.html'
 })
-export class AdministrativeClassesComponent implements OnInit {
+export class AdministrativeClassesComponent implements OnInit, OnDestroy {
+    private registrationSub?: Subscription;
     // Data lists
     classes: AdministrativeClassDTO[] = [];
     filteredClasses: AdministrativeClassDTO[] = [];
@@ -35,6 +38,7 @@ export class AdministrativeClassesComponent implements OnInit {
         private classService: AdministrativeClassService,
         private majorService: MajorService,
         private lecturerService: LecturerService,
+        private registrationService: RegistrationService,
         private flashMessage: FlashMessageService
     ) { }
 
@@ -42,6 +46,17 @@ export class AdministrativeClassesComponent implements OnInit {
         this.loadMajors();
         this.loadLecturers();
         this.loadClasses();
+
+        // Cập nhật ngay khi có sự kiện đăng ký (qua WebSocket)
+        this.registrationSub = this.registrationService.registrationUpdates$.subscribe(() => {
+            this.loadClasses();
+        });
+    }
+
+    ngOnDestroy(): void {
+        if (this.registrationSub) {
+            this.registrationSub.unsubscribe();
+        }
     }
 
     @HostListener('document:click', ['$event'])
@@ -107,7 +122,13 @@ export class AdministrativeClassesComponent implements OnInit {
         this.selectedYear = '';
         this.selectedAdvisorId = null;
         this.selectedStatus = 'ALL';
-        this.onSearch();
+        this.loadClasses();
+    }
+
+    refreshData(): void {
+        this.loadMajors();
+        this.loadLecturers();
+        this.loadClasses();
     }
 
     getSelectedMajorName(): string {

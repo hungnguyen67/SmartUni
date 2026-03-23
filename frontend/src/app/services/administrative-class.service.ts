@@ -15,6 +15,7 @@ export interface AdministrativeClassDTO {
     advisorName?: string;
     status: string;
     studentCount: number;
+    averageGpa?: number;
     createdAt: string;
     updatedAt: string;
 }
@@ -29,5 +30,9 @@ export class AdministrativeClassService {
 
     getClasses(): Observable<AdministrativeClassDTO[]> {
         return this.http.get<AdministrativeClassDTO[]>(this.apiUrl);
+    }
+
+    getClassesByAdvisor(userId: number): Observable<AdministrativeClassDTO[]> {
+        return this.http.get<AdministrativeClassDTO[]>(`${this.apiUrl}/advisor/${userId}`);
     }
 }

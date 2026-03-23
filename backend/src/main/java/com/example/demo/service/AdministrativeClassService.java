@@ -25,6 +25,12 @@ public class AdministrativeClassService {
                 .collect(Collectors.toList());
     }
 
+    public List<AdministrativeClassDTO> getClassesByAdvisor(Long userId) {
+        return administrativeClassRepository.findByAdvisorUserId(userId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private AdministrativeClassDTO convertToDTO(AdministrativeClass clazz) {
         AdministrativeClassDTO dto = new AdministrativeClassDTO();
         dto.setId(clazz.getId());
@@ -52,6 +58,7 @@ public class AdministrativeClassService {
         
         dto.setStatus(clazz.getStatus() != null ? clazz.getStatus().name() : "ACTIVE");
         dto.setStudentCount(studentProfileRepository.countByAdministrativeClassId(clazz.getId()));
+        dto.setAverageGpa(studentProfileRepository.findAverageGpaByClassId(clazz.getId()));
         dto.setCreatedAt(clazz.getCreatedAt());
         dto.setUpdatedAt(clazz.getUpdatedAt());
         

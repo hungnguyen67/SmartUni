@@ -90,7 +90,7 @@ public class CourseClass {
     private List<ClassSchedulePattern> schedules;
 
     public enum ClassStatus {
-        PLANNING, OPEN_REGISTRATION, FULL, ONGOING, GRADING, COMPLETED, CANCELLED, CLOSED
+        PLANNING, OPEN, ONGOING, CLOSED, CANCELLED
     }
 
     public CourseClass() {

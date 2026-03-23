@@ -31,6 +31,7 @@ public class CourseClassDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private List<ScheduleDTO> schedules;
+    private Integer cohort;
 
     public static class ScheduleDTO {
         private Integer dayOfWeek;
@@ -323,5 +324,13 @@ public class CourseClassDTO {
 
     public void setMajorName(String majorName) {
         this.majorName = majorName;
+    }
+
+    public Integer getCohort() {
+        return cohort;
+    }
+
+    public void setCohort(Integer cohort) {
+        this.cohort = cohort;
     }
 }

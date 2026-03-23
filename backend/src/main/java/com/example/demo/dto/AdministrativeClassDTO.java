@@ -19,6 +19,15 @@ public class AdministrativeClassDTO {
     private Long studentCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Double averageGpa;
+
+    public Double getAverageGpa() {
+        return averageGpa;
+    }
+
+    public void setAverageGpa(Double averageGpa) {
+        this.averageGpa = averageGpa;
+    }
 
     public AdministrativeClassDTO() {}
 
