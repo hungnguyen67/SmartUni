@@ -1,4 +1,5 @@
 import { Component, OnInit, HostListener } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { CurriculumService, CurriculumDTO } from '../../../services/curriculum.service';
 import { MajorService, MajorDTO } from '../../../services/major.service';
 import { SubjectService, SubjectDTO } from '../../../services/subject.service';
@@ -28,6 +29,12 @@ export class CurriculumsComponent implements OnInit {
     selectedCurriculumId: number | null = null;
     selectedBlockId: number | null = null;
 
+    tabFilters: any = {
+        'PROGRAM': { majorId: null, status: 'ALL', searchTerm: '' },
+        'BLOCK': { majorId: null, curriculumId: null, searchTerm: '' },
+        'SUBJECT': { majorId: null, curriculumId: null, blockId: null, searchTerm: '' }
+    };
+
     currentPage: number = 1;
     itemsPerPage: number = 10;
 
@@ -39,9 +46,10 @@ export class CurriculumsComponent implements OnInit {
     isEditing: boolean = false;
     currentCurriculum: any = {};
     originalCurriculum: CurriculumDTO | null = null;
+    originalItem: any = null;
 
     showDeleteModal: boolean = false;
-    curriculumToDelete: CurriculumDTO | null = null;
+    curriculumToDelete: any = null;
     deletingCurriculum: boolean = false;
     savingCurriculum: boolean = false;
 
@@ -78,8 +86,65 @@ export class CurriculumsComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadMajors();
+        this.loadMajors();
         this.loadAllSubjects();
+        this.loadCurriculums();
         this.loadData();
+        this.initAutoSync();
+    }
+
+    initAutoSync(): void {
+        forkJoin({
+            blocks: this.curriculumService.getKnowledgeBlocks(),
+            subjects: this.curriculumService.getAllCurriculumSubjects()
+        }).subscribe(({ blocks, subjects }: { blocks: any[], subjects: any[] }) => {
+            this.knowledgeBlocks = blocks;
+            this.curriculumSubjects = subjects;
+            
+            blocks.forEach(block => {
+                if (block.blockType === 'MANDATORY') {
+                    const blockSubjects = subjects.filter(s => s.blockId === block.id);
+                    const totalCredits = blockSubjects.reduce((acc: number, s: any) => acc + (s.credits || 0), 0);
+                    
+                    if (block.creditsRequired !== totalCredits) {
+                        const updatedBlock = { ...block, creditsRequired: totalCredits };
+                        this.curriculumService.updateKnowledgeBlock(block.id, updatedBlock).subscribe();
+                        block.creditsRequired = totalCredits;
+                    }
+                }
+            });
+
+            if (this.activeTab === 'BLOCK') {
+                this.onFilter();
+            }
+        });
+    }
+
+    loadAllCurriculumSubjects(): void {
+        this.curriculumService.getAllCurriculumSubjects().subscribe(data => {
+            this.curriculumSubjects = data;
+            if (this.activeTab === 'BLOCK') {
+                this.onFilter();
+            }
+        });
+    }
+
+    loadCurriculums(): void {
+        this.curriculumService.getCurriculums().subscribe(data => {
+            this.curriculums = data;
+            if (this.activeTab !== 'PROGRAM') {
+                this.onFilter();
+            }
+        });
+    }
+
+    loadKnowledgeBlocks(): void {
+        this.curriculumService.getKnowledgeBlocks().subscribe(data => {
+            this.knowledgeBlocks = data;
+            if (this.activeTab === 'SUBJECT') {
+                this.onFilter();
+            }
+        });
     }
 
     loadAllSubjects(): void {
@@ -97,6 +162,7 @@ export class CurriculumsComponent implements OnInit {
     setTab(tab: string): void {
         this.activeTab = tab;
         this.currentPage = 1;
+        this.activeDropdown = '';
         this.loadData();
     }
 
@@ -133,28 +199,51 @@ export class CurriculumsComponent implements OnInit {
     }
 
     onFilter(): void {
+        const currentFilters = this.tabFilters[this.activeTab];
+        const term = (currentFilters.searchTerm || '').toLowerCase();
+        
         if (this.activeTab === 'PROGRAM') {
             this.filteredCurriculums = this.curriculums.filter(c => {
-                const matchSearch = c.curriculumName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                    c.majorCode.toLowerCase().includes(this.searchTerm.toLowerCase());
-                const matchMajor = !this.selectedMajorId || c.majorId === this.selectedMajorId;
-                const matchStatus = this.selectedStatus === 'ALL' || c.status === this.selectedStatus;
+                const matchSearch = c.curriculumName.toLowerCase().includes(term) ||
+                    c.majorCode.toLowerCase().includes(term);
+                const matchMajor = !currentFilters.majorId || c.majorId === currentFilters.majorId;
+                const matchStatus = currentFilters.status === 'ALL' || c.status === currentFilters.status;
                 return matchSearch && matchMajor && matchStatus;
             });
         } else if (this.activeTab === 'BLOCK') {
             this.filteredBlocks = this.knowledgeBlocks.filter(b => {
-                const matchSearch = b.blockName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                    b.blockCode.toLowerCase().includes(this.searchTerm.toLowerCase());
-                const matchCurriculum = !this.selectedCurriculumId || b.curriculumId === this.selectedCurriculumId;
-                return matchSearch && matchCurriculum;
+                const matchSearch = b.blockName.toLowerCase().includes(term) ||
+                    b.blockCode.toLowerCase().includes(term);
+                const matchCurriculum = !currentFilters.curriculumId || b.curriculumId === currentFilters.curriculumId;
+                
+                let matchMajor = true;
+                if (currentFilters.majorId) {
+                    const curriculum = this.curriculums.find(c => c.id === b.curriculumId);
+                    matchMajor = curriculum ? curriculum.majorId === currentFilters.majorId : false;
+                }
+                
+                return matchSearch && matchCurriculum && matchMajor;
+            }).map(b => {
+                if (b.blockType === 'MANDATORY') {
+                    const blockSubjects = this.curriculumSubjects.filter(s => s.blockId === b.id);
+                    b.creditsRequired = blockSubjects.reduce((acc, s) => acc + (s.credits || 0), 0);
+                }
+                return b;
             });
         } else if (this.activeTab === 'SUBJECT') {
             this.filteredSubjects = this.curriculumSubjects.filter(s => {
-                const matchSearch = s.subjectName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                    s.subjectCode.toLowerCase().includes(this.searchTerm.toLowerCase());
-                const matchCurriculum = !this.selectedCurriculumId || s.curriculumId === this.selectedCurriculumId;
-                const matchBlock = !this.selectedBlockId || s.blockId === this.selectedBlockId;
-                return matchSearch && matchCurriculum && matchBlock;
+                const matchSearch = s.subjectName.toLowerCase().includes(term) ||
+                    s.subjectCode.toLowerCase().includes(term);
+                const matchCurriculum = !currentFilters.curriculumId || s.curriculumId === currentFilters.curriculumId;
+                const matchBlock = !currentFilters.blockId || s.blockId === currentFilters.blockId;
+                
+                let matchMajor = true;
+                if (currentFilters.majorId) {
+                    const curriculum = this.curriculums.find(c => c.id === s.curriculumId);
+                    matchMajor = curriculum ? curriculum.majorId === currentFilters.majorId : false;
+                }
+                
+                return matchSearch && matchCurriculum && matchBlock && matchMajor;
             });
         }
         this.currentPage = 1;
@@ -193,6 +282,7 @@ export class CurriculumsComponent implements OnInit {
         this.isEditing = true;
         this.activeTab = 'BLOCK';
         this.currentCurriculum = { ...item };
+        this.originalItem = { ...item };
         this.showModal = true;
     }
 
@@ -200,6 +290,7 @@ export class CurriculumsComponent implements OnInit {
         this.isEditing = true;
         this.activeTab = 'SUBJECT';
         this.currentCurriculum = { ...item };
+        this.originalItem = { ...item };
         this.showModal = true;
     }
 
@@ -228,12 +319,26 @@ export class CurriculumsComponent implements OnInit {
 
     hasChanges(): boolean {
         if (!this.isEditing) return true;
-        if (!this.originalCurriculum) return false;
-
-        return this.currentCurriculum.curriculumName !== this.originalCurriculum.curriculumName ||
-            this.currentCurriculum.majorId !== this.originalCurriculum.majorId ||
-            this.currentCurriculum.appliedYear !== this.originalCurriculum.appliedYear ||
-            this.currentCurriculum.status !== this.originalCurriculum.status;
+        
+        if (this.activeTab === 'PROGRAM') {
+            if (!this.originalCurriculum) return false;
+            return this.currentCurriculum.curriculumName !== this.originalCurriculum.curriculumName ||
+                this.currentCurriculum.majorId !== this.originalCurriculum.majorId ||
+                this.currentCurriculum.appliedYear !== this.originalCurriculum.appliedYear ||
+                this.currentCurriculum.status !== this.originalCurriculum.status;
+        } else if (this.activeTab === 'BLOCK') {
+            if (!this.originalItem) return false;
+            return this.currentCurriculum.blockName !== this.originalItem.blockName ||
+                   this.currentCurriculum.blockCode !== this.originalItem.blockCode ||
+                   this.currentCurriculum.creditsRequired !== this.originalItem.creditsRequired ||
+                   this.currentCurriculum.blockType !== this.originalItem.blockType;
+        } else if (this.activeTab === 'SUBJECT') {
+            if (!this.originalItem) return false;
+            return this.currentCurriculum.blockId !== this.originalItem.blockId ||
+                   this.currentCurriculum.subjectId !== this.originalItem.subjectId ||
+                   this.currentCurriculum.recommendedSemester !== this.originalItem.recommendedSemester;
+        }
+        return false;
     }
 
     saveCurriculum(): void {
@@ -251,6 +356,12 @@ export class CurriculumsComponent implements OnInit {
             }
 
             if (this.isEditing) {
+                if (!this.hasChanges()) {
+                    this.flashMessage.info('Không có thay đổi nào để cập nhật');
+                    this.closeModal();
+                    this.savingCurriculum = false;
+                    return;
+                }
                 this.curriculumService.updateCurriculum(this.currentCurriculum.id!, this.currentCurriculum as CurriculumDTO).subscribe({
                     next: () => {
                         this.flashMessage.success('Cập nhật CTĐT thành công');
@@ -279,7 +390,26 @@ export class CurriculumsComponent implements OnInit {
             }
         } else if (this.activeTab === 'BLOCK') {
             const block = this.currentCurriculum as any;
+            
+            if (block.blockType === 'MANDATORY') {
+                const blockSubjects = this.curriculumSubjects.filter(s => s.blockId === block.id);
+                block.creditsRequired = blockSubjects.reduce((acc, s) => acc + (s.credits || 0), 0);
+                
+                const info = this.getMandatoryCreditsInfo();
+                if (info.current > info.total) {
+                    this.flashMessage.error(`Tổng tín chỉ bắt buộc (${info.current}) không được vượt quá tổng tín chỉ chương trình (${info.total})`);
+                    this.savingCurriculum = false;
+                    return;
+                }
+            }
+
             if (this.isEditing) {
+                if (!this.hasChanges()) {
+                    this.flashMessage.info('Không có thay đổi nào để cập nhật');
+                    this.closeModal();
+                    this.savingCurriculum = false;
+                    return;
+                }
                 this.curriculumService.updateKnowledgeBlock(block.id, block).subscribe({
                     next: () => {
                         this.flashMessage.success('Cập nhật khối kiến thức thành công');
@@ -309,9 +439,16 @@ export class CurriculumsComponent implements OnInit {
         } else if (this.activeTab === 'SUBJECT') {
             const subject = this.currentCurriculum as any;
             if (this.isEditing) {
+                if (!this.hasChanges()) {
+                    this.flashMessage.info('Không có thay đổi nào để cập nhật');
+                    this.closeModal();
+                    this.savingCurriculum = false;
+                    return;
+                }
                 this.curriculumService.updateCurriculumSubject(subject).subscribe({
                     next: () => {
                         this.flashMessage.success('Cập nhật học phần theo khung thành công');
+                        this.syncBlockCredits(subject.blockId);
                         this.loadData();
                         this.closeModal();
                         this.savingCurriculum = false;
@@ -325,6 +462,7 @@ export class CurriculumsComponent implements OnInit {
                 this.curriculumService.addSubjectToCurriculum(subject).subscribe({
                     next: () => {
                         this.flashMessage.success('Thêm học phần vào khung thành công');
+                        this.syncBlockCredits(subject.blockId);
                         this.loadData();
                         this.closeModal();
                         this.savingCurriculum = false;
@@ -378,9 +516,11 @@ export class CurriculumsComponent implements OnInit {
                 });
             } else if (this.activeTab === 'SUBJECT') {
                 const s = this.curriculumToDelete as any;
+                const blockId = s.blockId;
                 this.curriculumService.deleteCurriculumSubject(s.curriculumId, s.subjectId).subscribe({
                     next: () => {
                         this.flashMessage.success('Xóa học phần khỏi khung thành công');
+                        this.syncBlockCredits(blockId);
                         this.loadData();
                         this.closeDeleteModal();
                     },
@@ -429,30 +569,42 @@ export class CurriculumsComponent implements OnInit {
         }
     }
 
+    getSearchTerm(): string {
+        return this.tabFilters[this.activeTab].searchTerm || '';
+    }
+
+    setSearchTerm(val: string): void {
+        this.tabFilters[this.activeTab].searchTerm = val;
+    }
+
     getSelectedMajorName(): string {
-        if (!this.selectedMajorId) return 'Tất cả các ngành học';
-        const major = this.majors.find(m => m.id === this.selectedMajorId);
+        const id = this.tabFilters[this.activeTab].majorId;
+        if (!id) return 'Tất cả các ngành học';
+        const major = this.majors.find(m => m.id === id);
         return major ? major.majorName : 'Tất cả các ngành học';
     }
 
     getSelectedCurriculumName(): string {
-        if (!this.selectedCurriculumId) return 'Tất cả chương trình';
-        const curr = this.curriculums.find(c => c.id === this.selectedCurriculumId);
+        const id = this.tabFilters[this.activeTab].curriculumId;
+        if (!id) return 'Tất cả chương trình';
+        const curr = this.curriculums.find(c => c.id === id);
         return curr ? curr.curriculumName : 'Tất cả chương trình';
     }
 
     getSelectedBlockName(): string {
-        if (!this.selectedBlockId) return 'Tất cả khối';
-        const block = this.knowledgeBlocks.find(b => b.id === this.selectedBlockId);
+        const id = this.tabFilters[this.activeTab].blockId;
+        if (!id) return 'Tất cả khối';
+        const block = this.knowledgeBlocks.find(b => b.id === id);
         return block ? block.blockName : 'Tất cả khối';
     }
 
-    resetFilters() {
-        this.selectedMajorId = null;
-        this.selectedStatus = 'ALL';
-        this.selectedCurriculumId = null;
-        this.selectedBlockId = null;
-        this.searchTerm = '';
+    resetFilters(): void {
+        const f = this.tabFilters[this.activeTab];
+        f.majorId = null;
+        f.status = 'ALL';
+        f.curriculumId = null;
+        f.blockId = null;
+        f.searchTerm = '';
         this.onFilter();
     }
 
@@ -465,16 +617,35 @@ export class CurriculumsComponent implements OnInit {
         }
     }
 
+    getAvailableCurriculumsForFilter(): CurriculumDTO[] {
+        const majorId = this.tabFilters[this.activeTab].majorId;
+        if (!majorId) return this.curriculums;
+        return this.curriculums.filter(c => c.majorId === majorId);
+    }
+
     getAvailableBlocksForFilter(): any[] {
-        // If we're in the modal, filter by currentCurriculum.curriculumId
+        // In modal or delete modal, handle relation
         if (this.showModal || this.showDeleteModal) {
             const curriculumId = this.currentCurriculum?.curriculumId;
             if (!curriculumId) return this.knowledgeBlocks;
             return this.knowledgeBlocks.filter(b => b.curriculumId === curriculumId);
         }
-        // Otherwise use the main filter state
-        if (!this.selectedCurriculumId) return this.knowledgeBlocks;
-        return this.knowledgeBlocks.filter(b => b.curriculumId === this.selectedCurriculumId);
+        
+        // In the filter menu, filter based on current tab's selections
+        const filter = this.tabFilters[this.activeTab];
+        
+        // If curriculum is selected, show only blocks for that curriculum
+        if (filter.curriculumId) {
+            return this.knowledgeBlocks.filter(b => b.curriculumId === filter.curriculumId);
+        }
+        
+        // If only major is selected, show blocks for all curriculums of that major
+        if (filter.majorId) {
+            const allowedCurriculumIds = this.getAvailableCurriculumsForFilter().map(c => c.id);
+            return this.knowledgeBlocks.filter(b => allowedCurriculumIds.includes(b.curriculumId));
+        }
+        
+        return this.knowledgeBlocks;
     }
 
     getModalMajorLabel(): string {
@@ -502,6 +673,13 @@ export class CurriculumsComponent implements OnInit {
         if (!id) return 'Chọn học phần';
         const sub = this.allSubjects.find(s => s.id === id);
         return sub ? `[${sub.subjectCode}] ${sub.name}` : 'Chọn học phần';
+    }
+
+    getModalBlockTypeLabel(): string {
+        const type = (this.currentCurriculum as any).blockType;
+        if (type === 'MANDATORY') return 'Bắt buộc';
+        if (type === 'ELECTIVE') return 'Tự chọn';
+        return 'Chọn loại khối';
     }
 
     getModalTitle(): string {
@@ -567,5 +745,49 @@ export class CurriculumsComponent implements OnInit {
         if (this.activeTab === 'BLOCK') return this.filteredBlocks.slice(start, start + this.itemsPerPage);
         if (this.activeTab === 'SUBJECT') return this.filteredSubjects.slice(start, start + this.itemsPerPage);
         return [];
+    }
+
+    getMandatoryCreditsInfo(): { current: number, total: number } {
+        const curriculumId = this.currentCurriculum?.curriculumId || this.currentCurriculum?.id;
+        if (!curriculumId) return { current: 0, total: 0 };
+        const curriculum = this.curriculums.find(c => c.id === Number(curriculumId));
+        if (!curriculum) return { current: 0, total: 0 };
+        const blocks = this.knowledgeBlocks.filter(b => b.curriculumId === curriculum.id && b.blockType === 'MANDATORY');
+        let existingSum = 0;
+        
+        // Auto-recalculate current block's credits if it's mandatory
+        if (this.activeTab === 'BLOCK' && this.currentCurriculum.blockType === 'MANDATORY') {
+            const blockSubjects = this.curriculumSubjects.filter(s => s.blockId === this.currentCurriculum.id);
+            this.currentCurriculum.creditsRequired = blockSubjects.reduce((acc, s) => acc + (s.credits || 0), 0);
+        }
+
+        blocks.forEach(b => {
+            if (this.activeTab === 'BLOCK' && this.isEditing && b.id === this.currentCurriculum.id) return;
+            
+            // If it's a mandatory block, we should also auto-calculate its credits based on assigned subjects
+            // but for now we rely on its stored value since it was calculated during its own save
+            existingSum += (b.creditsRequired || 0);
+        });
+        const typingCredits = (this.activeTab === 'BLOCK' && this.currentCurriculum.blockType === 'MANDATORY') ? (Number(this.currentCurriculum.creditsRequired) || 0) : 0;
+        return { current: existingSum + typingCredits, total: curriculum.totalCreditsRequired };
+    }
+
+    syncBlockCredits(blockId: number): void {
+        const block = this.knowledgeBlocks.find(b => b.id === blockId);
+        if (!block || block.blockType !== 'MANDATORY') return;
+
+        this.curriculumService.getAllCurriculumSubjects().subscribe(subjects => {
+            this.curriculumSubjects = subjects;
+            const blockSubjects = subjects.filter(s => s.blockId === blockId);
+            const totalCredits = blockSubjects.reduce((acc, s) => acc + (s.credits || 0), 0);
+            
+            // Only update if credits changed
+            if (block.creditsRequired !== totalCredits) {
+                const updatedBlock = { ...block, creditsRequired: totalCredits };
+                this.curriculumService.updateKnowledgeBlock(blockId, updatedBlock).subscribe(() => {
+                    this.loadKnowledgeBlocks();
+                });
+            }
+        });
     }
 }

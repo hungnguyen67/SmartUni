@@ -39,6 +39,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     savingClass = false;
     deletingClass = false;
     currentClass: Partial<AdministrativeClassDTO> = {};
+    originalClass: AdministrativeClassDTO | null = null;
     classToDelete: AdministrativeClassDTO | null = null;
 
     showStudentModal = false;
@@ -323,6 +324,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     editClass(adminClass: AdministrativeClassDTO): void {
         this.isEditing = true;
         this.currentClass = { ...adminClass };
+        this.originalClass = { ...adminClass };
         this.showModal = true;
     }
 
@@ -373,6 +375,12 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
             return;
         }
 
+        if (this.isEditing && !this.hasChanges()) {
+            this.flashMessage.info('Không có thay đổi nào để cập nhật');
+            this.closeMainModal();
+            return;
+        }
+
         this.savingClass = true;
         const request = this.isEditing 
             ? this.classService.updateClass(this.currentClass.id!, this.currentClass)
@@ -395,6 +403,22 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     selectMajor(id: number | null): void {
         this.selectedMajorId = id;
         this.activeDropdown = '';
+        this.onFilterMajorChange();
+    }
+
+    onFilterMajorChange(): void {
+        const availableAdvisors = this.getAvailableFilterAdvisors();
+        if (this.selectedAdvisorId && !availableAdvisors.some(l => l.id === this.selectedAdvisorId)) {
+            this.selectedAdvisorId = null;
+        }
+    }
+
+    getAvailableFilterAdvisors(): LecturerDTO[] {
+        if (!this.selectedMajorId) return this.lecturers;
+        const selectedMajor = this.majors.find(m => m.id === Number(this.selectedMajorId));
+        if (!selectedMajor) return this.lecturers;
+        
+        return this.lecturers.filter(l => l.facultyId === selectedMajor.facultyId);
     }
 
     selectAdvisor(id: number | null): void {
@@ -410,6 +434,22 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     setModalMajor(id: number): void {
         this.currentClass.majorId = id;
         this.activeDropdown = '';
+        this.onMajorChange();
+    }
+
+    onMajorChange(): void {
+        const availableAdvisors = this.getAvailableModalAdvisors();
+        if (this.currentClass.advisorId && !availableAdvisors.some(l => l.id === this.currentClass.advisorId)) {
+            this.currentClass.advisorId = undefined;
+        }
+    }
+
+    getAvailableModalAdvisors(): LecturerDTO[] {
+        if (!this.currentClass.majorId) return this.lecturers;
+        const selectedMajor = this.majors.find(m => m.id === Number(this.currentClass.majorId));
+        if (!selectedMajor) return this.lecturers;
+        
+        return this.lecturers.filter(l => l.facultyId === selectedMajor.facultyId);
     }
 
     setModalAdvisor(id: number | null): void {
@@ -420,6 +460,17 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     setModalStatus(status: string): void {
         this.currentClass.status = status;
         this.activeDropdown = '';
+    }
+
+    hasChanges(): boolean {
+        if (!this.originalClass || !this.currentClass) return false;
+        return this.currentClass.classCode !== this.originalClass.classCode ||
+               this.currentClass.className !== this.originalClass.className ||
+               this.currentClass.majorId !== this.originalClass.majorId ||
+               this.currentClass.academicYear !== this.originalClass.academicYear ||
+               this.currentClass.cohort !== this.originalClass.cohort ||
+               this.currentClass.advisorId !== this.originalClass.advisorId ||
+               this.currentClass.status !== this.originalClass.status;
     }
 
     getMajorName(id: any): string {

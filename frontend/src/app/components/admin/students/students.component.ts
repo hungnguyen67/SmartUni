@@ -41,6 +41,7 @@ export class StudentsComponent implements OnInit {
     savingStudent = false;
     deletingStudent = false;
     currentStudent: Partial<StudentDTO> = {};
+    originalStudent: StudentDTO | null = null;
     studentToDelete: StudentDTO | null = null;
 
     constructor(
@@ -201,6 +202,7 @@ export class StudentsComponent implements OnInit {
     editStudent(student: StudentDTO): void {
         this.isEditing = true;
         this.currentStudent = { ...student };
+        this.originalStudent = { ...student };
         this.showModal = true;
     }
 
@@ -251,6 +253,20 @@ export class StudentsComponent implements OnInit {
         this.activeDropdown = '';
     }
 
+    onEnrollmentYearChange(): void {
+        const availableClasses = this.getAvailableModalClasses();
+        // If the current class is not in the available list for the new year, reset it
+        if (this.currentStudent.classId && !availableClasses.some(c => c.id === this.currentStudent.classId)) {
+            this.currentStudent.classId = undefined;
+            this.currentStudent.className = '';
+        }
+    }
+
+    getAvailableModalClasses(): AdministrativeClassDTO[] {
+        if (!this.currentStudent.enrollmentYear) return this.classes;
+        return this.classes.filter(c => Number(c.cohort) === Number(this.currentStudent.enrollmentYear));
+    }
+
     handleBackdropClick(event: MouseEvent): void {
         if (event.target === event.currentTarget) {
             this.closeMainModal();
@@ -262,6 +278,24 @@ export class StudentsComponent implements OnInit {
         this.currentStudent.classId = id;
         this.currentStudent.className = code;
         this.activeDropdown = '';
+        this.onClassChange();
+    }
+
+    onClassChange(): void {
+        const availableCurriculums = this.getAvailableModalCurriculums();
+        // If the current curriculum is not in the available list for the new class, reset it
+        if (this.currentStudent.curriculumId && !availableCurriculums.some(c => c.id === this.currentStudent.curriculumId)) {
+            this.currentStudent.curriculumId = undefined;
+            this.currentStudent.curriculumName = '';
+        }
+    }
+
+    getAvailableModalCurriculums(): CurriculumDTO[] {
+        if (!this.currentStudent.classId) return this.curriculums;
+        const selectedClass = this.classes.find(c => c.id === Number(this.currentStudent.classId));
+        if (!selectedClass) return this.curriculums;
+        
+        return this.curriculums.filter(curr => Number(curr.majorId) === Number(selectedClass.majorId));
     }
 
     setModalCurriculum(id: number, name: string): void {
@@ -280,6 +314,22 @@ export class StudentsComponent implements OnInit {
         this.activeDropdown = '';
     }
 
+    hasChanges(): boolean {
+        if (!this.originalStudent || !this.currentStudent) return false;
+        return this.currentStudent.studentCode !== this.originalStudent.studentCode ||
+               this.currentStudent.lastName !== this.originalStudent.lastName ||
+               this.currentStudent.firstName !== this.originalStudent.firstName ||
+               this.currentStudent.email !== this.originalStudent.email ||
+               this.currentStudent.phone !== this.originalStudent.phone ||
+               this.currentStudent.birthday !== this.originalStudent.birthday ||
+               this.currentStudent.address !== this.originalStudent.address ||
+               this.currentStudent.classId !== this.originalStudent.classId ||
+               this.currentStudent.enrollmentYear !== this.originalStudent.enrollmentYear ||
+               this.currentStudent.gender !== this.originalStudent.gender ||
+               this.currentStudent.status !== this.originalStudent.status ||
+               this.currentStudent.curriculumId !== this.originalStudent.curriculumId;
+    }
+
     getClassName(id: any): string {
         if (!id) return 'Chọn lớp học';
         const clazz = this.classes.find(c => c.id === Number(id));
@@ -295,6 +345,12 @@ export class StudentsComponent implements OnInit {
     saveStudent(): void {
         if (!this.currentStudent.studentCode || !this.currentStudent.lastName || !this.currentStudent.firstName || !this.currentStudent.classId || !this.currentStudent.email) {
             this.flashMessage.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+            return;
+        }
+
+        if (this.isEditing && !this.hasChanges()) {
+            this.flashMessage.info('Không có thay đổi nào để cập nhật');
+            this.closeMainModal();
             return;
         }
 

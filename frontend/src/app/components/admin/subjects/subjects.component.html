@@ -299,7 +299,7 @@
                                     [class.rotate-90]="activeDropdown === 'preSub'"></i>
                             </button>
                             <div *ngIf="activeDropdown === 'preSub'"
-                                class="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-200 transform origin-top max-h-60 overflow-y-auto">
+                                class="absolute z-20 w-full bottom-full mb-2 bg-white border border-slate-200 rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-200 transform origin-bottom max-h-60 overflow-y-auto">
                                 <div (click)="selectRelationSubject('PREREQUISITE', ''); activeDropdown = ''"
                                     class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
                                     -- Không chọn --
@@ -325,7 +325,7 @@
                                     [class.rotate-90]="activeDropdown === 'preMinGrade'"></i>
                             </button>
                             <div *ngIf="activeDropdown === 'preMinGrade'"
-                                class="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                class="absolute z-20 w-full bottom-full mb-2 bg-white border border-slate-200 rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
                                 <div *ngFor="let grade of ['A', 'B', 'C', 'D', 'F']"
                                     (click)="getRelation('PREREQUISITE').minGrade = grade; activeDropdown = ''"
                                     class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0">
@@ -347,7 +347,7 @@
                                     [class.rotate-90]="activeDropdown === 'preParallel'"></i>
                             </button>
                             <div *ngIf="activeDropdown === 'preParallel'"
-                                class="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                class="absolute z-20 w-full bottom-full mb-2 bg-white border border-slate-200 rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
                                 <div (click)="getRelation('PREREQUISITE').isParallel = true; activeDropdown = ''"
                                     class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
                                     Có
@@ -379,7 +379,7 @@
                                     [class.rotate-90]="activeDropdown === 'eqSub'"></i>
                             </button>
                             <div *ngIf="activeDropdown === 'eqSub'"
-                                class="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-200 transform origin-top max-h-60 overflow-y-auto">
+                                class="absolute z-20 w-full bottom-full mb-2 bg-white border border-slate-200 rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-200 transform origin-bottom max-h-60 overflow-y-auto">
                                 <div (click)="selectRelationSubject('EQUIVALENT', ''); activeDropdown = ''"
                                     class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
                                     -- Không chọn --

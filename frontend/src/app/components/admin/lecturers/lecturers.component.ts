@@ -33,6 +33,7 @@ export class LecturersComponent implements OnInit {
     deletingLecturer: boolean = false;
 
     currentLecturer: Partial<LecturerDTO> = {};
+    originalLecturer: LecturerDTO | null = null;
     lecturerToDelete: LecturerDTO | null = null;
 
     constructor(
@@ -184,6 +185,7 @@ export class LecturersComponent implements OnInit {
             lastName: lecturer.lastName || '',
             firstName: lecturer.firstName || ''
         };
+        this.originalLecturer = { ...this.currentLecturer } as LecturerDTO;
         this.showModal = true;
     }
 
@@ -203,6 +205,12 @@ export class LecturersComponent implements OnInit {
     saveLecturer(): void {
         if (!this.currentLecturer.lecturerCode || !this.currentLecturer.lastName || !this.currentLecturer.firstName || !this.currentLecturer.facultyId || !this.currentLecturer.email) {
             this.flashMessage.error('Vui lòng điền đầy đủ các thông tin bắt buộc!');
+            return;
+        }
+
+        if (this.isEditing && !this.hasChanges()) {
+            this.flashMessage.info('Không có thay đổi nào để cập nhật');
+            this.closeModal();
             return;
         }
 
@@ -261,6 +269,20 @@ export class LecturersComponent implements OnInit {
     setLecturerStatus(status: string): void {
         this.currentLecturer.status = status;
         this.activeDropdown = '';
+    }
+
+    hasChanges(): boolean {
+        if (!this.originalLecturer || !this.currentLecturer) return false;
+        return this.currentLecturer.lecturerCode !== this.originalLecturer.lecturerCode ||
+               this.currentLecturer.lastName !== this.originalLecturer.lastName ||
+               this.currentLecturer.firstName !== this.originalLecturer.firstName ||
+               this.currentLecturer.email !== this.originalLecturer.email ||
+               this.currentLecturer.phone !== this.originalLecturer.phone ||
+               this.currentLecturer.birthday !== this.originalLecturer.birthday ||
+               this.currentLecturer.address !== this.originalLecturer.address ||
+               this.currentLecturer.facultyId !== this.originalLecturer.facultyId ||
+               this.currentLecturer.gender !== this.originalLecturer.gender ||
+               this.currentLecturer.status !== this.originalLecturer.status;
     }
 
     setFilterFaculty(id: number | null): void {

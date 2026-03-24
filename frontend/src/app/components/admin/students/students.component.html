@@ -414,6 +414,7 @@
                     <label class="text-xs font-semibold text-slate-900 uppercase">Năm nhập học <span
                             class="text-red-500">*</span></label>
                     <input type="number" [(ngModel)]="currentStudent.enrollmentYear"
+                        (ngModelChange)="onEnrollmentYearChange()"
                         class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm shadow-sm"
                         placeholder="VD: 2024">
                 </div>
@@ -442,10 +443,14 @@
                                 [class.rotate-90]="activeDropdown === 'modalClass'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalClass'"
-                            class="absolute z-[90] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
-                            <div *ngFor="let c of classes" (click)="setModalClass(c.id, c.classCode)"
+                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
+                            <div *ngFor="let c of getAvailableModalClasses()" (click)="setModalClass(c.id, c.classCode)"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0 transition-colors truncate">
                                 {{ c.classCode }}
+                            </div>
+                            <div *ngIf="getAvailableModalClasses().length === 0"
+                                class="px-4 py-8 text-center text-slate-400 text-xs">
+                                Không có lớp nào thuộc khóa này
                             </div>
                         </div>
                     </div>
@@ -463,11 +468,15 @@
                                 [class.rotate-90]="activeDropdown === 'modalCurriculum'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalCurriculum'"
-                            class="absolute z-[90] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
-                            <div *ngFor="let curr of curriculums"
+                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
+                            <div *ngFor="let curr of getAvailableModalCurriculums()"
                                 (click)="setModalCurriculum(curr.id, curr.curriculumName)"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0 transition-colors truncate">
                                 {{ curr.curriculumName }}
+                            </div>
+                            <div *ngIf="getAvailableModalCurriculums().length === 0"
+                                class="px-4 py-8 text-center text-slate-400 text-xs">
+                                Không có CTĐT nào phù hợp với ngành của lớp
                             </div>
                         </div>
                     </div>
@@ -486,7 +495,7 @@
                                 [class.rotate-90]="activeDropdown === 'modalStatus'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalStatus'"
-                            class="absolute z-[90] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-40 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-40 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
                             <div *ngFor="let st of ['STUDYING','GRADUATED','ACADEMIC_RESERVE','DROPPED_OUT']"
                                 (click)="setModalStatus(st)"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0 transition-colors">

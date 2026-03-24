@@ -40,8 +40,8 @@
                         <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600 transition-colors">
                             <i class="fas fa-search text-sm"></i>
                         </span>
-                        <input type="text" [(ngModel)]="searchTerm" (input)="onFilter()"
-                            [placeholder]="getSearchPlaceholder()"
+                        <input type="text" [ngModel]="getSearchTerm()"
+                            (ngModelChange)="setSearchTerm($event); onFilter()" [placeholder]="getSearchPlaceholder()"
                             class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-md outline-none transition-all text-sm focus:border-blue-500">
                     </div>
 
@@ -78,17 +78,17 @@
                                         </button>
                                         <div *ngIf="activeDropdown === 'major'"
                                             class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
-                                            <div (click)="selectedMajorId=null; activeDropdown=''"
+                                            <div (click)="tabFilters[activeTab].majorId=null; tabFilters[activeTab].curriculumId=null; tabFilters[activeTab].blockId=null; activeDropdown=''"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                                [class.text-slate-900]="selectedMajorId === null"
-                                                [class.bg-blue-50]="selectedMajorId === null">
+                                                [class.text-slate-900]="tabFilters[activeTab].majorId === null"
+                                                [class.bg-blue-50]="tabFilters[activeTab].majorId === null">
                                                 Tất cả các ngành học
                                             </div>
                                             <div *ngFor="let m of majors"
-                                                (click)="selectedMajorId=m.id; activeDropdown=''"
+                                                (click)="tabFilters[activeTab].majorId=m.id; tabFilters[activeTab].curriculumId=null; tabFilters[activeTab].blockId=null; activeDropdown=''"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                                [class.text-slate-900]="selectedMajorId === m.id"
-                                                [class.bg-blue-50]="selectedMajorId === m.id">
+                                                [class.text-slate-900]="tabFilters[activeTab].majorId === m.id"
+                                                [class.bg-blue-50]="tabFilters[activeTab].majorId === m.id">
                                                 {{ m.majorName }}
                                             </div>
                                         </div>
@@ -104,31 +104,32 @@
                                             (click)="activeDropdown = activeDropdown === 'status' ? '' : 'status'; $event.stopPropagation()"
                                             class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm appearance-none cursor-pointer text-slate-900">
                                             <div class="flex items-center gap-2.5 text-slate-900">
-                                                <span class="truncate">{{ getStatusLabel(selectedStatus) }}</span>
+                                                <span class="truncate">{{ getStatusLabel(tabFilters[activeTab].status)
+                                                    }}</span>
                                             </div>
                                             <i class="fas fa-chevron-right absolute text-[10px] right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 transition-transform duration-300 ease-in-out"
                                                 [class.rotate-90]="activeDropdown === 'status'"></i>
                                         </button>
                                         <div *ngIf="activeDropdown === 'status'"
                                             class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
-                                            <div (click)="selectedStatus='ALL'; activeDropdown=''"
+                                            <div (click)="tabFilters[activeTab].status='ALL'; activeDropdown=''"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                                [class.bg-blue-50]="selectedStatus === 'ALL'">
+                                                [class.bg-blue-50]="tabFilters[activeTab].status === 'ALL'">
                                                 Tất cả trạng thái
                                             </div>
-                                            <div (click)="selectedStatus='ACTIVE'; activeDropdown=''"
+                                            <div (click)="tabFilters[activeTab].status='ACTIVE'; activeDropdown=''"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                                [class.bg-blue-50]="selectedStatus === 'ACTIVE'">
+                                                [class.bg-blue-50]="tabFilters[activeTab].status === 'ACTIVE'">
                                                 Đang hoạt động
                                             </div>
-                                            <div (click)="selectedStatus='DRAFT'; activeDropdown=''"
+                                            <div (click)="tabFilters[activeTab].status='DRAFT'; activeDropdown=''"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                                [class.bg-blue-50]="selectedStatus === 'DRAFT'">
+                                                [class.bg-blue-50]="tabFilters[activeTab].status === 'DRAFT'">
                                                 Bản nháp
                                             </div>
-                                            <div (click)="selectedStatus='INACTIVE'; activeDropdown=''"
+                                            <div (click)="tabFilters[activeTab].status='INACTIVE'; activeDropdown=''"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                                [class.bg-blue-50]="selectedStatus === 'INACTIVE'">
+                                                [class.bg-blue-50]="tabFilters[activeTab].status === 'INACTIVE'">
                                                 Ngưng hoạt động
                                             </div>
                                         </div>
@@ -151,15 +152,15 @@
                                         </button>
                                         <div *ngIf="activeDropdown === 'curriculum'"
                                             class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
-                                            <div (click)="selectedCurriculumId=null; selectedBlockId=null; activeDropdown=''"
+                                            <div (click)="tabFilters[activeTab].curriculumId=null; tabFilters[activeTab].blockId=null; activeDropdown=''"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                                [class.bg-blue-50]="selectedCurriculumId === null">
+                                                [class.bg-blue-50]="tabFilters[activeTab].curriculumId === null">
                                                 Tất cả chương trình
                                             </div>
-                                            <div *ngFor="let c of curriculums"
-                                                (click)="selectedCurriculumId=c.id; selectedBlockId=null; activeDropdown=''"
+                                            <div *ngFor="let c of getAvailableCurriculumsForFilter()"
+                                                (click)="tabFilters[activeTab].curriculumId=c.id; tabFilters[activeTab].blockId=null; activeDropdown=''"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                                [class.bg-blue-50]="selectedCurriculumId === c.id">
+                                                [class.bg-blue-50]="tabFilters[activeTab].curriculumId === c.id">
                                                 {{ c.curriculumName }}
                                             </div>
                                         </div>
@@ -182,15 +183,15 @@
                                         </button>
                                         <div *ngIf="activeDropdown === 'block'"
                                             class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
-                                            <div (click)="selectedBlockId=null; activeDropdown=''"
+                                            <div (click)="tabFilters[activeTab].blockId=null; activeDropdown=''"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                                [class.bg-blue-50]="selectedBlockId === null">
+                                                [class.bg-blue-50]="tabFilters[activeTab].blockId === null">
                                                 Tất cả khối
                                             </div>
                                             <div *ngFor="let b of getAvailableBlocksForFilter()"
-                                                (click)="selectedBlockId=b.id; activeDropdown=''"
+                                                (click)="tabFilters[activeTab].blockId=b.id; activeDropdown=''"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                                [class.bg-blue-50]="selectedBlockId === b.id">
+                                                [class.bg-blue-50]="tabFilters[activeTab].blockId === b.id">
                                                 {{ b.blockName }}
                                             </div>
                                         </div>
@@ -411,14 +412,14 @@
 <div *ngIf="showModal" (mousedown)="handleBackdropClick($event)"
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
     <div (mousedown)="$event.stopPropagation()"
-        class="bg-white rounded-xl shadow-md w-full max-w-lg animate-in zoom-in-95 duration-200">
+        class="bg-white rounded-xl shadow-md w-full max-w-lg animate-in zoom-in-95 duration-200 relative mb-10">
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
             <h3 class="text-[17px] font-bold text-slate-700">{{ getModalTitle() }}</h3>
             <button (click)="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+        <div class="p-6 space-y-4">
             <!-- PROGRAM Tab Fields -->
             <ng-container *ngIf="activeTab === 'PROGRAM'">
                 <div class="space-y-1.5">
@@ -441,7 +442,7 @@
                                 [class.rotate-90]="activeDropdown === 'modalMajor'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalMajor'"
-                            class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md py-1 animate-in fade-in zoom-in-95 duration-200 max-h-48 overflow-y-auto">
+                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                             <div *ngFor="let m of majors"
                                 (click)="currentCurriculum.majorId = m.id; activeDropdown = ''"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0">
@@ -500,7 +501,7 @@
                                 [class.rotate-90]="activeDropdown === 'modalCurr'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalCurr'"
-                            class="absolute z-50 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md py-1 animate-in fade-in zoom-in-95 duration-200 max-h-48 overflow-y-auto">
+                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                             <div *ngFor="let c of curriculums"
                                 (click)="currentCurriculum.curriculumId = c.id; activeDropdown = ''"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0">
@@ -528,15 +529,42 @@
                 <div class="space-y-1.5">
                     <label class="text-xs font-semibold text-slate-900 uppercase">Số tín chỉ bắt buộc</label>
                     <input type="number" [(ngModel)]="currentCurriculum.creditsRequired"
-                        class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm text-slate-900 shadow-sm">
+                        [disabled]="currentCurriculum.blockType === 'MANDATORY'"
+                        [class.bg-slate-50]="currentCurriculum.blockType === 'MANDATORY'"
+                        class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm text-slate-900 shadow-sm"
+                        [placeholder]="currentCurriculum.blockType === 'MANDATORY' ? 'Tự động tính từ học phần' : 'Nhập số TC'">
+                    <div *ngIf="currentCurriculum.blockType === 'MANDATORY' && getMandatoryCreditsInfo() as info" 
+                         class="text-[11px] mt-1 flex justify-between px-1">
+                        <span class="text-slate-500">Đã phân bổ trong CTĐT:</span>
+                        <span [class.text-red-500]="info.current > info.total" 
+                              [class.text-blue-600]="info.current <= info.total"
+                              class="font-semibold">
+                            {{ info.current }} / {{ info.total }} TC
+                        </span>
+                    </div>
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-semibold text-slate-900 uppercase">Loại khối</label>
-                    <select [(ngModel)]="currentCurriculum.blockType"
-                        class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none text-sm">
-                        <option value="MANDATORY">Bắt buộc</option>
-                        <option value="ELECTIVE">Tự chọn</option>
-                    </select>
+                    <div class="relative">
+                        <button
+                            (click)="activeDropdown = activeDropdown === 'modalBlockType' ? '' : 'modalBlockType'; $event.stopPropagation()"
+                            class="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 shadow-sm hover:border-blue-300 transition-all text-left">
+                            <span class="truncate">{{ getModalBlockTypeLabel() }}</span>
+                            <i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-300"
+                                [class.rotate-90]="activeDropdown === 'modalBlockType'"></i>
+                        </button>
+                        <div *ngIf="activeDropdown === 'modalBlockType'"
+                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                            <div (click)="currentCurriculum.blockType = 'MANDATORY'; activeDropdown = ''"
+                                class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
+                                Bắt buộc
+                            </div>
+                            <div (click)="currentCurriculum.blockType = 'ELECTIVE'; activeDropdown = ''"
+                                class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
+                                Tự chọn
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </ng-container>
 
@@ -577,10 +605,10 @@
                                     [class.rotate-90]="activeDropdown === 'modalBlock'"></i>
                             </button>
                             <div *ngIf="activeDropdown === 'modalBlock'"
-                                class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md py-1 max-h-48 overflow-y-auto">
+                                class="absolute z-[60] w-full top-full mt-2 bg-white border border-slate-100 rounded-md shadow-md py-1 max-h-48 overflow-y-auto transform origin-top">
                                 <div *ngFor="let b of getAvailableBlocksForFilter()"
                                     (click)="currentCurriculum.blockId = b.id; activeDropdown = ''"
-                                    class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0 font-medium">
+                                    class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
                                     {{ b.blockName }}
                                 </div>
                             </div>
@@ -599,7 +627,7 @@
                                     [class.rotate-90]="activeDropdown === 'modalSubject'"></i>
                             </button>
                             <div *ngIf="activeDropdown === 'modalSubject'"
-                                class="absolute z-[50] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md py-1 max-h-48 overflow-y-auto">
+                                class="absolute z-[50] w-full top-full mt-2 bg-white border border-slate-100 rounded-md shadow-md py-1 max-h-48 overflow-y-auto transform origin-top">
                                 <div *ngFor="let s of allSubjects"
                                     (click)="currentCurriculum.subjectId = s.id; activeDropdown = ''"
                                     class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0">
@@ -643,10 +671,19 @@
         </div>
         <div class="p-6 space-y-4">
             <div>
-                <p class="text-slate-900 mt-2 leading-relaxed" [innerHTML]="getDeleteModalInfo()">
+                <p *ngIf="activeTab === 'PROGRAM'" class="text-slate-900 mt-2 leading-relaxed">
+                    Bạn có chắc muốn xóa chương trình đào tạo
+                    <span class="font-semibold">{{ curriculumToDelete?.curriculumName }}</span>?
+                    Thao tác này không thể hoàn tác.
                 </p>
-                <p class="text-slate-500 text-sm mt-3 flex items-center gap-2">
-                    <i class="fas fa-exclamation-triangle text-amber-500"></i>
+                <p *ngIf="activeTab === 'BLOCK'" class="text-slate-900 mt-2 leading-relaxed">
+                    Bạn có chắc muốn xóa khối kiến thức
+                    <span class="font-semibold">{{ curriculumToDelete?.blockName }}</span>?
+                    Thao tác này không thể hoàn tác.
+                </p>
+                <p *ngIf="activeTab === 'SUBJECT'" class="text-slate-900 mt-2 leading-relaxed">
+                    Bạn có chắc muốn xóa học phần
+                    <span class="font-semibold">{{ curriculumToDelete?.subjectName }}</span> khỏi chương trình đào tạo?
                     Thao tác này không thể hoàn tác.
                 </p>
             </div>

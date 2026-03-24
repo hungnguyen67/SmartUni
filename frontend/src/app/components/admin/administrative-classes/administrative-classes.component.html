@@ -84,11 +84,15 @@
                                                 [class.bg-blue-50]="selectedAdvisorId === null">
                                                 Tất cả cố vấn
                                             </div>
-                                            <div *ngFor="let l of lecturers" (click)="selectAdvisor(l.id)"
+                                            <div *ngFor="let l of getAvailableFilterAdvisors()" (click)="selectAdvisor(l.id)"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                                 [class.text-slate-900]="selectedAdvisorId === l.id"
                                                 [class.bg-blue-50]="selectedAdvisorId === l.id">
                                                 {{ l.lastName }} {{ l.firstName }}
+                                            </div>
+                                            <div *ngIf="getAvailableFilterAdvisors().length === 0"
+                                                 class="px-4 py-3 text-sm text-slate-400 italic text-center">
+                                                 Không có giảng viên phù hợp
                                             </div>
                                         </div>
                                     </div>
@@ -284,7 +288,7 @@
                         </td>
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ item.academicYear }}
                         </td>
-                        <td class="px-4 py-4 text-sm text-slate-900 text-center">K{{ item.cohort }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ item.cohort }}</td>
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">{{
                             item.studentCount }}</td>
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ item.averageGpa ? (item.averageGpa |
@@ -548,9 +552,13 @@
                         <div (click)="setModalAdvisor(null)"
                             class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-500 border-b border-slate-50">
                             Chưa phân công</div>
-                        <div *ngFor="let l of lecturers" (click)="setModalAdvisor(l.id)"
+                        <div *ngFor="let l of getAvailableModalAdvisors()" (click)="setModalAdvisor(l.id)"
                             class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0">
                             {{ l.lastName }} {{ l.firstName }}</div>
+                        <div *ngIf="getAvailableModalAdvisors().length === 0"
+                             class="px-4 py-3 text-sm text-slate-400 italic text-center">
+                             Không có giảng viên phù hợp
+                        </div>
                     </div>
                 </div>
             </div>
@@ -567,7 +575,7 @@
                             [class.rotate-90]="activeDropdown === 'modalStatus'"></i>
                     </button>
                     <div *ngIf="activeDropdown === 'modalStatus'"
-                        class="absolute z-[90] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-40 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                        class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-none overflow-visible animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
                         <div (click)="setModalStatus('ACTIVE')"
                             class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
                             Đang hoạt động</div>
