@@ -35,4 +35,16 @@ export class AdministrativeClassService {
     getClassesByAdvisor(userId: number): Observable<AdministrativeClassDTO[]> {
         return this.http.get<AdministrativeClassDTO[]>(`${this.apiUrl}/advisor/${userId}`);
     }
+
+    createClass(data: any): Observable<AdministrativeClassDTO> {
+        return this.http.post<AdministrativeClassDTO>(this.apiUrl, data);
+    }
+
+    updateClass(id: number, data: any): Observable<AdministrativeClassDTO> {
+        return this.http.put<AdministrativeClassDTO>(`${this.apiUrl}/${id}`, data);
+    }
+
+    deleteClass(id: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/${id}`);
+    }
 }

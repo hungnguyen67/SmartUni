@@ -3,10 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.AdministrativeClassDTO;
 import com.example.demo.service.AdministrativeClassService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -25,5 +22,20 @@ public class ClassController {
     @GetMapping("/advisor/{userId}")
     public List<AdministrativeClassDTO> getClassesByAdvisor(@PathVariable Long userId) {
         return administrativeClassService.getClassesByAdvisor(userId);
+    }
+
+    @PostMapping
+    public AdministrativeClassDTO createClass(@RequestBody AdministrativeClassDTO dto) {
+        return administrativeClassService.saveClass(dto);
+    }
+
+    @PutMapping("/{id}")
+    public AdministrativeClassDTO updateClass(@PathVariable Long id, @RequestBody AdministrativeClassDTO dto) {
+        return administrativeClassService.updateClass(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteClass(@PathVariable Long id) {
+        administrativeClassService.deleteClass(id);
     }
 }

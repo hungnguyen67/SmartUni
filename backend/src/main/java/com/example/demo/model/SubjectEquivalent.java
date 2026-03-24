@@ -25,6 +25,9 @@ public class SubjectEquivalent {
     @Column(name = "effective_from")
     private java.time.LocalDate effectiveFrom;
 
+    @Column(name = "effective_to")
+    private java.time.LocalDate effectiveTo;
+
     public SubjectEquivalent() {}
 
     public SubjectEquivalentKey getId() { return id; }
@@ -41,4 +44,7 @@ public class SubjectEquivalent {
 
     public java.time.LocalDate getEffectiveFrom() { return effectiveFrom; }
     public void setEffectiveFrom(java.time.LocalDate effectiveFrom) { this.effectiveFrom = effectiveFrom; }
+
+    public java.time.LocalDate getEffectiveTo() { return effectiveTo; }
+    public void setEffectiveTo(java.time.LocalDate effectiveTo) { this.effectiveTo = effectiveTo; }
 }

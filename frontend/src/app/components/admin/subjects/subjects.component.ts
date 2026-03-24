@@ -39,6 +39,10 @@ export class SubjectsComponent implements OnInit {
         const target = event.target as HTMLElement;
         if (!target.closest('.filter-menu-wrapper')) {
             this.showFilter = false;
+        }
+        
+        // Reset activeDropdown if clicking outside any relative container (which houses our dropdowns)
+        if (!target.closest('.relative')) {
             this.activeDropdown = '';
         }
     }
@@ -119,15 +123,17 @@ export class SubjectsComponent implements OnInit {
             theoryPeriods: 0,
             practicalPeriods: 0,
             description: '',
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            relations: []
         };
         this.showModal = true;
     }
 
     editSubject(subject: SubjectDTO): void {
         this.isEditing = true;
-        this.originalSubject = { ...subject };
-        this.currentSubject = { ...subject };
+        this.originalSubject = JSON.parse(JSON.stringify(subject));
+        this.currentSubject = JSON.parse(JSON.stringify(subject));
+        if (!this.currentSubject.relations) this.currentSubject.relations = [];
         this.showModal = true;
     }
 
@@ -135,18 +141,23 @@ export class SubjectsComponent implements OnInit {
         if (!this.isEditing) return true;
         if (!this.originalSubject) return false;
 
-        return this.currentSubject.subjectCode !== this.originalSubject.subjectCode ||
+        const baseChanges = this.currentSubject.subjectCode !== this.originalSubject.subjectCode ||
             this.currentSubject.name !== this.originalSubject.name ||
             this.currentSubject.credits !== this.originalSubject.credits ||
             this.currentSubject.theoryPeriods !== this.originalSubject.theoryPeriods ||
             this.currentSubject.practicalPeriods !== this.originalSubject.practicalPeriods ||
             this.currentSubject.description !== this.originalSubject.description ||
             this.currentSubject.status !== this.originalSubject.status;
+
+        const relationsChanged = JSON.stringify(this.currentSubject.relations) !== JSON.stringify(this.originalSubject.relations);
+
+        return baseChanges || relationsChanged;
     }
 
     closeModal(): void {
         this.showModal = false;
         this.originalSubject = null;
+        this.activeDropdown = '';
     }
 
     saveSubject(): void {
@@ -162,6 +173,24 @@ export class SubjectsComponent implements OnInit {
             this.flashMessage.error('Vui lòng nhập số tín chỉ');
             return;
         }
+
+        // Prepare relations: filter out empty ones
+        if (this.currentSubject.relations) {
+            this.currentSubject.relations = this.currentSubject.relations
+                .filter(r => r.subjectCode)
+                .map(r => ({
+                    ...r,
+                    effectiveFrom: r.effectiveFrom || null,
+                    effectiveTo: r.effectiveTo || null
+                }));
+        }
+
+        // Satisfy DB constraint: credits = theoryCredits + practicalCredits
+        // Rule: 15 periods LT = 1 credit, 30 periods TH = 1 credit (approx)
+        // But we must follow the sum constraint strictly.
+        const theoryCredits = Math.floor((this.currentSubject.theoryPeriods || 0) / 15);
+        this.currentSubject.theoryCredits = Math.min(theoryCredits, this.currentSubject.credits || 0);
+        this.currentSubject.practicalCredits = (this.currentSubject.credits || 0) - this.currentSubject.theoryCredits;
 
         if (this.isEditing) {
             if (!this.hasChanges()) {
@@ -242,5 +271,54 @@ export class SubjectsComponent implements OnInit {
             case 'INACTIVE': return 'bg-slate-50 text-slate-600 border-slate-200';
             default: return 'bg-slate-50 text-slate-600 border-slate-200';
         }
+    }
+
+    // Relation Helpers
+    getRelation(type: 'PREREQUISITE' | 'EQUIVALENT'): any {
+        if (!this.currentSubject.relations) this.currentSubject.relations = [];
+        let rel = this.currentSubject.relations.find(r => r.relationType === type);
+        if (!rel) {
+            rel = {
+                relationType: type,
+                subjectCode: '',
+                subjectName: '',
+                minGrade: 'D',
+                isParallel: false,
+                effectiveFrom: '',
+                effectiveTo: ''
+            };
+            this.currentSubject.relations.push(rel);
+        }
+        return rel;
+    }
+
+    updateRelationSubject(type: 'PREREQUISITE' | 'EQUIVALENT', event: Event) {
+        const select = event.target as HTMLSelectElement;
+        const code = select.value;
+        const rel = this.getRelation(type);
+        rel.subjectCode = code;
+        const sub = this.subjects.find(s => s.subjectCode === code);
+        rel.subjectName = sub ? sub.name : '';
+    }
+
+    getBindingConditions(subject: SubjectDTO): string {
+        if (!subject.relations || subject.relations.length === 0) return '';
+        return subject.relations
+            .filter(rel => rel.subjectCode) // Only show relations with a selected subject
+            .map(rel => {
+                const label = rel.relationType === 'PREREQUISITE' ? 'Tiên quyết' : 'Tương đương';
+                return `${label}(${rel.subjectName})`;
+            }).join(', ');
+    }
+
+    getSubjectNameByCode(code: string): string {
+        const sub = this.subjects.find(s => s.subjectCode === code);
+        return sub ? sub.name : '';
+    }
+
+    selectRelationSubject(type: 'PREREQUISITE' | 'EQUIVALENT', code: string) {
+        const rel = this.getRelation(type);
+        rel.subjectCode = code;
+        rel.subjectName = this.getSubjectNameByCode(code);
     }
 }

@@ -321,11 +321,11 @@
                                         -- Không chọn --
                                     </div>
                                     <div *ngFor="let l of lecturers"
-                                        (click)="selectedScheduleItem.lecturerName = l.fullName; activeDropdown = ''; saveScheduleItem()"
+                                        (click)="selectedScheduleItem.lecturerName = l.lastName + ' ' + l.firstName; activeDropdown = ''; saveScheduleItem()"
                                         class="px-2 py-1.5 text-[12px] hover:bg-blue-50 hover:text-slate-800 cursor-pointer transition-colors border-t border-slate-50"
-                                        [class.text-slate-800]="selectedScheduleItem.lecturerName === l.fullName"
-                                        [class.bg-blue-50]="selectedScheduleItem.lecturerName === l.fullName">
-                                        <div class="font-bold">{{ l.fullName }}</div>
+                                        [class.text-slate-800]="selectedScheduleItem.lecturerName === l.lastName + ' ' + l.firstName"
+                                        [class.bg-blue-50]="selectedScheduleItem.lecturerName === l.lastName + ' ' + l.firstName">
+                                        <div class="font-bold">{{ l.lastName }} {{ l.firstName }}</div>
                                         <div class="text-[9px] opacity-70">{{ l.lecturerCode }} - {{ l.facultyName }}
                                         </div>
                                     </div>

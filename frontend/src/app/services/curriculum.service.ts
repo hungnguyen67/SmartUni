@@ -23,11 +23,33 @@ export interface CurriculumSubjectComponentDTO {
     subjectName: string;
     credits: number;
     semester: number;
-    isRequired: boolean;
     prerequisites: string[];
     corequisites: string[];
     equivalents: string[];
     blockCode?: string;
+}
+
+export interface KnowledgeBlockDTO {
+    id: number;
+    blockCode: string;
+    blockName: string;
+    curriculumId: number;
+    curriculumName: string;
+    creditsRequired: number;
+    blockType: string;
+}
+
+export interface CurriculumSubjectDetailDTO {
+    id: number;
+    curriculumId: number;
+    curriculumName: string;
+    blockId: number;
+    blockName: string;
+    subjectId: number;
+    subjectCode: string;
+    subjectName: string;
+    recommendedSemester: number;
+    credits: number;
 }
 
 export interface KnowledgeBlockDetailDTO {
@@ -64,7 +86,41 @@ export class CurriculumService {
         return this.http.get<KnowledgeBlockDetailDTO[]>(`${this.apiUrl}/${id}/details`);
     }
 
-    createCurriculum(curriculum: CurriculumDTO): Observable<CurriculumDTO> {
+    getKnowledgeBlocks(): Observable<KnowledgeBlockDTO[]> {
+        return this.http.get<KnowledgeBlockDTO[]>(`${this.apiUrl}/knowledge-blocks`);
+    }
+
+    getAllCurriculumSubjects(): Observable<CurriculumSubjectDetailDTO[]> {
+    return this.http.get<CurriculumSubjectDetailDTO[]>(this.apiUrl + '/subjects');
+  }
+
+  // Knowledge Block CRUD
+  createKnowledgeBlock(block: KnowledgeBlockDTO): Observable<KnowledgeBlockDTO> {
+    return this.http.post<KnowledgeBlockDTO>(this.apiUrl + '/knowledge-blocks', block);
+  }
+
+  updateKnowledgeBlock(id: number, block: KnowledgeBlockDTO): Observable<KnowledgeBlockDTO> {
+    return this.http.put<KnowledgeBlockDTO>(`${this.apiUrl}/knowledge-blocks/${id}`, block);
+  }
+
+  deleteKnowledgeBlock(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/knowledge-blocks/${id}`);
+  }
+
+  // Curriculum Subject CRUD
+  addSubjectToCurriculum(dto: CurriculumSubjectDetailDTO): Observable<CurriculumSubjectDetailDTO> {
+    return this.http.post<CurriculumSubjectDetailDTO>(this.apiUrl + '/curriculum-subjects', dto);
+  }
+
+  updateCurriculumSubject(dto: CurriculumSubjectDetailDTO): Observable<CurriculumSubjectDetailDTO> {
+    return this.http.put<CurriculumSubjectDetailDTO>(this.apiUrl + '/curriculum-subjects', dto);
+  }
+
+  deleteCurriculumSubject(curriculumId: number, subjectId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/curriculum-subjects/${curriculumId}/${subjectId}`);
+  }
+
+  createCurriculum(curriculum: CurriculumDTO): Observable<CurriculumDTO> {
         return this.http.post<CurriculumDTO>(this.apiUrl, curriculum);
     }
 

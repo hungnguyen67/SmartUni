@@ -1,11 +1,14 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.StudentDTO;
-import com.example.demo.model.StudentProfile;
-import com.example.demo.repository.StudentProfileRepository;
+import com.example.demo.model.*;
+import com.example.demo.repository.*;
+import com.example.demo.exception.ApiException;
+import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,6 +17,18 @@ public class StudentService {
 
     @Autowired
     private StudentProfileRepository studentProfileRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private AdministrativeClassRepository administrativeClassRepository;
+
+    @Autowired
+    private CurriculumRepository curriculumRepository;
 
     public List<StudentDTO> searchStudents(String searchTerm, Long classId, Long majorId, 
                                           Integer enrollmentYear, String status, Double minGpa, Double maxGpa) {
@@ -36,22 +51,136 @@ public class StudentService {
         return studentProfileRepository.findDistinctEnrollmentYears();
     }
 
+    @Transactional
+    public StudentDTO createStudent(StudentDTO dto) {
+        User user = userRepository.findByEmail(dto.getEmail())
+                .orElseGet(() -> {
+                    User newUser = new User();
+                    newUser.setEmail(dto.getEmail());
+                    newUser.setAccountStatus(User.AccountStatus.ACTIVE);
+                    newUser.setCreatedAt(LocalDateTime.now());
+                    
+                    Role studentRole = roleRepository.findByName("STUDENT")
+                            .orElseThrow(() -> new ApiException("Role STUDENT not found", HttpStatus.INTERNAL_SERVER_ERROR));
+                    newUser.setRole(studentRole);
+                    newUser.setPassword("$2a$10$T1djKF4oQwrHeTJwjDaEyO5WB5XsEq6pRSZyz/oxSVcp3e80kdnF."); // Default: 123456
+                    return newUser;
+                });
+
+        if (user.getId() != null && studentProfileRepository.existsById(user.getId())) {
+            throw new ApiException("Student with this email already exists: " + dto.getEmail(), HttpStatus.CONFLICT);
+        }
+
+        if (studentProfileRepository.existsByStudentCode(dto.getStudentCode())) {
+            throw new ApiException("Student code already exists: " + dto.getStudentCode(), HttpStatus.CONFLICT);
+        }
+
+        updateUserFields(user, dto);
+        user = userRepository.saveAndFlush(user);
+
+        StudentProfile profile = new StudentProfile();
+        profile.setUser(user);
+        profile.setUserId(user.getId());
+        updateProfileFields(profile, dto);
+        profile.setCreatedAt(LocalDateTime.now());
+        
+        studentProfileRepository.save(profile);
+        return convertToDTO(profile);
+    }
+
+    @Transactional
+    public StudentDTO updateStudent(Long id, StudentDTO dto) {
+        StudentProfile profile = studentProfileRepository.findById(id)
+                .orElseThrow(() -> new ApiException("Student not found with id: " + id, HttpStatus.NOT_FOUND));
+        
+        User user = profile.getUser();
+        updateUserFields(user, dto);
+        userRepository.save(user);
+
+        updateProfileFields(profile, dto);
+        studentProfileRepository.save(profile);
+        
+        return convertToDTO(profile);
+    }
+
+    @Transactional
+    public void deleteStudent(Long id) {
+        StudentProfile profile = studentProfileRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+        User user = profile.getUser();
+        
+        studentProfileRepository.delete(profile);
+        userRepository.delete(user);
+    }
+
+    private void updateUserFields(User user, StudentDTO dto) {
+        user.setLastName(dto.getLastName() != null ? dto.getLastName() : "");
+        user.setFirstName(dto.getFirstName() != null ? dto.getFirstName() : "");
+        user.setPhone(dto.getPhone());
+        user.setBirthday(dto.getBirthday());
+        user.setAddress(dto.getAddress());
+        if (dto.getGender() != null) {
+            user.setGender(User.Gender.valueOf(dto.getGender()));
+        }
+        user.setUpdatedAt(LocalDateTime.now());
+    }
+
+    private void updateProfileFields(StudentProfile profile, StudentDTO dto) {
+        profile.setStudentCode(dto.getStudentCode());
+        profile.setEnrollmentYear(dto.getEnrollmentYear());
+
+        
+        if (dto.getClassId() != null) {
+            AdministrativeClass ac = administrativeClassRepository.findById(dto.getClassId())
+                    .orElseThrow(() -> new ApiException("Class not found with id: " + dto.getClassId(), HttpStatus.NOT_FOUND));
+            profile.setAdministrativeClass(ac);
+        }
+
+        if (dto.getCurriculumId() != null) {
+            Curriculum curriculum = curriculumRepository.findById(dto.getCurriculumId())
+                    .orElseThrow(() -> new ApiException("Curriculum not found with id: " + dto.getCurriculumId(), HttpStatus.BAD_REQUEST));
+            profile.setCurriculum(curriculum);
+        }
+
+        if (dto.getStatus() != null) {
+            profile.setStatus(StudentProfile.Status.valueOf(dto.getStatus()));
+        }
+        profile.setUpdatedAt(LocalDateTime.now());
+    }
+
     private StudentDTO convertToDTO(StudentProfile student) {
         StudentDTO dto = new StudentDTO();
         dto.setId(student.getUserId());
         dto.setStudentCode(student.getStudentCode());
         dto.setFullName(student.getUser().getFullName());
+        dto.setFirstName(student.getUser().getFirstName());
+        dto.setLastName(student.getUser().getLastName());
+        dto.setEmail(student.getUser().getEmail());
+        dto.setPhone(student.getUser().getPhone());
+        dto.setAddress(student.getUser().getAddress());
+        dto.setBirthday(student.getUser().getBirthday());
+        dto.setGender(student.getUser().getGender() != null ? student.getUser().getGender().name() : null);
         
         if (student.getAdministrativeClass() != null) {
             dto.setClassName(student.getAdministrativeClass().getClassCode());
             dto.setClassId(student.getAdministrativeClass().getId());
             if (student.getAdministrativeClass().getMajor() != null) {
                 dto.setMajorName(student.getAdministrativeClass().getMajor().getMajorName());
+                dto.setMajorId(student.getAdministrativeClass().getMajor().getId());
+                if (student.getAdministrativeClass().getMajor().getFaculty() != null) {
+                    dto.setFacultyId(student.getAdministrativeClass().getMajor().getFaculty().getId());
+                    dto.setFacultyName(student.getAdministrativeClass().getMajor().getFaculty().getFacultyName());
+                }
             }
         }
         
         if (dto.getMajorName() == null && student.getCurriculum() != null && student.getCurriculum().getMajor() != null) {
             dto.setMajorName(student.getCurriculum().getMajor().getMajorName());
+            dto.setMajorId(student.getCurriculum().getMajor().getId());
+            if (student.getCurriculum().getMajor().getFaculty() != null) {
+                dto.setFacultyId(student.getCurriculum().getMajor().getFaculty().getId());
+                dto.setFacultyName(student.getCurriculum().getMajor().getFaculty().getFacultyName());
+            }
         }
         
         if (student.getCurriculum() != null) {
@@ -60,7 +189,7 @@ public class StudentService {
         }
         
         dto.setEnrollmentYear(student.getEnrollmentYear());
-        dto.setCurrentSemester(student.getCurrentSemester());
+
         dto.setTotalCreditsEarned(student.getTotalCreditsEarned());
         dto.setCurrentGpa(student.getCurrentGpa());
         dto.setCurrentGpa10(student.getCurrentGpa10());

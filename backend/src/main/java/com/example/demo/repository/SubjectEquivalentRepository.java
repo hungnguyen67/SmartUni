@@ -11,4 +11,5 @@ import java.util.List;
 public interface SubjectEquivalentRepository extends JpaRepository<SubjectEquivalent, SubjectEquivalentKey> {
     List<SubjectEquivalent> findBySubjectIdIn(List<Long> subjectIds);
     List<SubjectEquivalent> findBySubjectId(Long subjectId);
+    void deleteBySubjectId(Long subjectId);
 }

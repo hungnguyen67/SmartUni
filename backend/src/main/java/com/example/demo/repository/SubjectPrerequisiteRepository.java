@@ -11,4 +11,5 @@ import java.util.List;
 public interface SubjectPrerequisiteRepository extends JpaRepository<SubjectPrerequisite, SubjectPrerequisiteKey> {
     List<SubjectPrerequisite> findBySubjectIdIn(List<Long> subjectIds);
     List<SubjectPrerequisite> findBySubjectId(Long subjectId);
+    void deleteBySubjectId(Long subjectId);
 }

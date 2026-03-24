@@ -6,12 +6,18 @@ export interface StudentDTO {
     id: number;
     studentCode: string;
     fullName: string;
+    lastName: string;
+    firstName: string;
+    email: string;
+    phone: string;
+    birthday: string;
+    address: string;
+    gender: string;
     className: string;
     classId: number;
     curriculumId: number;
     curriculumName: string;
     enrollmentYear: number;
-    currentSemester: number;
     totalCreditsEarned: number;
     currentGpa: number;
     currentGpa10: number;
@@ -44,5 +50,17 @@ export class StudentService {
 
     getEnrollmentYears(): Observable<number[]> {
         return this.http.get<number[]>(`${this.apiUrl}/enrollment-years`);
+    }
+
+    createStudent(data: any): Observable<StudentDTO> {
+        return this.http.post<StudentDTO>(this.apiUrl, data);
+    }
+
+    updateStudent(id: number, data: any): Observable<StudentDTO> {
+        return this.http.put<StudentDTO>(`${this.apiUrl}/${id}`, data);
+    }
+
+    deleteStudent(id: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/${id}`);
     }
 }

@@ -63,7 +63,8 @@ public class CourseClassService {
                 Long curriculumId = student.getCurriculum().getId();
                 curriculumSubjectRepository.findAll().stream()
                         .filter(cs -> cs.getCurriculum().getId().equals(curriculumId))
-                        .forEach(cs -> subjectRequirementMap.put(cs.getSubject().getId(), cs.getIsRequired()));
+                        .forEach(cs -> subjectRequirementMap.put(cs.getSubject().getId(), 
+                                cs.getKnowledgeBlock().getBlockType() == KnowledgeBlock.BlockType.MANDATORY));
                 
                 // Lọc lớp theo danh sách môn trong khung
                 classes = classes.stream()
@@ -404,7 +405,7 @@ public class CourseClassService {
                 List<com.example.demo.model.CurriculumSubject> mandatory = allCurriculumSubjects.stream()
                         .filter(cs -> cs.getCurriculum().getId().equals(currId)
                                 && cs.getRecommendedSemester().equals(currentSemesterNum)
-                                && cs.getIsRequired())
+                                && cs.getKnowledgeBlock().getBlockType() == com.example.demo.model.KnowledgeBlock.BlockType.MANDATORY)
                         .collect(Collectors.toList());
 
                 for (com.example.demo.model.CurriculumSubject cs : mandatory) {

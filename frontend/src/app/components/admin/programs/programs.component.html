@@ -212,26 +212,30 @@
   <div (mousedown)="$event.stopPropagation()"
     class="bg-white rounded-xl shadow-md w-full max-w-lg animate-in zoom-in-95 duration-200">
     <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
-      <h3 class="text-[17px] font-bold text-slate-700">{{ isEditing ? 'Chỉnh sửa Ngành' : 'Thêm Ngành' }}</h3>
+      <h3 class="text-[17px] font-bold text-slate-700">{{ isEditing ? 'Cập nhật thông tin Ngành' : 'Thêm Ngành mới'
+        }}</h3>
       <button (click)="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
         <i class="fas fa-times"></i>
       </button>
     </div>
     <div class="p-6 space-y-4">
       <div class="space-y-1.5">
-        <label class="text-xs font-semibold text-slate-900 uppercase">Mã Ngành</label>
+        <label class="text-xs font-semibold text-slate-900 uppercase">Mã Ngành <span
+            class="text-red-500">*</span></label>
         <input type="text" [(ngModel)]="currentMajor.majorCode"
           class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm text-slate-900"
           placeholder="VD: CNTT">
       </div>
       <div class="space-y-1.5">
-        <label class="text-xs font-semibold text-slate-900 uppercase">Tên Ngành</label>
+        <label class="text-xs font-semibold text-slate-900 uppercase">Tên Ngành <span
+            class="text-red-500">*</span></label>
         <input type="text" [(ngModel)]="currentMajor.majorName"
           class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm text-slate-900"
           placeholder="VD: Công nghệ thông tin">
       </div>
       <div class="space-y-1.5">
-        <label class="text-xs font-semibold text-slate-900 uppercase">Thuộc Khoa</label>
+        <label class="text-xs font-semibold text-slate-900 uppercase">Thuộc Khoa <span
+            class="text-red-500">*</span></label>
         <div class="relative">
           <button type="button"
             (click)="activeDropdown = (activeDropdown === 'modalFaculty' ? '' : 'modalFaculty'); $event.stopPropagation()"
@@ -287,9 +291,9 @@
         </div>
       </div>
     </div>
-    <div class="p-6 flex justify-end gap-3 rounded-b-xl">
+    <div class="p-6 flex justify-end gap-3">
       <button (click)="closeModal()"
-        class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all text-slate-900">Hủy
+        class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all">Hủy
         bỏ</button>
       <button (click)="saveMajor()"
         class="px-6 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-md disabled:opacity-50"
@@ -314,13 +318,13 @@
     <div class="p-6 space-y-4">
       <div>
         <p class="text-slate-900 mt-2 leading-relaxed">
-          Hành động này sẽ gỡ bỏ vĩnh viễn ngành <span
-            class="font-semibold text-slate-900">{{majorToDelete?.majorName}}</span>. Thao tác này có thể ảnh hưởng đến
-          các chương trình học và tài liệu liên quan.
+          Bạn có chắc muốn xóa ngành
+          <span class="font-semibold">{{ majorToDelete?.majorName }}</span>?
+          Thao tác này không thể hoàn tác.
         </p>
       </div>
     </div>
-    <div class="p-6 flex justify-end gap-3 text-slate-900">
+    <div class="p-6 flex justify-end gap-3">
       <button type="button" (click)="closeDeleteModal()"
         class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all text-slate-900">Hủy
         bỏ</button>

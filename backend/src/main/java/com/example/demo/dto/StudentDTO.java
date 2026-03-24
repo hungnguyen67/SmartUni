@@ -9,14 +9,22 @@ public class StudentDTO {
     private Long curriculumId;
     private String curriculumName;
     private Integer enrollmentYear;
-    private Integer currentSemester;
+
     private Integer totalCreditsEarned;
     private Double currentGpa;
     private Double currentGpa10;
     private String status;
     private String majorName;
+    private Long majorId;
     private String firstName;
     private String lastName;
+    private String email;
+    private String phone;
+    private String address;
+    private java.time.LocalDate birthday;
+    private String gender;
+    private Long facultyId;
+    private String facultyName;
     private Integer absentSessions = 0;
     private Integer absentPeriods = 0;
     private Double absentPercent = 0.0;
@@ -96,13 +104,7 @@ public class StudentDTO {
         this.enrollmentYear = enrollmentYear;
     }
 
-    public Integer getCurrentSemester() {
-        return currentSemester;
-    }
 
-    public void setCurrentSemester(Integer currentSemester) {
-        this.currentSemester = currentSemester;
-    }
 
     public Integer getTotalCreditsEarned() {
         return totalCreditsEarned;
@@ -174,6 +176,70 @@ public class StudentDTO {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public java.time.LocalDate getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(java.time.LocalDate birthday) {
+        this.birthday = birthday;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public Long getMajorId() {
+        return majorId;
+    }
+
+    public void setMajorId(Long majorId) {
+        this.majorId = majorId;
+    }
+
+    public Long getFacultyId() {
+        return facultyId;
+    }
+
+    public void setFacultyId(Long facultyId) {
+        this.facultyId = facultyId;
+    }
+
+    public String getFacultyName() {
+        return facultyName;
+    }
+
+    public void setFacultyName(String facultyName) {
+        this.facultyName = facultyName;
     }
 
     public Integer getAbsentSessions() {

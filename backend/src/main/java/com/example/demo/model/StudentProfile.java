@@ -31,8 +31,7 @@ public class StudentProfile implements Serializable {
     @Column(name = "enrollment_year")
     private Integer enrollmentYear;
 
-    @Column(name = "current_semester")
-    private Integer currentSemester = 1;
+
 
     @Column(name = "current_gpa")
     private Double currentGpa = 0.0;
@@ -76,8 +75,7 @@ public class StudentProfile implements Serializable {
     public Integer getEnrollmentYear() { return enrollmentYear; }
     public void setEnrollmentYear(Integer enrollmentYear) { this.enrollmentYear = enrollmentYear; }
 
-    public Integer getCurrentSemester() { return currentSemester; }
-    public void setCurrentSemester(Integer currentSemester) { this.currentSemester = currentSemester; }
+
 
     public Double getCurrentGpa() { return currentGpa; }
     public void setCurrentGpa(Double currentGpa) { this.currentGpa = currentGpa; }

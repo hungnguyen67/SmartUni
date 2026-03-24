@@ -306,7 +306,7 @@
                     <select [(ngModel)]="courseClassForm.lecturerId"
                         class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm appearance-none">
                         <option [ngValue]="null">Chưa phân công</option>
-                        <option *ngFor="let l of allLecturers" [value]="l.id">{{l.fullName}}</option>
+                        <option *ngFor="let l of allLecturers" [value]="l.id">{{l.lastName}} {{l.firstName}}</option>
                     </select>
                 </div>
                 <div class="space-y-1.5">

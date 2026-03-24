@@ -2,12 +2,17 @@ package com.example.demo.service;
 
 import com.example.demo.dto.SubjectDTO;
 import com.example.demo.model.Subject;
+import com.example.demo.model.SubjectPrerequisite;
+import com.example.demo.model.SubjectPrerequisiteKey;
+import com.example.demo.model.SubjectEquivalent;
+import com.example.demo.model.SubjectEquivalentKey;
 import com.example.demo.dto.SubjectRelationDTO;
 import com.example.demo.repository.SubjectEquivalentRepository;
 import com.example.demo.repository.SubjectPrerequisiteRepository;
 import com.example.demo.repository.SubjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,17 +41,21 @@ public class SubjectService {
         return convertToDTO(subject);
     }
 
+    @Transactional
     public SubjectDTO createSubject(SubjectDTO dto) {
         Subject subject = new Subject();
         updateSubjectFields(subject, dto);
         Subject saved = subjectRepository.save(subject);
+        updateRelations(saved, dto.getRelations());
         return convertToDTO(saved);
     }
 
+    @Transactional
     public SubjectDTO updateSubject(Long id, SubjectDTO dto) {
         Subject subject = subjectRepository.findById(id).orElseThrow(() -> new RuntimeException("Subject not found"));
         updateSubjectFields(subject, dto);
         Subject saved = subjectRepository.save(subject);
+        updateRelations(saved, dto.getRelations());
         return convertToDTO(saved);
     }
 
@@ -61,6 +70,43 @@ public class SubjectService {
         subject.setDescription(dto.getDescription());
         if (dto.getStatus() != null) {
             subject.setStatus(Subject.Status.valueOf(dto.getStatus()));
+        }
+    }
+
+    private void updateRelations(Subject subject, List<SubjectRelationDTO> relationDTOs) {
+        if (relationDTOs == null) return;
+        
+        // Delete existing relations
+        prerequisiteRepository.deleteBySubjectId(subject.getId());
+        equivalentRepository.deleteBySubjectId(subject.getId());
+        
+        // Add new relations
+        for (SubjectRelationDTO relDTO : relationDTOs) {
+            String subjectCode = relDTO.getSubjectCode();
+            if (subjectCode == null || subjectCode.isEmpty()) continue;
+
+            Subject targetSubject = subjectRepository.findBySubjectCode(subjectCode)
+                    .orElseThrow(() -> new RuntimeException("Relation subject not found: " + subjectCode));
+            
+            String type = relDTO.getRelationType();
+            if ("PREREQUISITE".equals(type) || "COREQUISITE".equals(type)) {
+                SubjectPrerequisite pre = new SubjectPrerequisite();
+                pre.setId(new SubjectPrerequisiteKey(subject.getId(), targetSubject.getId()));
+                pre.setSubject(subject);
+                pre.setPrerequisiteSubject(targetSubject);
+                pre.setMinGradeRequired(relDTO.getMinGrade() != null ? relDTO.getMinGrade() : "D");
+                pre.setIsCorequisite("COREQUISITE".equals(type) || (relDTO.getIsParallel() != null && relDTO.getIsParallel()));
+                prerequisiteRepository.save(pre);
+            } else if ("EQUIVALENT".equals(type)) {
+                SubjectEquivalent eq = new SubjectEquivalent();
+                eq.setId(new SubjectEquivalentKey(subject.getId(), targetSubject.getId()));
+                eq.setSubject(subject);
+                eq.setEquivalentSubject(targetSubject);
+                eq.setMinGradeRequired(relDTO.getMinGrade() != null ? relDTO.getMinGrade() : "D");
+                eq.setEffectiveFrom(relDTO.getEffectiveFrom());
+                eq.setEffectiveTo(relDTO.getEffectiveTo());
+                equivalentRepository.save(eq);
+            }
         }
     }
 
@@ -83,20 +129,31 @@ public class SubjectService {
         
         // Fetch Prerequisites & Corequisites
         prerequisiteRepository.findBySubjectId(subject.getId()).stream()
-                .map(p -> new SubjectRelationDTO(
+                .map(p -> {
+                    SubjectRelationDTO r = new SubjectRelationDTO(
                         p.getIsCorequisite() ? "COREQUISITE" : "PREREQUISITE",
                         p.getPrerequisiteSubject().getSubjectCode(),
                         p.getPrerequisiteSubject().getName()
-                ))
+                    );
+                    r.setMinGrade(p.getMinGradeRequired());
+                    r.setIsParallel(p.getIsCorequisite()); // Assuming parallel means corequisite here
+                    return r;
+                })
                 .forEach(relations::add);
         
         // Fetch Equivalents
         equivalentRepository.findBySubjectId(subject.getId()).stream()
-                .map(e -> new SubjectRelationDTO(
+                .map(e -> {
+                    SubjectRelationDTO r = new SubjectRelationDTO(
                         "EQUIVALENT",
                         e.getEquivalentSubject().getSubjectCode(),
                         e.getEquivalentSubject().getName()
-                ))
+                    );
+                    r.setMinGrade(e.getMinGradeRequired());
+                    r.setEffectiveFrom(e.getEffectiveFrom());
+                    r.setEffectiveTo(e.getEffectiveTo());
+                    return r;
+                })
                 .forEach(relations::add);
 
         dto.setRelations(relations);

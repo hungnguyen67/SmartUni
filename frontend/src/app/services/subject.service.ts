@@ -6,6 +6,10 @@ export interface SubjectRelationDTO {
     relationType: 'PREREQUISITE' | 'COREQUISITE' | 'EQUIVALENT';
     subjectCode: string;
     subjectName: string;
+    minGrade?: string | null;
+    isParallel?: boolean | null;
+    effectiveFrom?: string | null;
+    effectiveTo?: string | null;
 }
 
 export interface SubjectDTO {

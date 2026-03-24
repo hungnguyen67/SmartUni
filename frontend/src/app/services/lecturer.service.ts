@@ -5,13 +5,17 @@ import { Observable } from 'rxjs';
 export interface LecturerDTO {
     id: number;
     lecturerCode: string;
-    fullName: string;
+    lastName: string;
+    firstName: string;
     facultyName: string;
     facultyId: number;
     specialization: string;
     degree: string;
     academicRank: string;
     phone: string;
+    email: string;
+    birthday: string;
+    address: string;
     gender: string;
     status: string;
     advisorClasses: string[];
@@ -36,5 +40,17 @@ export class LecturerService {
             params = params.set('facultyId', facultyId.toString());
         }
         return this.http.get<LecturerDTO[]>(this.apiUrl, { params });
+    }
+
+    createLecturer(lecturer: any): Observable<LecturerDTO> {
+        return this.http.post<LecturerDTO>(this.apiUrl, lecturer);
+    }
+
+    updateLecturer(id: number, lecturer: any): Observable<LecturerDTO> {
+        return this.http.put<LecturerDTO>(`${this.apiUrl}/${id}`, lecturer);
+    }
+
+    deleteLecturer(id: number): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/${id}`);
     }
 }

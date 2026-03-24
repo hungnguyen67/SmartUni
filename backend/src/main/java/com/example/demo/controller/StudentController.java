@@ -31,4 +31,19 @@ public class StudentController {
     public List<Integer> getEnrollmentYears() {
         return studentService.getDistinctEnrollmentYears();
     }
+
+    @PostMapping
+    public StudentDTO createStudent(@RequestBody StudentDTO studentDTO) {
+        return studentService.createStudent(studentDTO);
+    }
+
+    @PutMapping("/{id}")
+    public StudentDTO updateStudent(@PathVariable Long id, @RequestBody StudentDTO studentDTO) {
+        return studentService.updateStudent(id, studentDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteStudent(@PathVariable Long id) {
+        studentService.deleteStudent(id);
+    }
 }

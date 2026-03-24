@@ -17,13 +17,23 @@ export class LecturersComponent implements OnInit {
     searchTerm: string = '';
     filterFaculty: number | null = null;
     filterStatus: string = '';
-    
+
     showFilter: boolean = false;
     activeDropdown: string = '';
     loading: boolean = false;
 
     currentPage: number = 1;
     itemsPerPage: number = 10;
+
+    // Modal states
+    showModal: boolean = false;
+    showDeleteModal: boolean = false;
+    isEditing: boolean = false;
+    savingLecturer: boolean = false;
+    deletingLecturer: boolean = false;
+
+    currentLecturer: Partial<LecturerDTO> = {};
+    lecturerToDelete: LecturerDTO | null = null;
 
     constructor(
         private lecturerService: LecturerService,
@@ -71,7 +81,8 @@ export class LecturersComponent implements OnInit {
 
     applyFilters(): void {
         this.filteredLecturers = this.lecturers.filter(l => {
-            return !this.filterStatus || l.status === this.filterStatus;
+            const matchesStatus = !this.filterStatus || l.status === this.filterStatus;
+            return matchesStatus;
         });
         this.currentPage = 1;
         this.updatePagination();
@@ -91,6 +102,7 @@ export class LecturersComponent implements OnInit {
         this.searchTerm = '';
         this.filterFaculty = null;
         this.filterStatus = '';
+        this.showFilter = false;
         this.loadLecturers();
     }
 
@@ -122,24 +134,24 @@ export class LecturersComponent implements OnInit {
         }
     }
 
-    getGenderName(gender: string): string {
+    getGenderName(gender: string | undefined): string {
         const map: any = { 'Male': 'Nam', 'Female': 'Nữ', 'Other': 'Khác' };
-        return map[gender] || 'Khác';
+        return map[gender || 'Other'] || 'Khác';
     }
 
-    getStatusLabel(status: string): string {
+    getStatusLabel(status: string | undefined): string {
         const s = status || 'ALL';
-        const map: any = { 
-            'WORKING': 'Đang giảng dạy', 
-            'ON_LEAVE': 'Nghỉ phép', 
-            'RESIGNED': 'Thôi việc', 
+        const map: any = {
+            'WORKING': 'Đang giảng dạy',
+            'ON_LEAVE': 'Nghỉ phép',
+            'RESIGNED': 'Thôi việc',
             'RETIRED': 'Nghỉ hưu',
             'ALL': 'Tất cả trạng thái'
         };
         return map[s] || s;
     }
 
-    getStatusClass(status: string): string {
+    getStatusClass(status: string | undefined): string {
         switch (status) {
             case 'WORKING': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
             case 'ON_LEAVE': return 'bg-amber-50 text-amber-600 border-amber-200';
@@ -149,17 +161,124 @@ export class LecturersComponent implements OnInit {
         }
     }
 
-    editLecturer(lecturer: LecturerDTO): void {
-        console.log('Edit', lecturer);
+    // Modal Methods
+    openAddModal(): void {
+        this.isEditing = false;
+        this.currentLecturer = {
+            gender: 'Male',
+            status: 'WORKING',
+            email: '',
+            lastName: '',
+            firstName: '',
+            birthday: '',
+            address: ''
+        };
+        this.showModal = true;
     }
 
-    deleteLecturer(lecturer: LecturerDTO): void {
-        if (confirm(`Xác nhận xóa giảng viên ${lecturer.fullName}?`)) {
-            console.log('Delete', lecturer.id);
+    editLecturer(lecturer: LecturerDTO): void {
+        this.isEditing = true;
+        // Make a copy and ensure names are mapped correctly
+        this.currentLecturer = {
+            ...lecturer,
+            lastName: lecturer.lastName || '',
+            firstName: lecturer.firstName || ''
+        };
+        this.showModal = true;
+    }
+
+    closeModal(): void {
+        this.showModal = false;
+        this.currentLecturer = {};
+        this.activeDropdown = '';
+    }
+
+    handleBackdropClick(event: MouseEvent): void {
+        if (event.target === event.currentTarget) {
+            this.closeModal();
+            this.closeDeleteModal();
         }
     }
 
-    openAddModal(): void {
-        console.log('Open Add Modal');
+    saveLecturer(): void {
+        if (!this.currentLecturer.lecturerCode || !this.currentLecturer.lastName || !this.currentLecturer.firstName || !this.currentLecturer.facultyId || !this.currentLecturer.email) {
+            this.flashMessage.error('Vui lòng điền đầy đủ các thông tin bắt buộc!');
+            return;
+        }
+
+        this.savingLecturer = true;
+        const request = this.isEditing
+            ? this.lecturerService.updateLecturer(this.currentLecturer.id!, this.currentLecturer)
+            : this.lecturerService.createLecturer(this.currentLecturer);
+
+        request.subscribe({
+            next: () => {
+                this.flashMessage.success(`${this.isEditing ? 'Cập nhật' : 'Thêm'} giảng viên thành công!`);
+                this.loadLecturers();
+                this.closeModal();
+                this.savingLecturer = false;
+            },
+            error: (err) => {
+                this.savingLecturer = false;
+                this.flashMessage.handleError(err);
+            }
+        });
+    }
+
+    deleteLecturer(lecturer: LecturerDTO): void {
+        this.lecturerToDelete = lecturer;
+        this.showDeleteModal = true;
+    }
+
+    closeDeleteModal(): void {
+        this.showDeleteModal = false;
+        this.lecturerToDelete = null;
+    }
+
+    confirmDelete(): void {
+        if (!this.lecturerToDelete) return;
+
+        this.deletingLecturer = true;
+        this.lecturerService.deleteLecturer(this.lecturerToDelete.id).subscribe({
+            next: () => {
+                this.flashMessage.success('Xóa giảng viên thành công!');
+                this.loadLecturers();
+                this.closeDeleteModal();
+                this.deletingLecturer = false;
+            },
+            error: (err) => {
+                this.deletingLecturer = false;
+                this.flashMessage.handleError(err);
+            }
+        });
+    }
+
+    setLecturerGender(gender: string): void {
+        this.currentLecturer.gender = gender;
+        this.activeDropdown = '';
+    }
+
+    setLecturerStatus(status: string): void {
+        this.currentLecturer.status = status;
+        this.activeDropdown = '';
+    }
+
+    setFilterFaculty(id: number | null): void {
+        this.filterFaculty = id;
+        this.activeDropdown = '';
+    }
+
+    setFilterStatus(status: string): void {
+        this.filterStatus = status;
+        this.activeDropdown = '';
+    }
+
+    getModalSubmitLabel(): string {
+        if (this.savingLecturer) return 'Đang lưu...';
+        return this.isEditing ? 'Cập nhật' : 'Lưu thông tin';
+    }
+
+    getDeleteSubmitLabel(): string {
+        return this.deletingLecturer ? 'Đang xóa...' : 'Xác nhận';
     }
 }

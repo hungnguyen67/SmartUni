@@ -8,20 +8,18 @@ public class CurriculumSubjectComponentDTO {
     private String subjectName;
     private Integer credits;
     private Integer semester;
-    private Boolean isRequired;
     private List<String> prerequisites;
     private List<String> corequisites;
     private List<String> equivalents;
     
     public CurriculumSubjectComponentDTO() {}
 
-    public CurriculumSubjectComponentDTO(Long subjectId, String subjectCode, String subjectName, Integer credits, Integer semester, Boolean isRequired, List<String> prerequisites, List<String> corequisites, List<String> equivalents) {
+    public CurriculumSubjectComponentDTO(Long subjectId, String subjectCode, String subjectName, Integer credits, Integer semester, List<String> prerequisites, List<String> corequisites, List<String> equivalents) {
         this.subjectId = subjectId;
         this.subjectCode = subjectCode;
         this.subjectName = subjectName;
         this.credits = credits;
         this.semester = semester;
-        this.isRequired = isRequired;
         this.prerequisites = prerequisites;
         this.corequisites = corequisites;
         this.equivalents = equivalents;
@@ -41,9 +39,6 @@ public class CurriculumSubjectComponentDTO {
 
     public Integer getSemester() { return semester; }
     public void setSemester(Integer semester) { this.semester = semester; }
-
-    public Boolean getIsRequired() { return isRequired; }
-    public void setIsRequired(Boolean isRequired) { this.isRequired = isRequired; }
 
     public List<String> getPrerequisites() { return prerequisites; }
     public void setPrerequisites(List<String> prerequisites) { this.prerequisites = prerequisites; }

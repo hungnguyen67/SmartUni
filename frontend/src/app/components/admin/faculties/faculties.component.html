@@ -190,20 +190,23 @@
     <div (mousedown)="$event.stopPropagation()"
         class="bg-white rounded-xl shadow-md w-full max-w-lg animate-in zoom-in-95 duration-200">
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
-            <h3 class="text-[17px] font-bold text-slate-700">{{ isEditing ? 'Chỉnh sửa Khoa' : 'Thêm Khoa' }}</h3>
+            <h3 class="text-[17px] font-bold text-slate-700">{{ isEditing ? 'Cập nhật thông tin Khoa' : 'Thêm Khoa
+                mới' }}</h3>
             <button (click)="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fas fa-times"></i>
             </button>
         </div>
         <div class="p-6 space-y-4">
             <div class="space-y-1.5">
-                <label class="text-xs font-semibold text-slate-900 uppercase">Mã Khoa</label>
+                <label class="text-xs font-semibold text-slate-900 uppercase">Mã Khoa <span
+                        class="text-red-500">*</span></label>
                 <input type="text" [(ngModel)]="currentFaculty.facultyCode"
                     class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm"
                     placeholder="VD: CNTT">
             </div>
             <div class="space-y-1.5">
-                <label class="text-xs font-semibold text-slate-900 uppercase">Tên Khoa</label>
+                <label class="text-xs font-semibold text-slate-900 uppercase">Tên Khoa <span
+                        class="text-red-500">*</span></label>
                 <input type="text" [(ngModel)]="currentFaculty.facultyName"
                     class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm"
                     placeholder="VD: Công nghệ thông tin">
@@ -227,7 +230,7 @@
                             [class.rotate-90]="activeDropdown === 'modalStatus'"></i>
                     </button>
                     <div *ngIf="activeDropdown === 'modalStatus'"
-                        class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                        class="absolute z-[90] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-40 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                         <div (click)="currentFaculty.status = 'ACTIVE'; activeDropdown = ''"
                             class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
                             Đang hoạt động
@@ -244,7 +247,7 @@
                 </div>
             </div>
         </div>
-        <div class="p-6 flex justify-end gap-3 rounded-b-xl">
+        <div class="p-6 flex justify-end gap-3">
             <button (click)="closeModal()"
                 class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all">Hủy
                 bỏ</button>

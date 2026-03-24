@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.CurriculumDTO;
+import com.example.demo.dto.KnowledgeBlockDTO;
+import com.example.demo.dto.CurriculumSubjectDetailDTO;
 import com.example.demo.service.CurriculumService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +38,46 @@ public class CurriculumController {
     @GetMapping("/{id}/details")
     public List<com.example.demo.dto.KnowledgeBlockDetailDTO> getCurriculumDetails(@PathVariable Long id) {
         return curriculumService.getCurriculumDetails(id);
+    }
+
+    @GetMapping("/knowledge-blocks")
+    public List<KnowledgeBlockDTO> getAllKnowledgeBlocks() {
+        return curriculumService.getAllKnowledgeBlocks();
+    }
+
+    @GetMapping("/subjects")
+    public List<CurriculumSubjectDetailDTO> getAllCurriculumSubjects() {
+        return curriculumService.getAllCurriculumSubjects();
+    }
+
+    @PostMapping("/knowledge-blocks")
+    public KnowledgeBlockDTO createKnowledgeBlock(@RequestBody KnowledgeBlockDTO dto) {
+        return curriculumService.createKnowledgeBlock(dto);
+    }
+
+    @PutMapping("/knowledge-blocks/{id}")
+    public KnowledgeBlockDTO updateKnowledgeBlock(@PathVariable Long id, @RequestBody KnowledgeBlockDTO dto) {
+        return curriculumService.updateKnowledgeBlock(id, dto);
+    }
+
+    @DeleteMapping("/knowledge-blocks/{id}")
+    public void deleteKnowledgeBlock(@PathVariable Long id) {
+        curriculumService.deleteKnowledgeBlock(id);
+    }
+
+    @PostMapping("/curriculum-subjects")
+    public CurriculumSubjectDetailDTO addSubjectToCurriculum(@RequestBody CurriculumSubjectDetailDTO dto) {
+        return curriculumService.addSubjectToCurriculum(dto);
+    }
+
+    @PutMapping("/curriculum-subjects")
+    public CurriculumSubjectDetailDTO updateCurriculumSubject(@RequestBody CurriculumSubjectDetailDTO dto) {
+        return curriculumService.updateCurriculumSubject(dto);
+    }
+
+    @DeleteMapping("/curriculum-subjects/{curriculumId}/{subjectId}")
+    public void deleteCurriculumSubject(@PathVariable Long curriculumId, @PathVariable Long subjectId) {
+        curriculumService.deleteCurriculumSubject(curriculumId, subjectId);
     }
 
     @PostMapping

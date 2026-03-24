@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { AdministrativeClassDTO, AdministrativeClassService } from '../../../services/administrative-class.service';
 import { MajorDTO, MajorService } from '../../../services/major.service';
 import { LecturerDTO, LecturerService } from '../../../services/lecturer.service';
+import { StudentDTO, StudentService } from '../../../services/student.service';
 import { RegistrationService } from '../../../services/registration.service';
 import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
 import { Subscription } from 'rxjs';
@@ -22,6 +23,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     searchTerm: string = '';
     selectedMajorId: number | null = null;
     selectedYear: string = '';
+    selectedCohort: number | null = null;
     selectedAdvisorId: number | null = null;
     selectedStatus: string = 'ALL';
 
@@ -29,6 +31,26 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     activeDropdown: string = '';
     showFilter: boolean = false;
     loading: boolean = false;
+
+    // Modal State
+    showModal = false;
+    showDeleteModal = false;
+    isEditing = false;
+    savingClass = false;
+    deletingClass = false;
+    currentClass: Partial<AdministrativeClassDTO> = {};
+    classToDelete: AdministrativeClassDTO | null = null;
+
+    showStudentModal = false;
+    selectedClass: AdministrativeClassDTO | null = null;
+    students: StudentDTO[] = [];
+    filteredStudents: StudentDTO[] = [];
+    studentSearchTerm = '';
+    
+    // Pagination for students
+    studentCurrentPage = 1;
+    studentItemsPerPage = 10;
+    studentTotalItems = 0;
 
     // Pagination
     currentPage: number = 1;
@@ -38,6 +60,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
         private classService: AdministrativeClassService,
         private majorService: MajorService,
         private lecturerService: LecturerService,
+        private studentService: StudentService,
         private registrationService: RegistrationService,
         private flashMessage: FlashMessageService
     ) { }
@@ -107,10 +130,11 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
 
             const matchesMajor = !this.selectedMajorId || c.majorId === Number(this.selectedMajorId);
             const matchesYear = !this.selectedYear || c.academicYear.toLowerCase().includes(this.selectedYear.toLowerCase());
+            const matchesCohort = !this.selectedCohort || c.cohort === Number(this.selectedCohort);
             const matchesAdvisor = !this.selectedAdvisorId || c.advisorId === Number(this.selectedAdvisorId);
             const matchesStatus = this.selectedStatus === 'ALL' || c.status === this.selectedStatus;
 
-            return matchesSearch && matchesMajor && matchesYear && matchesAdvisor && matchesStatus;
+            return matchesSearch && matchesMajor && matchesYear && matchesCohort && matchesAdvisor && matchesStatus;
         });
 
         this.currentPage = 1;
@@ -120,6 +144,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
         this.searchTerm = '';
         this.selectedMajorId = null;
         this.selectedYear = '';
+        this.selectedCohort = null;
         this.selectedAdvisorId = null;
         this.selectedStatus = 'ALL';
         this.loadClasses();
@@ -140,7 +165,17 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     getSelectedAdvisorName(): string {
         if (!this.selectedAdvisorId) return 'Tất cả cố vấn';
         const lecturer = this.lecturers.find(l => l.id === Number(this.selectedAdvisorId));
-        return lecturer ? lecturer.fullName : 'Tất cả cố vấn';
+        return lecturer ? (lecturer.lastName + ' ' + lecturer.firstName) : 'Tất cả cố vấn';
+    }
+
+    get availableCohorts(): number[] {
+        const cohorts = this.classes.map(c => c.cohort).filter(c => c !== undefined && c !== null);
+        return Array.from(new Set(cohorts)).sort((a, b) => b - a);
+    }
+
+    get availableYears(): string[] {
+        const years = this.classes.map(c => c.academicYear).filter(y => y !== undefined && y !== null && y !== '');
+        return Array.from(new Set(years)).sort((a, b) => b.localeCompare(a));
     }
 
     get totalPages(): number {
@@ -190,7 +225,219 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
         return this.filteredClasses.slice(start, start + this.itemsPerPage);
     }
 
-    editClass(item: any) { console.log('Edit', item); }
-    deleteClass(item: any) { if (confirm('Xác nhận xóa lớp này?')) console.log('Delete', item); }
-    openAddModal() { console.log('Open Add Class Modal'); }
+    // Modal Methods
+    viewClassDetails(adminClass: AdministrativeClassDTO): void {
+        this.selectedClass = adminClass;
+        this.showStudentModal = true;
+        this.loadStudents();
+    }
+
+    closeStudentModal(): void {
+        this.showStudentModal = false;
+        this.selectedClass = null;
+        this.students = [];
+        this.filteredStudents = [];
+        this.studentSearchTerm = '';
+    }
+
+    loadStudents(): void {
+        if (!this.selectedClass) return;
+        this.loading = true;
+        this.studentService.getStudents({ classId: this.selectedClass.id }).subscribe({
+            next: (data) => {
+                this.students = data;
+                this.onStudentFilterChange();
+                this.loading = false;
+            },
+            error: (err) => {
+                this.loading = false;
+                this.flashMessage.handleError(err);
+            }
+        });
+    }
+
+    onStudentFilterChange(): void {
+        this.filteredStudents = this.students.filter(s => {
+            const search = this.studentSearchTerm.toLowerCase();
+            return !search || 
+                s.studentCode.toLowerCase().includes(search) ||
+                (s.fullName && s.fullName.toLowerCase().includes(search));
+        });
+        this.studentTotalItems = this.filteredStudents.length;
+        this.studentCurrentPage = 1;
+    }
+
+    get pagedStudents(): StudentDTO[] {
+        const startIndex = (this.studentCurrentPage - 1) * this.studentItemsPerPage;
+        return this.filteredStudents.slice(startIndex, startIndex + this.studentItemsPerPage);
+    }
+
+    get studentTotalPages(): number {
+        return Math.ceil(this.studentTotalItems / this.studentItemsPerPage) || 1;
+    }
+
+    get studentMinEnd(): number {
+        return Math.min(this.studentCurrentPage * this.studentItemsPerPage, this.studentTotalItems);
+    }
+
+    getStudentFirstName(fullName: string): string {
+        if (!fullName) return '';
+        const parts = fullName.trim().split(' ');
+        return parts.length > 0 ? parts[parts.length - 1] : '';
+    }
+
+    getStudentLastName(fullName: string): string {
+        if (!fullName) return '';
+        const parts = fullName.trim().split(' ');
+        return parts.length > 1 ? parts.slice(0, parts.length - 1).join(' ') : '';
+    }
+
+    getStudentStatusLabel(status: string): string {
+        switch (status) {
+            case 'STUDYING': return 'Đang học';
+            case 'DROPPED': return 'Thôi học';
+            case 'GRADUATED': return 'Đã tốt nghiệp';
+            case 'SUSPENDED': return 'Đình chỉ';
+            default: return status || '---';
+        }
+    }
+
+    getStudentStatusClass(status: string): string {
+        switch (status) {
+            case 'STUDYING': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+            case 'DROPPED': return 'bg-red-50 text-red-600 border-red-100';
+            case 'GRADUATED': return 'bg-blue-50 text-blue-600 border-blue-100';
+            case 'SUSPENDED': return 'bg-amber-50 text-amber-600 border-amber-100';
+            default: return 'bg-slate-50 text-slate-600 border-slate-100';
+        }
+    }
+
+    openAddModal(): void {
+        this.isEditing = false;
+        this.currentClass = {
+            status: 'ACTIVE'
+        };
+        this.showModal = true;
+    }
+
+    editClass(adminClass: AdministrativeClassDTO): void {
+        this.isEditing = true;
+        this.currentClass = { ...adminClass };
+        this.showModal = true;
+    }
+
+    deleteClass(adminClass: AdministrativeClassDTO): void {
+        this.classToDelete = adminClass;
+        this.showDeleteModal = true;
+    }
+
+    confirmDelete(): void {
+        if (!this.classToDelete) return;
+
+        this.deletingClass = true;
+        this.classService.deleteClass(this.classToDelete.id).subscribe({
+            next: () => {
+                this.flashMessage.success('Xóa lớp thành công!');
+                this.loadClasses();
+                this.closeDeleteModal();
+                this.deletingClass = false;
+            },
+            error: (err) => {
+                this.deletingClass = false;
+                this.flashMessage.handleError(err);
+            }
+        });
+    }
+
+    closeDeleteModal(): void {
+        this.showDeleteModal = false;
+        this.classToDelete = null;
+    }
+
+    closeMainModal(): void {
+        this.showModal = false;
+        this.currentClass = {};
+        this.activeDropdown = '';
+    }
+
+    handleBackdropClick(event: MouseEvent): void {
+        if (event.target === event.currentTarget) {
+            this.closeMainModal();
+            this.closeDeleteModal();
+        }
+    }
+
+    saveClass(): void {
+        if (!this.currentClass.classCode || !this.currentClass.majorId) {
+            this.flashMessage.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+            return;
+        }
+
+        this.savingClass = true;
+        const request = this.isEditing 
+            ? this.classService.updateClass(this.currentClass.id!, this.currentClass)
+            : this.classService.createClass(this.currentClass);
+
+        request.subscribe({
+            next: () => {
+                this.flashMessage.success(this.isEditing ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
+                this.loadClasses();
+                this.closeMainModal();
+                this.savingClass = false;
+            },
+            error: (err) => {
+                this.savingClass = false;
+                this.flashMessage.handleError(err);
+            }
+        });
+    }
+
+    selectMajor(id: number | null): void {
+        this.selectedMajorId = id;
+        this.activeDropdown = '';
+    }
+
+    selectAdvisor(id: number | null): void {
+        this.selectedAdvisorId = id;
+        this.activeDropdown = '';
+    }
+
+    selectStatus(status: string): void {
+        this.selectedStatus = status;
+        this.activeDropdown = '';
+    }
+
+    setModalMajor(id: number): void {
+        this.currentClass.majorId = id;
+        this.activeDropdown = '';
+    }
+
+    setModalAdvisor(id: number | null): void {
+        this.currentClass.advisorId = id || undefined;
+        this.activeDropdown = '';
+    }
+
+    setModalStatus(status: string): void {
+        this.currentClass.status = status;
+        this.activeDropdown = '';
+    }
+
+    getMajorName(id: any): string {
+        if (!id) return 'Chọn ngành học';
+        const major = this.majors.find(m => m.id === Number(id));
+        return major ? major.majorName : 'Chọn ngành học';
+    }
+
+    getAdvisorName(id: any): string {
+        if (!id) return 'Chưa phân công';
+        const lecturer = this.lecturers.find(l => l.id === Number(id));
+        return lecturer ? (lecturer.lastName + ' ' + lecturer.firstName) : 'Chưa phân công';
+    }
+
+    changeStudentPage(delta: number): void {
+        const newPage = this.studentCurrentPage + delta;
+        if (newPage >= 1 && newPage <= this.studentTotalPages) {
+            this.studentCurrentPage = newPage;
+        }
+    }
 }

@@ -19,12 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.example.demo.dto.ClassScheduleInstanceDTO;
-import com.example.demo.repository.ClassSchedulePatternRepository;
+import com.example.demo.dto.AttendanceSubmitDTO;
+import com.example.demo.dto.SessionDetailDTO;
 import com.example.demo.repository.ClassScheduleInstanceRepository;
+import com.example.demo.repository.ClassSchedulePatternRepository;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ScheduleService {
@@ -276,7 +275,7 @@ public class ScheduleService {
         }
 
         dto.setEnrollmentYear(student.getEnrollmentYear());
-        dto.setCurrentSemester(student.getCurrentSemester());
+
         dto.setStatus(student.getStatus() != null ? student.getStatus().name() : null);
 
         if (courseClass != null && courseClass.getSubject() != null) {

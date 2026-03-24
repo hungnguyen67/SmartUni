@@ -26,9 +26,6 @@ public class CurriculumSubject {
     @Column(name = "recommended_semester")
     private Integer recommendedSemester;
 
-    @Column(name = "is_required")
-    private Boolean isRequired = true;
-
     public CurriculumSubject() {}
 
     public CurriculumSubjectKey getId() { return id; }
@@ -45,7 +42,4 @@ public class CurriculumSubject {
 
     public Integer getRecommendedSemester() { return recommendedSemester; }
     public void setRecommendedSemester(Integer recommendedSemester) { this.recommendedSemester = recommendedSemester; }
-
-    public Boolean getIsRequired() { return isRequired; }
-    public void setIsRequired(Boolean isRequired) { this.isRequired = isRequired; }
 }
