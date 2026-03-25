@@ -394,7 +394,7 @@
                                 [class.rotate-90]="activeDropdown === 'modalGender'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalGender'"
-                            class="absolute z-[90] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-lg animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                            class="absolute z-[90] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                             <div (click)="setModalGender('Male')"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 transition-colors">
                                 Nam</div>
@@ -447,7 +447,7 @@
                                 [class.rotate-90]="activeDropdown === 'modalClass'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalClass'"
-                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
+                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-md max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
                             <div *ngFor="let c of getAvailableModalClasses()" (click)="setModalClass(c.id, c.classCode)"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0 transition-colors truncate">
                                 {{ c.classCode }}
@@ -472,7 +472,7 @@
                                 [class.rotate-90]="activeDropdown === 'modalCurriculum'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalCurriculum'"
-                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
+                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-md max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
                             <div *ngFor="let curr of getAvailableModalCurriculums()"
                                 (click)="setModalCurriculum(curr.id, curr.curriculumName)"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0 transition-colors truncate">
@@ -499,7 +499,7 @@
                                 [class.rotate-90]="activeDropdown === 'modalStatus'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalStatus'"
-                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-lg max-h-40 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
+                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-md max-h-40 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
                             <div *ngFor="let st of ['STUDYING','GRADUATED','ACADEMIC_RESERVE','DROPPED_OUT']"
                                 (click)="setModalStatus(st)"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0 transition-colors">

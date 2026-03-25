@@ -16,7 +16,7 @@
                             [class.rotate-90]="activeDropdown === 'semester'"></i>
                     </button>
                     <div *ngIf="activeDropdown === 'semester'"
-                        class="absolute z-[100] w-full mt-1 bg-white border border-slate-100 rounded-sm shadow-lg max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 origin-top">
+                        class="absolute z-[100] w-full mt-1 bg-white border border-slate-100 rounded-sm shadow-md max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 origin-top">
                         <div *ngFor="let s of semesters"
                             (click)="selectedSemesterId=s.id; activeDropdown=''; onSemesterChange()"
                             class="px-3 py-2 text-[12px] flex items-center hover:bg-blue-50 hover:text-slate-800 cursor-pointer transition-colors max-w-full"
@@ -40,7 +40,7 @@
                             [class.rotate-90]="activeDropdown === 'cohort'"></i>
                     </button>
                     <div *ngIf="activeDropdown === 'cohort'"
-                        class="absolute z-[100] w-full mt-1 bg-white border border-slate-100 rounded shadow-lg max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 origin-top">
+                        class="absolute z-[100] w-full mt-1 bg-white border border-slate-100 rounded shadow-md max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 origin-top">
                         <div *ngFor="let y of cohorts" (click)="selectedCohort=y; activeDropdown=''; onFilterChange()"
                             class="px-3 py-2 text-[12px] hover:bg-blue-50 hover:text-slate-800 cursor-pointer transition-colors"
                             [class.text-slate-800]="selectedCohort === y" [class.bg-blue-50]="selectedCohort === y">
@@ -62,7 +62,7 @@
                             [class.rotate-90]="activeDropdown === 'major'"></i>
                     </button>
                     <div *ngIf="activeDropdown === 'major'"
-                        class="absolute z-[100] w-full mt-1 bg-white border border-slate-100 rounded shadow-lg max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 origin-top">
+                        class="absolute z-[100] w-full mt-1 bg-white border border-slate-100 rounded shadow-md max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 origin-top">
                         <div *ngFor="let m of majors"
                             (click)="selectedMajorId=m.id; activeDropdown=''; onFilterChange()"
                             class="px-3 py-2 text-[12px] hover:bg-blue-50 hover:text-slate-800 cursor-pointer transition-colors max-w-full"
@@ -198,7 +198,7 @@
                                             <div class="text-[10px] font-medium text-slate-600 leading-none truncate">
                                                 Lớp: {{ item.targetClassName || selectedAdminClass?.classCode }}</div>
                                             <div class="text-[10px] font-medium text-slate-600 leading-none truncate">
-                                                GV: {{ item.lecturerName }}
+                                                GV: {{ item.lecturerName || 'Chưa xếp' }}
                                             </div>
                                             <div class="text-[10px] font-medium text-slate-600 leading-none truncate">
                                                 Phòng: {{ item.room || 'Chưa xếp' }}</div>
@@ -315,7 +315,7 @@
                                         [class.rotate-90]="activeDropdown === 'lecturerSelect'"></i>
                                 </button>
                                 <div *ngIf="activeDropdown === 'lecturerSelect'"
-                                    class="absolute z-[100] w-full mt-1 bg-white border border-slate-100 rounded shadow-lg max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 origin-top">
+                                    class="absolute z-[100] w-full mt-1 bg-white border border-slate-100 rounded shadow-md max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 origin-top">
                                     <div (click)="selectedScheduleItem.lecturerName = null; activeDropdown = ''; saveScheduleItem()"
                                         class="px-2 py-1.5 text-[12px] text-slate-400 italic hover:bg-slate-50 cursor-pointer transition-colors">
                                         -- Không chọn --
@@ -523,11 +523,6 @@
         <button (click)="copyScheduleItem()"
             class="text-left pl-2 pr-4 py-[3px] my-[1px] mx-[2px] hover:bg-[#cee8fc] hover:outline hover:outline-1 hover:outline-[#99d1ff] transition-none block">
             Sao chép lịch học
-        </button>
-
-        <button
-            class="text-left pl-2 pr-4 py-[3px] my-[1px] mx-[2px] hover:bg-[#cee8fc] hover:outline hover:outline-1 hover:outline-[#99d1ff] transition-none block">
-            Cập nhật lịch học
         </button>
 
         <div class="h-[1px] bg-[#e2e3e3] my-[2px] mr-[-2px]"></div>

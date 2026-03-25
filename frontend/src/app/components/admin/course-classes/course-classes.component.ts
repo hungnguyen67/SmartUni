@@ -95,7 +95,9 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     modalMode: 'ADD' | 'EDIT' = 'ADD';
     courseClassForm: any = this.getEmptyForm();
     courseClassToDeleteId: number | null = null;
-
+    deletingFaculty: boolean = false;
+    courseClassToDelete: any = null;
+    originalFormJson: string = '';
     constructor(
         private courseClassService: CourseClassService,
         private semesterService: SemesterService,
@@ -112,7 +114,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.loadSemesters();
         this.loadInitialData();
-        
+
         // 1. Tự động cập nhật khi có tín hiệu từ RegistrationService (trong cùng phiên)
         this.registrationSub = this.registrationService.registrationUpdates$.subscribe(() => {
             console.log('Phát hiện thay đổi sĩ số, đang cập nhật...');
@@ -155,14 +157,9 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         // Load enrollment years
         this.studentService.getEnrollmentYears().subscribe(years => {
             this.allCohorts = years;
-            // Default to 2024 or latest year if exists
-            if (years.includes(2024)) {
-                this.selectionYear = 2024;
-                this.listYear = 2024;
-            } else if (years.length > 0) {
-                this.selectionYear = years[years.length - 1];
-                this.listYear = years[years.length - 1];
-            }
+            // No hardcoded default year, letting user choose or defaulting to null
+            this.selectionYear = null;
+            this.listYear = null;
         });
 
         // Load majors and set default
@@ -181,14 +178,26 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         this.listFilteredAdminClasses = this.listMajorId
             ? this.administrativeClasses.filter(c => c.majorId == this.listMajorId)
             : this.administrativeClasses;
-        this.onListFilterChange();
     }
 
     onSelectionMajorChange(): void {
-        this.selectionFilteredAdminClasses = this.selectionMajorId
-            ? this.administrativeClasses.filter(c => c.majorId == this.selectionMajorId)
-            : this.administrativeClasses;
+        this.selectionAdminClassId = null;
+        this.filterSelectionAdminClasses();
         this.loadAnalysis();
+    }
+
+    onSelectionYearChange(): void {
+        this.selectionAdminClassId = null;
+        this.filterSelectionAdminClasses();
+        this.loadAnalysis();
+    }
+
+    filterSelectionAdminClasses(): void {
+        this.selectionFilteredAdminClasses = this.administrativeClasses.filter(c => {
+            const matchesMajor = !this.selectionMajorId || c.majorId == this.selectionMajorId;
+            const matchesYear = !this.selectionYear || c.cohort == this.selectionYear;
+            return matchesMajor && matchesYear;
+        });
     }
 
     onGroupByChange(): void {
@@ -228,9 +237,9 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     }
 
     getSelectionMajorName(): string {
-        if (!this.selectionMajorId) return 'Tất cả các ngành học';
+        if (!this.selectionMajorId) return 'Chọn ngành đào tạo';
         const major = this.majors.find(m => m.id == this.selectionMajorId);
-        return major ? major.majorName : 'Tất cả các ngành học';
+        return major ? major.majorName : 'Chọn ngành đào tạo';
     }
 
     getListAdminClassName(): string {
@@ -240,9 +249,9 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     }
 
     getSelectionAdminClassName(): string {
-        if (!this.selectionAdminClassId) return 'Tất cả lớp hành chính';
+        if (!this.selectionAdminClassId) return 'Chọn lớp hành chính';
         const adminClass = this.administrativeClasses.find(c => c.id == this.selectionAdminClassId);
-        return adminClass ? adminClass.className : 'Tất cả lớp hành chính';
+        return adminClass ? adminClass.className : 'Chọn lớp hành chính';
     }
 
     getListYearLabel(): string {
@@ -251,7 +260,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     }
 
     getSelectionYearLabel(): string {
-        if (!this.selectionYear) return 'Tất cả các khóa';
+        if (!this.selectionYear) return 'Chọn khóa học';
         return 'Khóa ' + this.selectionYear;
     }
 
@@ -330,9 +339,15 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     }
 
     toggleSelectAll(): void {
+        const canSelect = this.filteredDemandAnalysis.filter(d => d.openedClasses === 0);
+        if (canSelect.length === 0) {
+            this.allSelected = false;
+            return;
+        }
+
         this.allSelected = !this.allSelected;
         if (this.allSelected) {
-            this.filteredDemandAnalysis.forEach(d => {
+            canSelect.forEach(d => {
                 const key = `${d.subjectId}_${d.adminClassId}`;
                 this.selectedDemandKeys.add(key);
             });
@@ -342,13 +357,15 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     }
 
     toggleSelect(demand: any): void {
+        if (demand.openedClasses > 0) return;
         const key = `${demand.subjectId}_${demand.adminClassId}`;
         if (this.selectedDemandKeys.has(key)) {
             this.selectedDemandKeys.delete(key);
         } else {
             this.selectedDemandKeys.add(key);
         }
-        this.allSelected = this.selectedDemandKeys.size === this.filteredDemandAnalysis.length && this.filteredDemandAnalysis.length > 0;
+        const canSelect = this.filteredDemandAnalysis.filter(d => d.openedClasses === 0);
+        this.allSelected = canSelect.length > 0 && this.selectedDemandKeys.size === canSelect.length;
     }
 
     isDemandSelected(demand: any): boolean {
@@ -366,31 +383,30 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         }
 
         const demandsToCreate = this.filteredDemandAnalysis.filter(d =>
-            this.selectedDemandKeys.has(`${d.subjectId}_${d.adminClassId}`));
+            this.selectedDemandKeys.has(`${d.subjectId}_${d.adminClassId}`) && d.openedClasses === 0
+        );
 
-        if (!confirm(`Xác nhận khởi tạo ${demandsToCreate.length} lớp học phần hàng loạt?`)) return;
+        if (demandsToCreate.length === 0) {
+            this.flashMessage.warning('Các học phần đã chọn đều đã được tạo lớp!');
+            return;
+        }
 
         this.loading = true;
         this.courseClassService.generateAutoBatch(this.selectedSemesterId!, demandsToCreate)
             .subscribe({
                 next: (res) => {
-                    const createdCount = res.length;
-                    const skippedCount = demandsToCreate.length - createdCount;
-
-                    let msg = `Đã xử lý xong!`;
-                    if (createdCount > 0) msg += `\n- Thành công: ${createdCount} lớp.`;
-                    if (skippedCount > 0) msg += `\n- Bỏ qua (đã tồn tại): ${skippedCount} lớp.`;
-
-                    alert(msg);
+                    this.flashMessage.success('Khởi tạo thành công!');
+                    this.isSelectionModalOpen = false;
                     this.selectedDemandKeys.clear();
                     this.allSelected = false;
                     this.loadAnalysis();
                     this.loadSubjects();
+                    this.loadAllClasses();
                     this.loading = false;
                 },
                 error: (err) => {
                     console.error('Batch creation failed', err);
-                    alert('Khởi tạo hàng loạt thất bại!');
+                    this.flashMessage.error('Khởi tạo hàng loạt thất bại!');
                     this.loading = false;
                 }
             });
@@ -398,17 +414,32 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
 
     onListFilterChange(): void {
         const search = this.listSearchTerm.toLowerCase();
+        const selectedMajorName = this.getListMajorName();
+        // Lấy mã lớp (classCode) để so khớp vì bảng hiển thị mã lớp
+        const selectedAdminClass = this.administrativeClasses.find(ac => ac.id == this.listAdminClassId);
+        const selectedAdminClassCode = selectedAdminClass ? selectedAdminClass.classCode : null;
 
-        // Filter main classes list
+        // 1. Thực hiện lọc danh sách lớp hệ chính (Main list)
         let filteredClasses = this.allCourseClasses.filter(c => {
+            // Lọc theo từ khóa tìm kiếm (Mã môn, Tên môn, Mã lớp)
             const matchesSearch = !search ||
-                c.subjectName.toLowerCase().includes(search) ||
-                c.subjectCode.toLowerCase().includes(search) ||
-                c.classCode.toLowerCase().includes(search);
+                (c.subjectName || '').toLowerCase().includes(search) ||
+                (c.subjectCode || '').toLowerCase().includes(search) ||
+                (c.classCode || '').toLowerCase().includes(search);
 
-            return matchesSearch;
+            // Lọc theo Ngành học (So khớp tên vì DTO trả về tên)
+            const matchesMajor = !this.listMajorId || c.majorName === selectedMajorName;
+            
+            // Lọc theo Khóa học (Cohort)
+            const matchesYear = !this.listYear || c.cohort == this.listYear;
+
+            // Lọc theo Lớp hành chính (So khớp mã lớp - classCode)
+            const matchesAdminClass = !this.listAdminClassId || c.targetClassName === selectedAdminClassCode;
+
+            return matchesSearch && matchesMajor && matchesYear && matchesAdminClass;
         });
 
+        // 2. Cập nhật thông tin phân trang và hiển thị
         this.classTotalItems = filteredClasses.length;
         this.classCurrentPage = 1;
         this.updateClassPage(filteredClasses);
@@ -522,9 +553,13 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
             return;
         }
         this.selectedDemand = this.demandAnalysis.find(a => a.subjectId == this.courseClassForm.subjectId);
-        if (this.selectedDemand && this.modalMode === 'ADD') {
-            this.courseClassForm.classCount = this.selectedDemand.suggestedMoreClasses || 1;
-            this.onBatchCountChange();
+        if (this.selectedDemand) {
+            this.courseClassForm.theoryPeriods = this.selectedDemand.theoryPeriods || 0;
+            this.courseClassForm.practicalPeriods = this.selectedDemand.practicalPeriods || 0;
+            if (this.modalMode === 'ADD') {
+                this.courseClassForm.classCount = this.selectedDemand.suggestedMoreClasses || 1;
+                this.onBatchCountChange();
+            }
         }
     }
 
@@ -550,18 +585,46 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
             maxStudents: cc.maxStudents,
             classStatus: cc.classStatus,
             currentEnrolled: cc.currentEnrolled,
-            registrationStart: cc.registrationStart,
-            registrationEnd: cc.registrationEnd,
+            registrationStart: cc.registrationStart ? cc.registrationStart.split('T')[0] : null,
+            registrationEnd: cc.registrationEnd ? cc.registrationEnd.split('T')[0] : null,
             attendanceWeight: cc.attendanceWeight || 0.1,
             midtermWeight: cc.midtermWeight || 0.3,
             finalWeight: cc.finalWeight || 0.6,
             expectedRoom: cc.expectedRoom,
             targetClassId: cc.targetClassId,
+            theoryPeriods: cc.theoryPeriods || 0,
+            practicalPeriods: cc.practicalPeriods || 0,
             schedules: cc.schedules ? cc.schedules.map((s: any) => ({ ...s })) : []
         };
-        this.courseClassForm.batchLecturers = [cc.lecturerId];
         this.courseClassForm.classCount = 1;
+
+        // Capture exactly how the payload will look before submission to ensure accurate comparison in saveCourseClass
+        const originalPayload = this.preparePayload({ ...this.courseClassForm });
+        this.originalFormJson = JSON.stringify(originalPayload);
         this.isModalOpen = true;
+    }
+
+    private preparePayload(form: any): any {
+        const payload = { ...form };
+
+        if (payload.registrationStart) {
+            // If already has 'T', it's formatted; if not, add 'T00:00:00'
+            if (!payload.registrationStart.includes('T')) payload.registrationStart += 'T00:00:00';
+        } else payload.registrationStart = null;
+
+        if (payload.registrationEnd) {
+            if (!payload.registrationEnd.includes('T')) payload.registrationEnd += 'T23:59:59';
+        } else payload.registrationEnd = null;
+
+        if (payload.startDate) {
+            if (!payload.startDate.includes('T')) payload.startDate += 'T00:00:00';
+        } else payload.startDate = null;
+
+        if (payload.endDate) {
+            if (!payload.endDate.includes('T')) payload.endDate += 'T00:00:00';
+        } else payload.endDate = null;
+
+        return payload;
     }
 
     closeModal(): void {
@@ -611,11 +674,42 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         }
 
         // Sanitize date fields to prevent Jackson parsing errors (400 Bad Request)
-        const payload = { ...this.courseClassForm };
-        if (!payload.registrationStart) payload.registrationStart = null;
-        if (!payload.registrationEnd) payload.registrationEnd = null;
-        if (!payload.startDate) payload.startDate = null;
-        if (!payload.endDate) payload.endDate = null;
+        const payload = this.preparePayload(this.courseClassForm);
+
+        // Detect if anything changed for EDIT mode
+        if (this.modalMode === 'EDIT') {
+            const hasChanged = JSON.stringify(payload) !== this.originalFormJson;
+            if (!hasChanged) {
+                this.flashMessage.info('Không có thay đổi nào để cập nhật');
+                this.isSubmitting = false;
+                return;
+            }
+        }
+
+        if (payload.classStatus === 'OPEN' && (!payload.registrationStart || !payload.registrationEnd)) {
+            this.flashMessage.error('Vui lòng nhập Thời gian đăng ký khi mở lớp!');
+            this.isSubmitting = false;
+            return;
+        }
+
+        // Validate full schedule before opening registration
+        if (payload.classStatus === 'OPEN') {
+            const requiredPeriods = (payload.theoryPeriods || 0) + (payload.practicalPeriods || 0);
+            const totalScheduled = payload.schedules.reduce((sum: number, s: any) => sum + (s.endPeriod - s.startPeriod + 1), 0);
+            
+            if (totalScheduled < requiredPeriods) {
+                this.flashMessage.error(`Lịch học chưa đủ tiết (${totalScheduled}/${requiredPeriods} tiết). Vui lòng xếp đủ lịch trước khi mở đăng ký!`);
+                this.isSubmitting = false;
+                return;
+            }
+        }
+
+        const totalWeight = (payload.attendanceWeight || 0) + (payload.midtermWeight || 0) + (payload.finalWeight || 0);
+        if (Math.abs(totalWeight - 1.0) > 0.001) {
+            this.flashMessage.error(`Tổng trọng số điểm phải bằng 100% (Hiện tại là ${Math.round(totalWeight * 100)}%)`);
+            this.isSubmitting = false;
+            return;
+        }
 
         const request = this.modalMode === 'ADD'
             ? this.courseClassService.createCourseClass(this.selectedSemesterId!, payload)
@@ -624,6 +718,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         request.subscribe({
             next: () => {
                 this.flashMessage.success(this.modalMode === 'EDIT' ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
+                this.loadAllClasses();
                 this.finishSubmit();
             },
             error: (err) => {
@@ -680,15 +775,20 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
 
     openDeleteConfirmation(id: number): void {
         this.courseClassToDeleteId = id;
+        this.courseClassToDelete = this.allCourseClasses.find(c => c.id === id) ||
+            this.selectedSubjectClasses.find(c => c.id === id);
         this.isDeleteModalOpen = true;
     }
 
     deleteCourseClass(): void {
         if (!this.courseClassToDeleteId) return;
         this.isSubmitting = true;
+        this.deletingFaculty = true;
         this.courseClassService.deleteCourseClass(this.courseClassToDeleteId).subscribe({
             next: () => {
+                this.flashMessage.success('Xóa lớp học phần thành công!');
                 this.isSubmitting = false;
+                this.deletingFaculty = false;
                 this.isDeleteModalOpen = false;
                 if (this.selectedSubject) {
                     this.loadClassDetails(this.selectedSubject.subjectId);
@@ -699,6 +799,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
             error: (err) => {
                 console.error('Error deleting course class', err);
                 this.isSubmitting = false;
+                this.deletingFaculty = false;
             }
         });
     }
@@ -716,7 +817,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
 
     getStatusLabel(status: string): string {
         switch (status) {
-            case 'PLANNING': return 'Kế hoạch';
+            case 'PLANNING': return 'Lên kế hoạch';
             case 'OPEN': return 'Mở đăng ký';
             case 'ONGOING': return 'Đang học';
             case 'CLOSED': return 'Đã khóa sổ';

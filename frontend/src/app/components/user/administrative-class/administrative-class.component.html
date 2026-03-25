@@ -77,7 +77,7 @@
                                                     [class.rotate-90]="activeDropdown === 'cohort'"></i>
                                             </button>
                                             <div *ngIf="activeDropdown === 'cohort'"
-                                                class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-lg overflow-y-auto max-h-60 transform origin-top animate-in fade-in zoom-in-95 duration-200">
+                                                class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-md overflow-y-auto max-h-60 transform origin-top animate-in fade-in zoom-in-95 duration-200">
                                                 <div (click)="selectedCohort = null; onFilterChange(); activeDropdown = ''"
                                                     class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-50">
                                                     Tất cả các khóa</div>
@@ -103,7 +103,7 @@
                                                     [class.rotate-90]="activeDropdown === 'status'"></i>
                                             </button>
                                             <div *ngIf="activeDropdown === 'status'"
-                                                class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-lg overflow-y-auto max-h-60 transform origin-top animate-in fade-in zoom-in-95 duration-200">
+                                                class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-md overflow-y-auto max-h-60 transform origin-top animate-in fade-in zoom-in-95 duration-200">
                                                 <div (click)="selectedStatus = ''; onFilterChange(); activeDropdown = ''"
                                                     class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-50">
                                                     Tất cả trạng thái</div>

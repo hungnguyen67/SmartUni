@@ -51,7 +51,7 @@ export class ScheduleComponent implements OnInit {
 
     isResizing = false;
     resizingItem: any = null;
-    resizingItemObject: any = null; // Snapshot của item tại thời điểm bắt đầu resize
+    resizingItemObject: any = null;
     resizingOriginalDuration: number = 0;
     newEndPeriod: number | null = null;
     periods: number[] = Array.from({ length: 17 }, (_, i) => i + 1);
@@ -379,8 +379,7 @@ export class ScheduleComponent implements OnInit {
 
         return data.map((item) => {
             const startTime = this.formatBackendTime(item.startTime || periodTimes[item.startPeriod] || '07:00');
-            
-            // Lấy thời gian bắt đầu của tiết tiếp theo làm mốc kết thúc cho tiết hiện tại
+
             let defaultEndTime = periodEndTimes[item.endPeriod];
             if (!defaultEndTime) {
                 const [h, m] = (periodTimes[item.endPeriod] || '07:00').split(':').map(Number);
@@ -495,16 +494,31 @@ export class ScheduleComponent implements OnInit {
     submitCopySchedule(): void {
         if (!this.clipboardItem || !this.clipboardItem.classId) return;
 
+        // 1. Kiểm tra tùy chọn sao chép TRƯỚC (Bắt buộc)
         if (!this.copyOptions.type) {
-            alert('Vui lòng chọn một tùy chọn sao chép!');
+            this.flashMessage.warning('Vui lòng chọn một tùy chọn sao chép!');
             return;
         }
 
         const currentWeek = this.getCurrentWeek();
         if (currentWeek === null) {
-            alert('Lịch học hiện tại nằm ngoài khoảng thời gian học kỳ!');
+            this.flashMessage.error('Lịch học hiện tại nằm ngoài khoảng thời gian học kỳ!');
             return;
         }
+
+        // 2. Kiểm tra dữ liệu thiếu (Nếu thiếu Giảng viên hoặc Phòng sẽ CHẶN việc sao chép)
+        const isMissingLecturer = !this.clipboardItem.lecturerName || this.clipboardItem.lecturerName === 'Chưa xếp';
+        const isMissingRoom = !this.clipboardItem.room || this.clipboardItem.room === 'Chưa xếp';
+
+        if (isMissingLecturer || isMissingRoom) {
+            this.flashMessage.error('Không thể sao chép! Bạn phải xếp đầy đủ Giảng viên và Phòng học trước.');
+            this.showCopyModal = false;
+            this.closeCopyModal();
+            return;
+        }
+
+        this.showCopyModal = false;
+        this.closeCopyModal();
 
         const classId = this.clipboardItem.classId;
         const itemDate = new Date(this.clipboardItem.scheduleDate);
@@ -578,7 +592,7 @@ export class ScheduleComponent implements OnInit {
         }
 
         if (fromWeek > toWeek) {
-            alert('Tuần bắt đầu không thể lớn hơn tuần kết thúc!');
+            this.flashMessage.error('Tuần bắt đầu không thể lớn hơn tuần kết thúc!');
             return;
         }
 
@@ -599,7 +613,6 @@ export class ScheduleComponent implements OnInit {
             this.scheduleService.addPatternsBulk(classId, patternsToCreate).subscribe({
                 next: () => {
                     this.loadScheduleForAdminClass();
-                    this.closeCopyModal();
                 },
                 error: (err) => {
                     console.error('Lỗi khi sao chép lịch học', err);
@@ -614,25 +627,24 @@ export class ScheduleComponent implements OnInit {
 
         const currentWeek = this.getCurrentWeek();
         if (currentWeek === null) {
-            alert('Lịch học hiện tại nằm ngoài khoảng thời gian học kỳ!');
+            this.flashMessage.error('Lịch học hiện tại nằm ngoài khoảng thời gian học kỳ!');
             return;
         }
 
         const item = this.contextMenu.item;
-        if (confirm(`Bạn có chắc muốn xóa lịch học môn [${item.title}] trong tuần này?`)) {
-            this.scheduleService.deletePatternSingle(item.patternId, currentWeek).subscribe({
-                next: () => {
-                    if (this.selectedScheduleItem?.id === item.id) {
-                        this.selectedScheduleItem = null;
-                    }
-                    this.loadScheduleForAdminClass();
-                    this.closeContextMenu();
-                },
-                error: (err) => {
-                    this.flashMessage.handleError(err);
+        this.scheduleService.deletePatternSingle(item.patternId, currentWeek).subscribe({
+            next: () => {
+                if (this.selectedScheduleItem?.id === item.id) {
+                    this.selectedScheduleItem = null;
                 }
-            });
-        }
+                this.flashMessage.success('Xóa lịch học thành công!');
+                this.loadScheduleForAdminClass();
+                this.closeContextMenu();
+            },
+            error: (err) => {
+                this.flashMessage.handleError(err);
+            }
+        });
     }
 
     deleteScheduleForward(): void {
@@ -640,25 +652,24 @@ export class ScheduleComponent implements OnInit {
 
         const currentWeek = this.getCurrentWeek();
         if (currentWeek === null) {
-            alert('Lịch học hiện tại nằm ngoài khoảng thời gian học kỳ!');
+            this.flashMessage.error('Lịch học hiện tại nằm ngoài khoảng thời gian học kỳ!');
             return;
         }
 
         const item = this.contextMenu.item;
-        if (confirm(`Bạn có chắc muốn xóa TẤT CẢ các buổi học của suất này (môn [${item.title}]) từ tuần này trở đi không?`)) {
-            this.scheduleService.deletePatternForward(item.patternId, currentWeek).subscribe({
-                next: () => {
-                    if (this.selectedScheduleItem?.id === item.id) {
-                        this.selectedScheduleItem = null;
-                    }
-                    this.loadScheduleForAdminClass();
-                    this.closeContextMenu();
-                },
-                error: (err) => {
-                    this.flashMessage.handleError(err);
+        this.scheduleService.deletePatternForward(item.patternId, currentWeek).subscribe({
+            next: () => {
+                if (this.selectedScheduleItem?.id === item.id) {
+                    this.selectedScheduleItem = null;
                 }
-            });
-        }
+                this.flashMessage.success('Xóa lịch hết tiến độ thành công!');
+                this.loadScheduleForAdminClass();
+                this.closeContextMenu();
+            },
+            error: (err) => {
+                this.flashMessage.handleError(err);
+            }
+        });
     }
 
     nextWeek(): void {
@@ -682,7 +693,7 @@ export class ScheduleComponent implements OnInit {
 
     openPatternModal(): void {
         if (!this.selectedAdminClass) {
-            alert('Vui lòng chọn lớp hành chính trước!');
+            this.flashMessage.warning('Vui lòng chọn lớp hành chính trước!');
             return;
         }
         this.showPatternModal = true;
@@ -695,7 +706,7 @@ export class ScheduleComponent implements OnInit {
     savePattern(): void {
         if (!this.selectedAdminClass) return;
         if (this.classes.length === 0) {
-            alert('Lớp này chưa có học phần nào được khởi tạo.');
+            this.flashMessage.warning('Lớp này chưa có học phần nào được khởi tạo.');
             return;
         }
 
@@ -816,11 +827,13 @@ export class ScheduleComponent implements OnInit {
 
     getStatusLabel(status: string): string {
         switch (status) {
-            case 'OPEN_REGISTRATION': return 'Đang đăng ký';
-            case 'FULL': return 'Đã đầy';
-            case 'CLOSED': return 'Đã khóa';
+            case 'PLANNING': return 'Lên kế hoạch';
+            case 'OPEN':
+            case 'OPEN_REGISTRATION': return 'Mở đăng ký';
+            case 'ONGOING': return 'Đang học';
+            case 'CLOSED': return 'Đã khóa sổ';
             case 'CANCELLED': return 'Đã hủy';
-            case 'PLANNING': return 'Lập kế hoạch';
+            case 'FULL': return 'Đã đầy';
             case 'PLANNED': return 'Đã lập lịch';
             default: return status;
         }
@@ -974,12 +987,11 @@ export class ScheduleComponent implements OnInit {
     cancelScheduleItem(): void {
         if (!this.selectedScheduleItem || !this.selectedScheduleItem.patternId) return;
 
-        if (confirm(`Bạn có chắc muốn hủy lịch học môn [${this.selectedScheduleItem.title}] ?`)) {
-            this.scheduleService.deletePattern(this.selectedScheduleItem.patternId).subscribe(() => {
-                this.selectedScheduleItem = null;
-                this.loadScheduleForAdminClass();
-            });
-        }
+        this.scheduleService.deletePattern(this.selectedScheduleItem.patternId).subscribe(() => {
+            this.flashMessage.success('Hủy buổi học thành công!');
+            this.selectedScheduleItem = null;
+            this.loadScheduleForAdminClass();
+        });
     }
 
     onResizeStart(event: MouseEvent, item: any): void {
