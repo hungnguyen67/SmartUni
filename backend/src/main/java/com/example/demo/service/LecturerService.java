@@ -3,6 +3,9 @@ package com.example.demo.service;
 import com.example.demo.dto.LecturerDTO;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import com.example.demo.exception.ApiException;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,9 @@ public class LecturerService {
     @Autowired
     private FacultyRepository facultyRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public List<LecturerDTO> getAllLecturers(String searchTerm, Long facultyId) {
         List<LecturerProfile> lecturers = lecturerProfileRepository.searchLecturers(searchTerm, facultyId);
         return lecturers.stream().map(this::convertToDTO).collect(Collectors.toList());
@@ -39,18 +45,22 @@ public class LecturerService {
 
     @Transactional
     public LecturerDTO createLecturer(LecturerDTO dto) {
-        User user = userRepository.findByEmail(dto.getEmail())
-                .orElseGet(() -> {
-                    User newUser = new User();
-                    newUser.setEmail(dto.getEmail());
-                    newUser.setAccountStatus(User.AccountStatus.ACTIVE);
-                    newUser.setCreatedAt(LocalDateTime.now());
-                    
-                    Role lecturerRole = roleRepository.findByName("LECTURER")
-                            .orElseThrow(() -> new RuntimeException("Role LECTURER not found"));
-                    newUser.setRole(lecturerRole);
-                    return newUser;
-                });
+        if (userRepository.existsByEmail(dto.getEmail())) {
+             throw new ApiException("Email '" + dto.getEmail() + "' đã tồn tại trong hệ thống!", HttpStatus.CONFLICT);
+        }
+
+        if (dto.getLecturerCode() != null && lecturerProfileRepository.existsByLecturerCode(dto.getLecturerCode())) {
+            throw new ApiException("Mã giảng viên '" + dto.getLecturerCode() + "' đã tồn tại!", HttpStatus.CONFLICT);
+        }
+
+        User user = new User();
+        user.setEmail(dto.getEmail());
+        user.setAccountStatus(User.AccountStatus.ACTIVE);
+        user.setCreatedAt(LocalDateTime.now());
+        
+        Role lecturerRole = roleRepository.findByName("LECTURER")
+                .orElseThrow(() -> new RuntimeException("Role LECTURER not found"));
+        user.setRole(lecturerRole);
 
         updateUserFields(user, dto);
         userRepository.save(user);
@@ -109,6 +119,13 @@ public class LecturerService {
         user.setPhone(dto.getPhone());
         user.setBirthday(dto.getBirthday());
         user.setAddress(dto.getAddress());
+        user.setAvatar(dto.getAvatar());
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        if (dto.getIsEmailVerified() != null) {
+            user.setIsEmailVerified(dto.getIsEmailVerified());
+        }
         if (dto.getGender() != null) {
             user.setGender(User.Gender.valueOf(dto.getGender()));
         }

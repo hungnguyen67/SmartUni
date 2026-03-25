@@ -35,6 +35,7 @@ export class LecturersComponent implements OnInit {
     currentLecturer: Partial<LecturerDTO> = {};
     originalLecturer: LecturerDTO | null = null;
     lecturerToDelete: LecturerDTO | null = null;
+    emailError: string | null = null;
 
     constructor(
         private lecturerService: LecturerService,
@@ -172,8 +173,12 @@ export class LecturersComponent implements OnInit {
             lastName: '',
             firstName: '',
             birthday: '',
-            address: ''
+            address: '',
+            password: 'Abc123',
+            isEmailVerified: true,
+            avatar: 'https://ui-avatars.com/api/?name=User'
         };
+        this.emailError = null;
         this.showModal = true;
     }
 
@@ -192,6 +197,7 @@ export class LecturersComponent implements OnInit {
     closeModal(): void {
         this.showModal = false;
         this.currentLecturer = {};
+        this.emailError = null;
         this.activeDropdown = '';
     }
 
@@ -208,9 +214,17 @@ export class LecturersComponent implements OnInit {
             return;
         }
 
+        this.emailError = null;
+
         if (this.isEditing && !this.hasChanges()) {
             this.flashMessage.info('Không có thay đổi nào để cập nhật');
             this.closeModal();
+            return;
+        }
+
+        const emailExists = this.lecturers.some(l => l.email === this.currentLecturer.email && (!this.isEditing || l.id !== this.currentLecturer.id));
+        if (emailExists) {
+            this.flashMessage.error('Email này đã tồn tại trong hệ thống!');
             return;
         }
 
@@ -228,6 +242,10 @@ export class LecturersComponent implements OnInit {
             },
             error: (err) => {
                 this.savingLecturer = false;
+                const message = err?.error?.message || err?.message || 'Có lỗi xảy ra!';
+                if (message.toLowerCase().includes('email')) {
+                    this.emailError = message;
+                }
                 this.flashMessage.handleError(err);
             }
         });

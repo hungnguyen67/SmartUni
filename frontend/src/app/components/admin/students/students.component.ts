@@ -43,6 +43,7 @@ export class StudentsComponent implements OnInit {
     currentStudent: Partial<StudentDTO> = {};
     originalStudent: StudentDTO | null = null;
     studentToDelete: StudentDTO | null = null;
+    emailError: string | null = null;
 
     constructor(
         private studentService: StudentService,
@@ -242,14 +243,19 @@ export class StudentsComponent implements OnInit {
             enrollmentYear: new Date().getFullYear(),
             totalCreditsEarned: 0,
             currentGpa: 0,
-            currentGpa10: 0
+            currentGpa10: 0,
+            password: 'Abc123',
+            isEmailVerified: true,
+            avatar: 'https://ui-avatars.com/api/?name=Student'
         };
+        this.emailError = null;
         this.showModal = true;
     }
 
     closeMainModal(): void {
         this.showModal = false;
         this.currentStudent = {};
+        this.emailError = null;
         this.activeDropdown = '';
     }
 
@@ -348,9 +354,17 @@ export class StudentsComponent implements OnInit {
             return;
         }
 
+        this.emailError = null;
+
         if (this.isEditing && !this.hasChanges()) {
             this.flashMessage.info('Không có thay đổi nào để cập nhật');
             this.closeMainModal();
+            return;
+        }
+
+        const emailExists = this.students.some(s => s.email === this.currentStudent.email && (!this.isEditing || s.id !== this.currentStudent.id));
+        if (emailExists) {
+            this.flashMessage.error('Email này đã tồn tại trong hệ thống!');
             return;
         }
 
@@ -368,6 +382,10 @@ export class StudentsComponent implements OnInit {
             },
             error: (err: any) => {
                 this.savingStudent = false;
+                const message = err?.error?.message || err?.message || 'Có lỗi xảy ra!';
+                if (message.toLowerCase().includes('email')) {
+                    this.emailError = message;
+                }
                 this.flashMessage.handleError(err);
             }
         });

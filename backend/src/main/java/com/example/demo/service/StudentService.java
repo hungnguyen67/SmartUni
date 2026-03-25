@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +31,9 @@ public class StudentService {
     @Autowired
     private CurriculumRepository curriculumRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public List<StudentDTO> searchStudents(String searchTerm, Long classId, Long majorId, 
                                           Integer enrollmentYear, String status, Double minGpa, Double maxGpa) {
         
@@ -50,30 +54,24 @@ public class StudentService {
     public List<Integer> getDistinctEnrollmentYears() {
         return studentProfileRepository.findDistinctEnrollmentYears();
     }
-
     @Transactional
     public StudentDTO createStudent(StudentDTO dto) {
-        User user = userRepository.findByEmail(dto.getEmail())
-                .orElseGet(() -> {
-                    User newUser = new User();
-                    newUser.setEmail(dto.getEmail());
-                    newUser.setAccountStatus(User.AccountStatus.ACTIVE);
-                    newUser.setCreatedAt(LocalDateTime.now());
-                    
-                    Role studentRole = roleRepository.findByName("STUDENT")
-                            .orElseThrow(() -> new ApiException("Role STUDENT not found", HttpStatus.INTERNAL_SERVER_ERROR));
-                    newUser.setRole(studentRole);
-                    newUser.setPassword("$2a$10$T1djKF4oQwrHeTJwjDaEyO5WB5XsEq6pRSZyz/oxSVcp3e80kdnF."); // Default: 123456
-                    return newUser;
-                });
-
-        if (user.getId() != null && studentProfileRepository.existsById(user.getId())) {
-            throw new ApiException("Student with this email already exists: " + dto.getEmail(), HttpStatus.CONFLICT);
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new ApiException("Email '" + dto.getEmail() + "' đã tồn tại trong hệ thống!", HttpStatus.CONFLICT);
         }
 
         if (studentProfileRepository.existsByStudentCode(dto.getStudentCode())) {
-            throw new ApiException("Student code already exists: " + dto.getStudentCode(), HttpStatus.CONFLICT);
+            throw new ApiException("Mã sinh viên '" + dto.getStudentCode() + "' đã tồn tại!", HttpStatus.CONFLICT);
         }
+
+        User user = new User();
+        user.setEmail(dto.getEmail());
+        user.setAccountStatus(User.AccountStatus.ACTIVE);
+        user.setCreatedAt(LocalDateTime.now());
+        
+        Role studentRole = roleRepository.findByName("STUDENT")
+                .orElseThrow(() -> new ApiException("Role STUDENT not found", HttpStatus.INTERNAL_SERVER_ERROR));
+        user.setRole(studentRole);
 
         updateUserFields(user, dto);
         user = userRepository.saveAndFlush(user);
@@ -119,6 +117,13 @@ public class StudentService {
         user.setPhone(dto.getPhone());
         user.setBirthday(dto.getBirthday());
         user.setAddress(dto.getAddress());
+        user.setAvatar(dto.getAvatar());
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        if (dto.getIsEmailVerified() != null) {
+            user.setIsEmailVerified(dto.getIsEmailVerified());
+        }
         if (dto.getGender() != null) {
             user.setGender(User.Gender.valueOf(dto.getGender()));
         }

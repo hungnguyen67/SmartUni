@@ -36,6 +36,9 @@ public class StudentDTO {
     private String enteredCode;
     private java.time.LocalDateTime createdAt;
     private java.time.LocalDateTime updatedAt;
+    private String password;
+    private Boolean isEmailVerified;
+    private String avatar;
 
     public StudentDTO() {
     }
@@ -278,4 +281,13 @@ public class StudentDTO {
     public void setSessionAbsentPeriods(Integer sessionAbsentPeriods) { this.sessionAbsentPeriods = sessionAbsentPeriods; }
     public String getEnteredCode() { return enteredCode; }
     public void setEnteredCode(String enteredCode) { this.enteredCode = enteredCode; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public Boolean getIsEmailVerified() { return isEmailVerified; }
+    public void setIsEmailVerified(Boolean isEmailVerified) { this.isEmailVerified = isEmailVerified; }
+
+    public String getAvatar() { return avatar; }
+    public void setAvatar(String avatar) { this.avatar = avatar; }
 }

@@ -22,4 +22,6 @@ public interface LecturerProfileRepository extends JpaRepository<LecturerProfile
            "LOWER(CONCAT(u.lastName, ' ', u.firstName)) = LOWER(:fullName) OR " +
            "LOWER(CONCAT(u.firstName, ' ', u.lastName)) = LOWER(:fullName)")
     LecturerProfile findByUserFullName(@Param("fullName") String fullName);
+    
+    boolean existsByLecturerCode(String lecturerCode);
 }

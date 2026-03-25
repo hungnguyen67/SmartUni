@@ -25,6 +25,9 @@ export interface StudentDTO {
     majorName: string;
     createdAt: string;
     updatedAt: string;
+    password?: string;
+    isEmailVerified?: boolean;
+    avatar?: string;
 }
 
 @Injectable({

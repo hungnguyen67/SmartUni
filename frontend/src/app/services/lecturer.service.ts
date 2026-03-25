@@ -21,6 +21,9 @@ export interface LecturerDTO {
     advisorClasses: string[];
     createdAt: string;
     updatedAt: string;
+    password?: string;
+    isEmailVerified?: boolean;
+    avatar?: string;
 }
 
 @Injectable({

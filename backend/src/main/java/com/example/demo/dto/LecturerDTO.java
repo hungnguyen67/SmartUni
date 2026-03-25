@@ -22,6 +22,9 @@ public class LecturerDTO {
     private List<String> advisorClasses;
     private java.time.LocalDateTime createdAt;
     private java.time.LocalDateTime updatedAt;
+    private String password;
+    private Boolean isEmailVerified;
+    private String avatar;
 
     public LecturerDTO() {}
 
@@ -78,4 +81,13 @@ public class LecturerDTO {
 
     public java.time.LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(java.time.LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public Boolean getIsEmailVerified() { return isEmailVerified; }
+    public void setIsEmailVerified(Boolean isEmailVerified) { this.isEmailVerified = isEmailVerified; }
+
+    public String getAvatar() { return avatar; }
+    public void setAvatar(String avatar) { this.avatar = avatar; }
 }

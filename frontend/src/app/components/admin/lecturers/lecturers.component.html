@@ -261,7 +261,11 @@
                             class="text-red-500">*</span></label>
                     <input type="email" [(ngModel)]="currentLecturer.email"
                         class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm shadow-sm"
-                        placeholder="VD: gv@smartuni.edu.vn" [disabled]="isEditing">
+                        placeholder="VD: gv@smartuni.edu.vn" [disabled]="isEditing" (input)="emailError = null">
+                    <p *ngIf="emailError" class="text-xs text-red-500 mt-1 animate-in slide-in-from-top-1 duration-200">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        {{ emailError }}
+                    </p>
                 </div>
 
                 <div class="space-y-1.5">
