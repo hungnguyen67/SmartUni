@@ -27,6 +27,8 @@ export interface CurriculumSubjectComponentDTO {
     corequisites: string[];
     equivalents: string[];
     blockCode?: string;
+    theoryPeriods?: number;
+    practicalPeriods?: number;
 }
 
 export interface KnowledgeBlockDTO {

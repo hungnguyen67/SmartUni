@@ -99,13 +99,13 @@ public class CurriculumService {
                                                                 .filter(p -> p.getSubject().getId()
                                                                                 .equals(cs.getSubject().getId())
                                                                                 && p.getIsCorequisite())
-                                                                .map(p -> p.getPrerequisiteSubject().getSubjectCode())
+                                                                .map(p -> p.getPrerequisiteSubject().getName())
                                                                 .collect(Collectors.toList());
 
                                                 List<String> equivalents = allEquivalents.stream()
                                                                 .filter(e -> e.getSubject().getId()
                                                                                 .equals(cs.getSubject().getId()))
-                                                                .map(e -> e.getEquivalentSubject().getSubjectCode())
+                                                                .map(e -> e.getEquivalentSubject().getName())
                                                                 .collect(Collectors.toList());
 
                                                 return new CurriculumSubjectComponentDTO(
@@ -116,7 +116,9 @@ public class CurriculumService {
                                                                 cs.getRecommendedSemester(),
                                                                 prerequisites,
                                                                 corequisites,
-                                                                equivalents);
+                                                                equivalents,
+                                                                cs.getSubject().getTheoryPeriods(),
+                                                                cs.getSubject().getPracticalPeriods());
                                         })
                                         .collect(Collectors.toList());
 

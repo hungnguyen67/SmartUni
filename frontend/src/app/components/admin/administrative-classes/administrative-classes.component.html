@@ -84,15 +84,16 @@
                                                 [class.bg-blue-50]="selectedAdvisorId === null">
                                                 Tất cả cố vấn
                                             </div>
-                                            <div *ngFor="let l of getAvailableFilterAdvisors()" (click)="selectAdvisor(l.id)"
+                                            <div *ngFor="let l of getAvailableFilterAdvisors()"
+                                                (click)="selectAdvisor(l.id)"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                                 [class.text-slate-900]="selectedAdvisorId === l.id"
                                                 [class.bg-blue-50]="selectedAdvisorId === l.id">
                                                 {{ l.lastName }} {{ l.firstName }}
                                             </div>
                                             <div *ngIf="getAvailableFilterAdvisors().length === 0"
-                                                 class="px-4 py-3 text-sm text-slate-400 italic text-center">
-                                                 Không có giảng viên phù hợp
+                                                class="px-4 py-3 text-sm text-slate-400 italic text-center">
+                                                Không có giảng viên phù hợp
                                             </div>
                                         </div>
                                     </div>
@@ -275,8 +276,8 @@
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">
                             {{ item.classCode }}
                         </td>
-                        <td class="px-4 py-4 text-sm font-medium text-slate-600">
-                            <span class="hover:text-blue-500 cursor-pointer" (click)="viewClassDetails(item)">
+                        <td class="px-4 py-4 text-sm font-medium text-slate-800">
+                            <span class="hover:text-blue-700 cursor-pointer" (click)="viewClassDetails(item)">
                                 {{item.className}}
                             </span>
                         </td>
@@ -556,8 +557,8 @@
                             class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0">
                             {{ l.lastName }} {{ l.firstName }}</div>
                         <div *ngIf="getAvailableModalAdvisors().length === 0"
-                             class="px-4 py-3 text-sm text-slate-400 italic text-center">
-                             Không có giảng viên phù hợp
+                            class="px-4 py-3 text-sm text-slate-400 italic text-center">
+                            Không có giảng viên phù hợp
                         </div>
                     </div>
                 </div>

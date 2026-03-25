@@ -790,4 +790,25 @@ export class CurriculumsComponent implements OnInit {
             }
         });
     }
+
+    navigateToBlocks(item: any): void {
+        this.tabFilters['BLOCK'].majorId = item.majorId;
+        this.tabFilters['BLOCK'].curriculumId = item.id;
+        this.setTab('BLOCK');
+        this.onFilter();
+    }
+
+    navigateToSubjects(item: any): void {
+        const curriculum = this.curriculums.find(c => c.id === item.curriculumId);
+        if (curriculum) {
+            this.tabFilters['SUBJECT'].majorId = curriculum.majorId;
+        } else {
+            this.tabFilters['SUBJECT'].majorId = null;
+        }
+        this.tabFilters['SUBJECT'].curriculumId = item.curriculumId;
+        this.tabFilters['SUBJECT'].blockId = item.id;
+        this.setTab('SUBJECT');
+        this.onFilter();
+    }
 }
+

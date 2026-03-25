@@ -10,22 +10,9 @@
                     class="w-full bg-transparent border-none text-[13px] text-slate-700 outline-none appearance-none cursor-pointer py-2 px-2.5">
                     <option [value]="selectedProgram">{{ selectedProgram }}</option>
                 </select>
-                <i class="fas fa-chevron-down absolute right-1 text-slate-400 text-[10px] pointer-events-none"></i>
+                <i class="fas fa-chevron-right absolute right-1 text-slate-400 text-[10px] pointer-events-none"></i>
             </div>
         </div>
-
-        <!-- <div class="flex items-center gap-8 px-1">
-            <label class="flex items-center gap-1.5 cursor-pointer group">
-                <input type="radio" name="regType" value="STANDARD" [(ngModel)]="registrationType"
-                    class="w-3.5 h-3.5 text-blue-600 border-slate-300 focus:ring-0">
-                <span class="text-[13px] text-slate-700 group-hover:text-blue-700">Tiến độ chuẩn (4.0 năm)</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer group">
-                <input type="radio" name="regType" value="OUT_OF_PLAN" [(ngModel)]="registrationType"
-                    class="w-3.5 h-3.5 text-blue-600 border-slate-300 focus:ring-0">
-                <span class="text-[13px] text-slate-700 group-hover:text-blue-700">Ngoài kế hoạch</span>
-            </label>
-        </div> -->
 
         <div *ngIf="!isClassSelectionMode" class="relative border border-slate-300 rounded-md pt-4 pb-4 bg-white mt-4">
             <h2 class="absolute -top-3 left-6 bg-white px-2 text-[14px] font-bold text-[#1e3a8a]">
@@ -157,7 +144,7 @@
 
         <div class="relative border border-slate-300 rounded-md pt-4 pb-4 bg-white mt-12 shadow-sm">
             <h2 class="absolute -top-3 left-6 bg-white px-2 text-[14px] font-bold text-[#1e3a8a]">
-                Kết quả đăng ký : {{ registeredClasses.length || 0 }} học phần, {{ getTotalCredits() }} Tín chỉ
+                Kết quả đăng ký : {{ getVisibleRegistrations().length || 0 }} học phần, {{ getTotalCredits() }} Tín chỉ
             </h2>
 
             <div class="overflow-x-auto px-4 mt-2">
@@ -174,30 +161,31 @@
                         </tr>
                     </thead>
                     <tbody class="text-[13px]">
-                        <tr *ngFor="let reg of registeredClasses; let i = index"
-                            class="transition-colors border-b border-slate-50 last:border-0">
-                            <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ i + 1 }}</td>
-                            <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ reg.classCode }}</td>
-                            <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ reg.subjectName }}</td>
-                            <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ reg.credits }}</td>
-                            <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ reg.lecturerName || 'Chưa phân
-                                công' }}</td>
-                            <td class="px-4 py-4 text-sm text-slate-900 text-left">
-                                {{ formatSchedule(reg.schedules, reg.startDate, reg.endDate) }}
-                            </td>
-                            <td class="px-4 py-4 text-center">
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <button (click)="changeClass(reg)"
-                                        class="inline-flex items-center px-3 py-2 border border-slate-300 hover:bg-slate-100 rounded-full text-[11px] font-bold text-blue-700 transition-all shadow-sm whitespace-nowrap">
-                                        Chuyển LHP
-                                    </button>
-                                    <button (click)="drop(reg.id)"
-                                        class="inline-flex items-center px-4 py-2 border border-slate-300 hover:bg-slate-100 rounded-full text-[11px] font-bold text-slate-700 transition-all shadow-sm whitespace-nowrap">
-                                        Hủy
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                        <ng-container *ngFor="let reg of getVisibleRegistrations(); let i = index">
+                            <tr class="transition-colors border-b border-slate-50 last:border-0">
+                                <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ i + 1 }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ reg.classCode }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ reg.subjectName }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ reg.credits }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ reg.lecturerName || 'Chưa phân
+                                    công' }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">
+                                    {{ formatSchedule(reg.schedules, reg.startDate, reg.endDate) }}
+                                </td>
+                                <td class="px-4 py-4 text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button (click)="changeClass(reg)"
+                                            class="inline-flex items-center px-3 py-2 border border-slate-300 hover:bg-slate-100 rounded-full text-[11px] font-bold text-blue-700 transition-all shadow-sm whitespace-nowrap">
+                                            Chuyển LHP
+                                        </button>
+                                        <button (click)="drop(reg.id)"
+                                            class="inline-flex items-center px-4 py-2 border border-slate-300 hover:bg-slate-100 rounded-full text-[11px] font-bold text-slate-700 transition-all shadow-sm whitespace-nowrap">
+                                            Hủy
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-container>
                     </tbody>
                 </table>
             </div>

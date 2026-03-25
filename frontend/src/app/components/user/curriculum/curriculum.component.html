@@ -23,7 +23,7 @@
                             <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">Tên học phần</th>
                             <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Khối KT</th>
                             <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Số TC</th>
-                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Điều kiện ràng buộc
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">Điều kiện ràng buộc
                             </th>
                             <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Học kỳ dự kiến</th>
                             <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Chi tiết</th>
@@ -46,14 +46,18 @@
                             <td class="px-4 py-4 text-sm text-slate-900 text-center">
                                 {{ subject.credits }}</td>
                             <td class="px-4 py-4 text-sm text-slate-900 text-left">
-                                <span *ngIf="subject.prerequisites?.length">Học trước({{
-                                    subject.prerequisites.join(', ') }})</span>
+                                <span *ngIf="subject.prerequisites?.length">
+                                    Học trước({{ subject.prerequisites.join(', ') }})
+                                </span>
+                                <span *ngIf="subject.equivalents?.length">
+                                    Tương đương({{ subject.equivalents.join(', ') }})
+                                </span>
                             </td>
                             <td class="px-4 py-4 text-sm text-slate-900 text-center">
                                 {{ subject.semester }}
                             </td>
                             <td class="px-2 py-4 text-center">
-                                <button (click)="navigateToDetail(subject.subjectId)"
+                                <button (click)="navigateToDetail(subject, i + 1)"
                                     class="text-slate-700 hover:text-blue-600 transition-all">
                                     <i class="fas fa-external-link-alt"></i>
                                 </button>
@@ -77,15 +81,15 @@
                 <i class="fas fa-list-ul text-[12px]"></i> Các khối lựa chọn bắt buộc
             </div>
             <div class="p-1">
-                <div *ngFor="let block of mandatoryBlocks" (click)="scrollToBlock(block.blockId)"
-                    class="flex items-start px-3 py-3 cursor-pointer group transition-all border-b border-slate-50">
+                <div *ngFor="let block of mandatoryBlocks" (click)="openBlockDetail(block)"
+                    class="flex items-start px-3 py-3 cursor-pointer group transition-all">
                     <div class="w-8 h-8 shrink-0 flex items-center justify-center text-slate-500 transition-all mt-0.5">
                         <i class="fas fa-layer-group text-xs"></i>
                     </div>
                     <div class="ml-3 overflow-hidden">
                         <div
                             class="text-[14px] font-semibold text-slate-900 truncate transition-colors group-hover:text-blue-600">
-                            {{ block.name }}
+                            <span>{{ block.name }}</span>
                         </div>
                         <div class="text-[12px] text-slate-600 mt-0.5 leading-relaxed">
                             {{ block.details }}
@@ -100,15 +104,15 @@
                 <i class="fas fa-layer-group text-[12px]"></i> Các khối lựa chọn đơn
             </div>
             <div class="p-1">
-                <div *ngFor="let item of electiveBlocks" (click)="scrollToBlock(item.blockId)"
-                    class="flex items-start px-3 py-3 cursor-pointer group transition-all border-b border-slate-50">
+                <div *ngFor="let item of electiveBlocks" (click)="openBlockDetail(item)"
+                    class="flex items-start px-3 py-3 cursor-pointer group transition-all">
                     <div class="w-8 h-8 shrink-0 flex items-center justify-center text-slate-500 transition-all mt-0.5">
                         <i class="fas fa-layer-group text-xs"></i>
                     </div>
                     <div class="ml-3 overflow-hidden">
                         <div
                             class="text-[14px] font-semibold text-slate-900 truncate transition-colors group-hover:text-blue-600">
-                            {{ item.name }}
+                            <span>{{ item.name }}</span>
                         </div>
                         <div class="text-[12px] text-slate-600 mt-0.5 leading-relaxed">
                             {{ item.details }}
@@ -120,6 +124,240 @@
     </aside>
 </div>
 
+<!-- Modal Chi tiết Khối kiến thức -->
+<div *ngIf="showDetailModal" (mousedown)="handleBackdropClick($event)"
+    class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div (mousedown)="$event.stopPropagation()"
+        class="bg-white rounded-xl shadow-2xl w-full max-w-4xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
+            <h3 class="text-[17px] font-bold text-slate-900">Chi tiết khối: {{ selectedBlockName }}</h3>
+            <button (click)="closeDetailModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto max-h-[70vh]">
+            <div class="overflow-x-auto">
+                <table class="w-full table-auto border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200">
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">STT</th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">Mã học phần</th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">Tên học phần</th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Số tín chỉ</th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center">Số tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        <tr *ngFor="let s of selectedBlockSubjects; let idx = index"
+                            class="hover:bg-slate-50 transition-colors">
+                            <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ idx + 1 }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ s.subjectCode }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ s.subjectName }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ s.credits }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-center">
+                                {{ (s.theoryPeriods || 0) + (s.practicalPeriods || 0) || (s.credits * 15) }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="p-4 border-t border-slate-100 flex justify-end bg-slate-50/50 rounded-b-xl">
+            <button (click)="closeDetailModal()"
+                class="px-8 py-2 text-sm font-semibold text-white bg-[#1f2f5c] hover:bg-[#2d4380] rounded-lg transition-all shadow-md">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chi tiết Học phần chuyên sâu -->
+<div *ngIf="showSubjectModal && selectedSubject" (mousedown)="handleBackdropClick($event)"
+    class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div (mousedown)="$event.stopPropagation()"
+        class="bg-white rounded-xl shadow-2xl w-full max-w-4xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
+            <h3 class="text-[17px] font-bold text-slate-900">Chi tiết học phần: {{ selectedSubject.subjectName
+                }}</h3>
+            <button (click)="closeSubjectModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="p-6 bg-white text-[14px] leading-relaxed flex-1 overflow-y-auto custom-scrollbar">
+            <section class="mb-8">
+                <h4 class="text-[#1f2f5c] font-bold border-b-2 border-[#1f2f5c] inline-block pb-1 mb-6">
+                    Thông tin học phần
+                </h4>
+                <div class="grid grid-cols-2 gap-y-4 gap-x-20">
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <span class="text-slate-500 w-40">Mã học phần:</span>
+                            <span class="font-medium text-slate-900">{{ selectedSubject.subjectCode }}</span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-slate-500 w-40">Tên học phần:</span>
+                            <span class="font-medium text-slate-900">{{ selectedSubject.subjectName }}</span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-slate-500 w-40">Số tín học phần:</span>
+                            <span class="font-medium text-slate-900">{{ selectedSubject.credits }}</span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-slate-500 w-40">Số tín học phí:</span>
+                            <span class="font-medium text-slate-900"></span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-slate-500 w-40">Là môn tính điểm:</span>
+                            <span class="font-medium text-slate-900"></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <span class="text-slate-500 w-40">Học kỳ dự kiến:</span>
+                            <span class="font-medium text-slate-900">{{ selectedSubject.semester }}</span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-slate-500 w-40">Học kỳ thực tế:</span>
+                            <span class="font-medium text-slate-900"></span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-slate-500 w-40">Thuộc tính học phần:</span>
+                            <span class="font-medium text-slate-900"></span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-slate-500 w-40">Phạm vi đảm nhiệm:</span>
+                            <span class="font-medium text-slate-900"></span>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-slate-500 w-40">Thứ tự:</span>
+                            <span class="font-medium text-slate-900">{{ selectedSubjectIndex }}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-8">
+                <h4 class="text-[#1f2f5c] font-bold border-b-2 border-[#1f2f5c] inline-block pb-1 mb-6">
+                    Quan hệ học phần
+                </h4>
+                <div *ngIf="selectedSubject.prerequisites?.length > 0">
+                    <div *ngFor="let p of selectedSubject.prerequisites" class="grid grid-cols-2 gap-x-20">
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <span class="text-slate-500 w-40">Loại quan hệ:</span>
+                                <span class="font-medium text-slate-900">Học trước</span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-slate-500 w-40">Học phần:</span>
+                                <span class="font-medium text-slate-900">{{ p }}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-slate-500 w-40">Mức:</span>
+                                <span class="font-medium text-slate-900"></span>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <span class="text-slate-500 w-40">Toán tử:</span>
+                                <span class="font-medium text-slate-900"></span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-slate-500 w-40">Giá trị:</span>
+                                <span class="font-medium text-slate-900"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-8">
+                <h4 class="text-[#1f2f5c] font-bold border-b-2 border-[#1f2f5c] inline-block pb-1 mb-6">
+                    Quan hệ tương đương
+                </h4>
+                <div *ngIf="selectedSubject.equivalents?.length > 0">
+                    <div *ngFor="let eq of selectedSubject.equivalents" class="grid grid-cols-2 gap-x-20">
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <span class="text-slate-500 w-40">Loại quan hệ:</span>
+                                <span class="font-medium text-slate-900">Học tương đương</span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-slate-500 w-40">Học phần:</span>
+                                <span class="font-medium text-slate-900">{{ eq }}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-slate-500 w-40">Mức:</span>
+                                <span class="font-medium text-slate-900"></span>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <span class="text-slate-500 w-40">Toán tử:</span>
+                                <span class="font-medium text-slate-900"></span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-slate-500 w-40">Giá trị:</span>
+                                <span class="font-medium text-slate-900"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mb-8">
+                <h4 class="text-[#1f2f5c] font-bold border-b-2 border-[#1f2f5c] inline-block pb-1 mb-6">
+                    Bài học
+                </h4>
+            </section>
+
+            <section class="mb-8">
+                <h4 class="text-[#1f2f5c] font-bold border-b-2 border-[#1f2f5c] inline-block pb-1 mb-6">
+                    Phân bổ học phần
+                </h4>
+                <div class="w-full">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200">
+                                <th
+                                    class="py-2 pr-4 font-semibold text-slate-900 text-center uppercase text-[12px] w-20">
+                                    STT
+                                </th>
+                                <th class="py-2 px-4 font-semibold text-slate-900 text-left uppercase text-[12px]">
+                                    Loại phân bổ
+                                </th>
+                                <th class="py-2 pl-4 font-semibold text-slate-900 text-center uppercase text-[12px]">
+                                    Số tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-700">
+                            <tr class="border-b border-slate-50">
+                                <td class="py-3 pr-4 text-sm text-slate-900 text-center">1</td>
+                                <td class="py-3 px-4 text-sm text-slate-900">Lý thuyết</td>
+                                <td class="py-3 pl-4 text-sm text-slate-900 text-center">{{
+                                    selectedSubject.theoryPeriods }}</td>
+                            </tr>
+                            <tr *ngIf="selectedSubject.practicalPeriods > 0" class="border-b border-slate-50">
+                                <td class="py-3 pr-4 text-sm text-slate-900 text-center">2</td>
+                                <td class="py-3 px-4 text-sm text-slate-900">Thực hành</td>
+                                <td class="py-3 pl-4 text-sm text-slate-900 text-center">{{
+                                    selectedSubject.practicalPeriods }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div class="p-4 border-t border-slate-100 flex justify-end bg-slate-50/50 rounded-b-xl">
+            <button (click)="closeSubjectModal()"
+                class="px-8 py-2 text-sm font-semibold text-white bg-[#1f2f5c] hover:bg-[#2d4380] rounded-lg transition-all shadow-md">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
 
 <ng-template #loader>
     <div class="flex flex-col items-center justify-center py-24 text-slate-400 gap-4 bg-white border-slate-200">

@@ -17,6 +17,12 @@ export class CurriculumComponent implements OnInit {
     loading = false;
     error: string | null = null;
     totalCredits = 0;
+    showDetailModal = false;
+    showSubjectModal = false;
+    selectedBlockName = '';
+    selectedBlockSubjects: any[] = [];
+    selectedSubject: any = null;
+    selectedSubjectIndex: number = 0;
 
     constructor(
         private curriculumService: CurriculumService,
@@ -168,7 +174,32 @@ export class CurriculumComponent implements OnInit {
         }
     }
 
-    navigateToDetail(subjectId: number): void {
-        this.router.navigate(['/home/program/course', subjectId]);
+    navigateToDetail(subject: any, index: number): void {
+        this.selectedSubject = subject;
+        this.selectedSubjectIndex = index;
+        this.showSubjectModal = true;
+    }
+
+    closeSubjectModal(): void {
+        this.showSubjectModal = false;
+        this.selectedSubject = null;
+    }
+    openBlockDetail(block: any): void {
+        this.selectedBlockName = block.blockName || block.name;
+        const detailBlock = this.curriculumDetails.find(b => b.blockId === block.blockId);
+        this.selectedBlockSubjects = detailBlock ? detailBlock.subjects : [];
+        this.showDetailModal = true;
+    }
+
+    closeDetailModal(): void {
+        this.showDetailModal = false;
+    }
+
+    handleBackdropClick(event: MouseEvent): void {
+        if ((event.target as HTMLElement).classList.contains('backdrop-blur-sm')) {
+            this.closeDetailModal();
+            this.closeSubjectModal();
+        }
     }
 }
+

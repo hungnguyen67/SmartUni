@@ -270,8 +270,9 @@
                             <td class="px-4 py-4 text-sm text-slate-900 text-center">
                                 {{ (currentPage - 1) * itemsPerPage + i + 1 }}
                             </td>
-                            <td class="px-4 py-4 text-sm text-slate-900 text-left">
-                                {{ item.curriculumName }}
+                            <td class="px-4 py-4 text-sm font-medium text-slate-800">
+                                <span class="hover:text-blue-700 cursor-pointer" (click)="navigateToBlocks(item)">{{
+                                    item.curriculumName }}</span>
                             </td>
                             <td class="px-4 py-4 text-sm text-slate-900 text-left">
                                 {{ item.majorName }}
@@ -311,12 +312,12 @@
                             <td class="px-4 py-4 text-sm text-slate-900 text-center">
                                 {{ item.blockCode }}
                             </td>
-                            <td class="px-4 py-4 text-sm text-slate-900 text-left">
-                                {{ item.blockName }}
+                            <td class="px-4 py-4 text-sm font-medium text-slate-800">
+                                <span class="hover:text-blue-700 cursor-pointer" (click)="navigateToSubjects(item)">{{
+                                    item.blockName }}</span>
                             </td>
                             <td class="px-4 py-4 text-sm text-slate-900 text-left">
-                                {{ item.curriculumName }}
-                            </td>
+                                {{ item.curriculumName }}</td>
                             <td class="px-4 py-4 text-sm text-slate-900 text-center">
                                 {{ item.creditsRequired }}
                             </td>
@@ -343,11 +344,9 @@
                                 {{ (currentPage - 1) * itemsPerPage + i + 1 }}
                             </td>
                             <td class="px-4 py-4 text-sm text-slate-900 text-left">
-                                {{ item.curriculumName }}
-                            </td>
+                                {{ item.curriculumName }}</td>
                             <td class="px-4 py-4 text-sm text-slate-900 text-left">
-                                {{ item.blockName }}
-                            </td>
+                                {{ item.blockName }}</td>
                             <td class="px-4 py-4 text-sm text-slate-900 text-center">
                                 {{ item.subjectCode }}
                             </td>
@@ -533,12 +532,11 @@
                         [class.bg-slate-50]="currentCurriculum.blockType === 'MANDATORY'"
                         class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm text-slate-900 shadow-sm"
                         [placeholder]="currentCurriculum.blockType === 'MANDATORY' ? 'Tự động tính từ học phần' : 'Nhập số TC'">
-                    <div *ngIf="currentCurriculum.blockType === 'MANDATORY' && getMandatoryCreditsInfo() as info" 
-                         class="text-[11px] mt-1 flex justify-between px-1">
+                    <div *ngIf="currentCurriculum.blockType === 'MANDATORY' && getMandatoryCreditsInfo() as info"
+                        class="text-[11px] mt-1 flex justify-between px-1">
                         <span class="text-slate-500">Đã phân bổ trong CTĐT:</span>
-                        <span [class.text-red-500]="info.current > info.total" 
-                              [class.text-blue-600]="info.current <= info.total"
-                              class="font-semibold">
+                        <span [class.text-red-500]="info.current > info.total"
+                            [class.text-blue-600]="info.current <= info.total" class="font-semibold">
                             {{ info.current }} / {{ info.total }} TC
                         </span>
                     </div>

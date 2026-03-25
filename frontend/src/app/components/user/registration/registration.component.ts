@@ -241,7 +241,11 @@ export class RegistrationComponent implements OnInit {
         return `ĐĂNG KÝ HỌC PHẦN ${semester.name}, ${semester.academicYear}`.toUpperCase();
     }
 
+    getVisibleRegistrations(): any[] {
+        return (this.registeredClasses || []).filter(reg => (reg.classStatus || '').toUpperCase() === 'OPEN');
+    }
+
     getTotalCredits(): number {
-        return this.registeredClasses.reduce((sum, item) => sum + (item.credits || 0), 0);
+        return this.getVisibleRegistrations().reduce((sum, item) => sum + (item.credits || 0), 0);
     }
 }
