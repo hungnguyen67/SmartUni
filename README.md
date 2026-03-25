@@ -151,18 +151,6 @@ Trong repository settings, thêm:
 
 Workflow sẽ trigger khi push lên branch `main`.
 
-## Kiểm thử và Quản lý Lỗi (Software Testing)
-
-Dự án áp dụng quy trình kiểm thử phần mềm chuyên nghiệp phục vụ cho bài thực hành tổng hợp:
-
-- **Báo cáo kiểm thử chi tiết**: Xem tại [TEST_REPORT.md](./TEST_REPORT.md)
-- **Công cụ Quản lý lỗi**: 
-  - [GitHub Issues](https://github.com/hungnguyen67/SmartUni/issues): Toàn bộ quy trình từ ghi nhận, phân loại, theo dõi đến đóng lỗi đều thực hiện tại đây.
-- **Các loại kiểm thử đã thực hiện**:
-  - Manual Testing (Black-box): Kiểm thử chức năng CRUD, Đăng nhập, Tìm kiếm.
-  - White-box Testing: Kiểm tra logic xử lý JWT, các ràng buộc (Constraints) trong Database.
-  - Security Testing: Kiểm tra Hardcoded Secret, Phân quyền API Admin.
-
 ## Đóng góp
 
 1. Fork repository
@@ -170,10 +158,6 @@ Dự án áp dụng quy trình kiểm thử phần mềm chuyên nghiệp phục
 3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to branch (`git push origin feature/AmazingFeature`)
 5. Tạo Pull Request
-
-## Giấy phép
-
-Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE` để biết thêm chi tiết.
 
 ## Liên hệ
 
