@@ -34,9 +34,9 @@ public class StudentService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public List<StudentDTO> searchStudents(String searchTerm, Long classId, Long majorId, 
-                                          Integer enrollmentYear, String status, Double minGpa, Double maxGpa) {
-        
+    public List<StudentDTO> searchStudents(String searchTerm, Long classId, Long majorId,
+            Integer enrollmentYear, String status, Double minGpa, Double maxGpa) {
+
         StudentProfile.Status profileStatus = null;
         if (status != null && !status.isEmpty()) {
             try {
@@ -47,13 +47,14 @@ public class StudentService {
 
         List<StudentProfile> students = studentProfileRepository.searchStudents(
                 searchTerm, classId, majorId, enrollmentYear, profileStatus, minGpa, maxGpa);
-                
+
         return students.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     public List<Integer> getDistinctEnrollmentYears() {
         return studentProfileRepository.findDistinctEnrollmentYears();
     }
+
     @Transactional
     public StudentDTO createStudent(StudentDTO dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
@@ -68,7 +69,7 @@ public class StudentService {
         user.setEmail(dto.getEmail());
         user.setAccountStatus(User.AccountStatus.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
-        
+
         Role studentRole = roleRepository.findByName("STUDENT")
                 .orElseThrow(() -> new ApiException("Role STUDENT not found", HttpStatus.INTERNAL_SERVER_ERROR));
         user.setRole(studentRole);
@@ -81,7 +82,7 @@ public class StudentService {
         profile.setUserId(user.getId());
         updateProfileFields(profile, dto);
         profile.setCreatedAt(LocalDateTime.now());
-        
+
         studentProfileRepository.save(profile);
         return convertToDTO(profile);
     }
@@ -90,14 +91,14 @@ public class StudentService {
     public StudentDTO updateStudent(Long id, StudentDTO dto) {
         StudentProfile profile = studentProfileRepository.findById(id)
                 .orElseThrow(() -> new ApiException("Student not found with id: " + id, HttpStatus.NOT_FOUND));
-        
+
         User user = profile.getUser();
         updateUserFields(user, dto);
         userRepository.save(user);
 
         updateProfileFields(profile, dto);
         studentProfileRepository.save(profile);
-        
+
         return convertToDTO(profile);
     }
 
@@ -106,7 +107,7 @@ public class StudentService {
         StudentProfile profile = studentProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
         User user = profile.getUser();
-        
+
         studentProfileRepository.delete(profile);
         userRepository.delete(user);
     }
@@ -134,16 +135,17 @@ public class StudentService {
         profile.setStudentCode(dto.getStudentCode());
         profile.setEnrollmentYear(dto.getEnrollmentYear());
 
-        
         if (dto.getClassId() != null) {
             AdministrativeClass ac = administrativeClassRepository.findById(dto.getClassId())
-                    .orElseThrow(() -> new ApiException("Class not found with id: " + dto.getClassId(), HttpStatus.NOT_FOUND));
+                    .orElseThrow(() -> new ApiException("Class not found with id: " + dto.getClassId(),
+                            HttpStatus.NOT_FOUND));
             profile.setAdministrativeClass(ac);
         }
 
         if (dto.getCurriculumId() != null) {
             Curriculum curriculum = curriculumRepository.findById(dto.getCurriculumId())
-                    .orElseThrow(() -> new ApiException("Curriculum not found with id: " + dto.getCurriculumId(), HttpStatus.BAD_REQUEST));
+                    .orElseThrow(() -> new ApiException("Curriculum not found with id: " + dto.getCurriculumId(),
+                            HttpStatus.BAD_REQUEST));
             profile.setCurriculum(curriculum);
         }
 
@@ -165,7 +167,7 @@ public class StudentService {
         dto.setAddress(student.getUser().getAddress());
         dto.setBirthday(student.getUser().getBirthday());
         dto.setGender(student.getUser().getGender() != null ? student.getUser().getGender().name() : null);
-        
+
         if (student.getAdministrativeClass() != null) {
             dto.setClassName(student.getAdministrativeClass().getClassCode());
             dto.setClassId(student.getAdministrativeClass().getId());
@@ -178,8 +180,9 @@ public class StudentService {
                 }
             }
         }
-        
-        if (dto.getMajorName() == null && student.getCurriculum() != null && student.getCurriculum().getMajor() != null) {
+
+        if (dto.getMajorName() == null && student.getCurriculum() != null
+                && student.getCurriculum().getMajor() != null) {
             dto.setMajorName(student.getCurriculum().getMajor().getMajorName());
             dto.setMajorId(student.getCurriculum().getMajor().getId());
             if (student.getCurriculum().getMajor().getFaculty() != null) {
@@ -187,12 +190,12 @@ public class StudentService {
                 dto.setFacultyName(student.getCurriculum().getMajor().getFaculty().getFacultyName());
             }
         }
-        
+
         if (student.getCurriculum() != null) {
             dto.setCurriculumId(student.getCurriculum().getId());
             dto.setCurriculumName(student.getCurriculum().getCurriculumName());
         }
-        
+
         dto.setEnrollmentYear(student.getEnrollmentYear());
 
         dto.setTotalCreditsEarned(student.getTotalCreditsEarned());
@@ -201,7 +204,7 @@ public class StudentService {
         dto.setStatus(student.getStatus() != null ? student.getStatus().name() : null);
         dto.setCreatedAt(student.getCreatedAt());
         dto.setUpdatedAt(student.getUpdatedAt());
-        
+
         return dto;
     }
 }

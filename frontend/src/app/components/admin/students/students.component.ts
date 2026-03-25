@@ -358,7 +358,6 @@ export class StudentsComponent implements OnInit {
 
         if (this.isEditing && !this.hasChanges()) {
             this.flashMessage.info('Không có thay đổi nào để cập nhật');
-            this.closeMainModal();
             return;
         }
 

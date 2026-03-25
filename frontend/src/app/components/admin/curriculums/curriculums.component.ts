@@ -358,7 +358,6 @@ export class CurriculumsComponent implements OnInit {
             if (this.isEditing) {
                 if (!this.hasChanges()) {
                     this.flashMessage.info('Không có thay đổi nào để cập nhật');
-                    this.closeModal();
                     this.savingCurriculum = false;
                     return;
                 }
@@ -406,7 +405,6 @@ export class CurriculumsComponent implements OnInit {
             if (this.isEditing) {
                 if (!this.hasChanges()) {
                     this.flashMessage.info('Không có thay đổi nào để cập nhật');
-                    this.closeModal();
                     this.savingCurriculum = false;
                     return;
                 }
@@ -441,7 +439,6 @@ export class CurriculumsComponent implements OnInit {
             if (this.isEditing) {
                 if (!this.hasChanges()) {
                     this.flashMessage.info('Không có thay đổi nào để cập nhật');
-                    this.closeModal();
                     this.savingCurriculum = false;
                     return;
                 }

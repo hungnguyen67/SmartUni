@@ -218,7 +218,6 @@ export class LecturersComponent implements OnInit {
 
         if (this.isEditing && !this.hasChanges()) {
             this.flashMessage.info('Không có thay đổi nào để cập nhật');
-            this.closeModal();
             return;
         }
 
@@ -292,15 +291,15 @@ export class LecturersComponent implements OnInit {
     hasChanges(): boolean {
         if (!this.originalLecturer || !this.currentLecturer) return false;
         return this.currentLecturer.lecturerCode !== this.originalLecturer.lecturerCode ||
-               this.currentLecturer.lastName !== this.originalLecturer.lastName ||
-               this.currentLecturer.firstName !== this.originalLecturer.firstName ||
-               this.currentLecturer.email !== this.originalLecturer.email ||
-               this.currentLecturer.phone !== this.originalLecturer.phone ||
-               this.currentLecturer.birthday !== this.originalLecturer.birthday ||
-               this.currentLecturer.address !== this.originalLecturer.address ||
-               this.currentLecturer.facultyId !== this.originalLecturer.facultyId ||
-               this.currentLecturer.gender !== this.originalLecturer.gender ||
-               this.currentLecturer.status !== this.originalLecturer.status;
+            this.currentLecturer.lastName !== this.originalLecturer.lastName ||
+            this.currentLecturer.firstName !== this.originalLecturer.firstName ||
+            this.currentLecturer.email !== this.originalLecturer.email ||
+            this.currentLecturer.phone !== this.originalLecturer.phone ||
+            this.currentLecturer.birthday !== this.originalLecturer.birthday ||
+            this.currentLecturer.address !== this.originalLecturer.address ||
+            this.currentLecturer.facultyId !== this.originalLecturer.facultyId ||
+            this.currentLecturer.gender !== this.originalLecturer.gender ||
+            this.currentLecturer.status !== this.originalLecturer.status;
     }
 
     setFilterFaculty(id: number | null): void {

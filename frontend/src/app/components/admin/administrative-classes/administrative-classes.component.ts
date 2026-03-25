@@ -377,7 +377,6 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
 
         if (this.isEditing && !this.hasChanges()) {
             this.flashMessage.info('Không có thay đổi nào để cập nhật');
-            this.closeMainModal();
             return;
         }
 

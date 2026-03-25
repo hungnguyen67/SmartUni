@@ -46,7 +46,7 @@ public class LecturerService {
     @Transactional
     public LecturerDTO createLecturer(LecturerDTO dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
-             throw new ApiException("Email '" + dto.getEmail() + "' đã tồn tại trong hệ thống!", HttpStatus.CONFLICT);
+            throw new ApiException("Email '" + dto.getEmail() + "' đã tồn tại trong hệ thống!", HttpStatus.CONFLICT);
         }
 
         if (dto.getLecturerCode() != null && lecturerProfileRepository.existsByLecturerCode(dto.getLecturerCode())) {
@@ -57,7 +57,7 @@ public class LecturerService {
         user.setEmail(dto.getEmail());
         user.setAccountStatus(User.AccountStatus.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
-        
+
         Role lecturerRole = roleRepository.findByName("LECTURER")
                 .orElseThrow(() -> new RuntimeException("Role LECTURER not found"));
         user.setRole(lecturerRole);
@@ -69,7 +69,7 @@ public class LecturerService {
         profile.setUser(user);
         updateProfileFields(profile, dto);
         profile.setCreatedAt(LocalDateTime.now());
-        
+
         lecturerProfileRepository.save(profile);
         return convertToDTO(profile);
     }
@@ -78,14 +78,14 @@ public class LecturerService {
     public LecturerDTO updateLecturer(Long id, LecturerDTO dto) {
         LecturerProfile profile = lecturerProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lecturer not found"));
-        
+
         User user = profile.getUser();
         updateUserFields(user, dto);
         userRepository.save(user);
 
         updateProfileFields(profile, dto);
         lecturerProfileRepository.save(profile);
-        
+
         return convertToDTO(profile);
     }
 
@@ -94,7 +94,7 @@ public class LecturerService {
         LecturerProfile profile = lecturerProfileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Lecturer not found"));
         User user = profile.getUser();
-        
+
         // Clear advisor from administrative classes
         List<AdministrativeClass> adminClasses = administrativeClassRepository.findByAdvisorUserId(id);
         for (AdministrativeClass ac : adminClasses) {
@@ -137,7 +137,7 @@ public class LecturerService {
         profile.setSpecialization(dto.getSpecialization());
         profile.setDegree(dto.getDegree());
         profile.setAcademicRank(dto.getAcademicRank());
-        
+
         if (dto.getFacultyId() != null) {
             Faculty faculty = facultyRepository.findById(dto.getFacultyId())
                     .orElseThrow(() -> new RuntimeException("Faculty not found"));
@@ -169,12 +169,12 @@ public class LecturerService {
         dto.setStatus(lecturer.getStatus() != null ? lecturer.getStatus().name() : null);
         dto.setCreatedAt(lecturer.getCreatedAt());
         dto.setUpdatedAt(lecturer.getUpdatedAt());
-        
+
         List<AdministrativeClass> classes = administrativeClassRepository.findByAdvisorUserId(lecturer.getUserId());
         dto.setAdvisorClasses(classes.stream()
                 .map(AdministrativeClass::getClassCode)
                 .collect(Collectors.toList()));
-        
+
         return dto;
     }
 }
