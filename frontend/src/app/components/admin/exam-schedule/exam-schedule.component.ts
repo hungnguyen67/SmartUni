@@ -96,7 +96,7 @@ export class ExamScheduleComponent implements OnInit {
 
   loadSchedules(): void {
     this.http.get<any[]>('http://localhost:8001/api/admin/exam-schedules').subscribe(data => {
-      this.examSchedules = data;
+      this.examSchedules = data.sort((a, b) => (b.id || 0) - (a.id || 0));
       this.filterSchedules();
     });
   }

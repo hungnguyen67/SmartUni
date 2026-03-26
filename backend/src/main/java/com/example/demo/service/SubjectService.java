@@ -32,6 +32,7 @@ public class SubjectService {
 
     public List<SubjectDTO> getAllSubjects() {
         return subjectRepository.findAll().stream()
+                .filter(s -> s.getStatus() != Subject.Status.INACTIVE)
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

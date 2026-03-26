@@ -40,7 +40,7 @@ export class SubjectsComponent implements OnInit {
         if (!target.closest('.filter-menu-wrapper')) {
             this.showFilter = false;
         }
-        
+
         // Reset activeDropdown if clicking outside any relative container (which houses our dropdowns)
         if (!target.closest('.relative')) {
             this.activeDropdown = '';
@@ -65,7 +65,7 @@ export class SubjectsComponent implements OnInit {
 
     loadSubjects(): void {
         this.subjectService.getAllSubjects().subscribe(data => {
-            this.subjects = data;
+            this.subjects = data.sort((a, b) => (b.id || 0) - (a.id || 0));
             this.onSearch();
         });
     }
@@ -123,7 +123,7 @@ export class SubjectsComponent implements OnInit {
             theoryPeriods: 0,
             practicalPeriods: 0,
             description: '',
-            status: 'ACTIVE',
+            status: 'DRAFT',
             relations: []
         };
         this.showModal = true;
@@ -161,16 +161,25 @@ export class SubjectsComponent implements OnInit {
     }
 
     saveSubject(): void {
-        if (!this.currentSubject.subjectCode) {
+        const s = this.currentSubject;
+        if (!s.subjectCode) {
             this.flashMessage.error('Vui lòng nhập mã học phần');
             return;
         }
-        if (!this.currentSubject.name) {
+        if (!s.name) {
             this.flashMessage.error('Vui lòng nhập tên học phần');
             return;
         }
-        if (this.currentSubject.credits === undefined || this.currentSubject.credits === null) {
+        if (s.credits === undefined || s.credits === null) {
             this.flashMessage.error('Vui lòng nhập số tín chỉ');
+            return;
+        }
+        if (s.theoryPeriods === undefined || s.theoryPeriods === null) {
+            this.flashMessage.error('Vui lòng nhập số tiết lý thuyết');
+            return;
+        }
+        if (s.practicalPeriods === undefined || s.practicalPeriods === null) {
+            this.flashMessage.error('Vui lòng nhập số tiết thực hành');
             return;
         }
 

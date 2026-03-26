@@ -95,7 +95,7 @@ export class StudentsComponent implements OnInit {
         this.loading = true;
         this.studentService.getStudents(this.filters).subscribe({
             next: (data: StudentDTO[]) => {
-                this.students = data;
+                this.students = data.sort((a, b) => (b.id || 0) - (a.id || 0));
                 this.currentPage = 1;
                 this.updatePagination();
                 this.loading = false;
@@ -300,7 +300,7 @@ export class StudentsComponent implements OnInit {
         if (!this.currentStudent.classId) return this.curriculums;
         const selectedClass = this.classes.find(c => c.id === Number(this.currentStudent.classId));
         if (!selectedClass) return this.curriculums;
-        
+
         return this.curriculums.filter(curr => Number(curr.majorId) === Number(selectedClass.majorId));
     }
 
@@ -323,17 +323,17 @@ export class StudentsComponent implements OnInit {
     hasChanges(): boolean {
         if (!this.originalStudent || !this.currentStudent) return false;
         return this.currentStudent.studentCode !== this.originalStudent.studentCode ||
-               this.currentStudent.lastName !== this.originalStudent.lastName ||
-               this.currentStudent.firstName !== this.originalStudent.firstName ||
-               this.currentStudent.email !== this.originalStudent.email ||
-               this.currentStudent.phone !== this.originalStudent.phone ||
-               this.currentStudent.birthday !== this.originalStudent.birthday ||
-               this.currentStudent.address !== this.originalStudent.address ||
-               this.currentStudent.classId !== this.originalStudent.classId ||
-               this.currentStudent.enrollmentYear !== this.originalStudent.enrollmentYear ||
-               this.currentStudent.gender !== this.originalStudent.gender ||
-               this.currentStudent.status !== this.originalStudent.status ||
-               this.currentStudent.curriculumId !== this.originalStudent.curriculumId;
+            this.currentStudent.lastName !== this.originalStudent.lastName ||
+            this.currentStudent.firstName !== this.originalStudent.firstName ||
+            this.currentStudent.email !== this.originalStudent.email ||
+            this.currentStudent.phone !== this.originalStudent.phone ||
+            this.currentStudent.birthday !== this.originalStudent.birthday ||
+            this.currentStudent.address !== this.originalStudent.address ||
+            this.currentStudent.classId !== this.originalStudent.classId ||
+            this.currentStudent.enrollmentYear !== this.originalStudent.enrollmentYear ||
+            this.currentStudent.gender !== this.originalStudent.gender ||
+            this.currentStudent.status !== this.originalStudent.status ||
+            this.currentStudent.curriculumId !== this.originalStudent.curriculumId;
     }
 
     getClassName(id: any): string {
@@ -349,8 +349,33 @@ export class StudentsComponent implements OnInit {
     }
 
     saveStudent(): void {
-        if (!this.currentStudent.studentCode || !this.currentStudent.lastName || !this.currentStudent.firstName || !this.currentStudent.classId || !this.currentStudent.email) {
-            this.flashMessage.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+        const s = this.currentStudent;
+        if (!s.studentCode) {
+            this.flashMessage.error('Vui lòng nhập mã số sinh viên');
+            return;
+        }
+        if (!s.lastName) {
+            this.flashMessage.error('Vui lòng nhập họ đệm sinh viên');
+            return;
+        }
+        if (!s.firstName) {
+            this.flashMessage.error('Vui lòng nhập tên sinh viên');
+            return;
+        }
+        if (!s.email) {
+            this.flashMessage.error('Vui lòng nhập địa chỉ email');
+            return;
+        }
+        if (!s.enrollmentYear) {
+            this.flashMessage.error('Vui lòng nhập năm nhập học');
+            return;
+        }
+        if (!s.classId) {
+            this.flashMessage.error('Vui lòng chọn lớp hành chính');
+            return;
+        }
+        if (!s.curriculumId) {
+            this.flashMessage.error('Vui lòng chọn chương trình đào tạo');
             return;
         }
 

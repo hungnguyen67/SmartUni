@@ -280,7 +280,7 @@
     <div (mousedown)="$event.stopPropagation()"
         class="bg-white rounded-xl shadow-md w-full max-w-lg animate-in zoom-in-95 duration-200">
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
-            <h3 class="text-[17px] font-bold text-slate-700">{{ modalMode === 'EDIT' ? 'Chỉnh sửa Lớp học' : 'Thêm Lớp
+            <h3 class="text-[17px] font-bold text-slate-900">{{ modalMode === 'EDIT' ? 'Chỉnh sửa Lớp học' : 'Thêm Lớp
                 học mới' }}</h3>
             <button (click)="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fas fa-times"></i>
@@ -400,7 +400,7 @@
 <div *ngIf="isSelectionModalOpen" (mousedown)="handleBackdropClick($event)"
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
     <div (mousedown)="$event.stopPropagation()"
-        class="bg-white rounded-xl shadow-2xl w-full max-w-7xl h-[92vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+        class="bg-white rounded-xl shadow-md w-full max-w-7xl h-[92vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
             <h3 class="text-[17px] font-bold text-slate-900">Thêm lớp học mới</h3>
             <button (click)="closeSelectionModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
@@ -431,7 +431,7 @@
                                     </div>
                                 </button>
                                 <div *ngIf="activeDropdown === 'selectionMajor'"
-                                    class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-xl max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                    class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                                     <div (click)="selectionMajorId = null; onSelectionMajorChange(); activeDropdown = ''; $event.stopPropagation()"
                                         class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
                                         [class.text-slate-900]="selectionMajorId === null"
@@ -464,7 +464,7 @@
                                     </div>
                                 </button>
                                 <div *ngIf="activeDropdown === 'selectionYear'"
-                                    class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-xl max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                    class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                                     <div (click)="selectionYear = null; onSelectionYearChange(); activeDropdown = ''; $event.stopPropagation()"
                                         class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
                                         [class.text-slate-900]="selectionYear === null"
@@ -498,7 +498,7 @@
                                     </div>
                                 </button>
                                 <div *ngIf="activeDropdown === 'selectionClass'"
-                                    class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-xl max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                    class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                                     <div (click)="selectionAdminClassId = null; onSelectionFilterChange(); activeDropdown = ''; $event.stopPropagation()"
                                         class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
                                         [class.text-slate-900]="selectionAdminClassId === null"
@@ -615,7 +615,7 @@
     <div (mousedown)="$event.stopPropagation()"
         class="bg-white rounded-xl shadow-md w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <h3 class="text-[17px] font-bold text-slate-700">Xác nhận xóa?</h3>
+            <h3 class="text-[17px] font-bold text-slate-900">Xác nhận xóa?</h3>
             <button (click)="isDeleteModalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fas fa-times"></i>
             </button>

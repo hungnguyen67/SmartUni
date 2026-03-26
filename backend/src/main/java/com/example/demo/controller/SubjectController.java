@@ -42,7 +42,11 @@ public class SubjectController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSubject(@PathVariable Long id) {
-        subjectRepository.deleteById(id);
+        com.example.demo.model.Subject subject = subjectRepository.findById(id).orElse(null);
+        if (subject != null) {
+            subject.setStatus(com.example.demo.model.Subject.Status.INACTIVE);
+            subjectRepository.save(subject);
+        }
         return ResponseEntity.ok().build();
     }
 }

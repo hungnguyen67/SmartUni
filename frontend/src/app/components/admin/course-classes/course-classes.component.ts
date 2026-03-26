@@ -289,7 +289,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     loadAllClasses(): void {
         if (!this.selectedSemesterId) return;
         this.courseClassService.getClassesBySemester(this.selectedSemesterId).subscribe(data => {
-            this.allCourseClasses = data;
+            this.allCourseClasses = data.sort((a, b) => (b.id || 0) - (a.id || 0));
             this.onListFilterChange();
         });
     }
@@ -304,8 +304,8 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         this.loading = true;
         this.courseClassService.getGroupedSubjects(this.selectedSemesterId).subscribe({
             next: (data) => {
-                this.subjects = data;
-                this.filteredSubjects = data;
+                this.subjects = data.sort((a, b) => (b.subjectId || 0) - (a.subjectId || 0));
+                this.filteredSubjects = this.subjects;
                 this.loadAnalysis();
                 this.loading = false;
             },

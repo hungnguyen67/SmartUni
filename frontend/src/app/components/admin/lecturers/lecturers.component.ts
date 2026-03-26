@@ -70,7 +70,7 @@ export class LecturersComponent implements OnInit {
         this.loading = true;
         this.lecturerService.getLecturers(this.searchTerm, this.filterFaculty || undefined).subscribe({
             next: (data: LecturerDTO[]) => {
-                this.lecturers = data;
+                this.lecturers = data.sort((a, b) => (b.id || 0) - (a.id || 0));
                 this.applyFilters();
                 this.loading = false;
             },
@@ -209,8 +209,25 @@ export class LecturersComponent implements OnInit {
     }
 
     saveLecturer(): void {
-        if (!this.currentLecturer.lecturerCode || !this.currentLecturer.lastName || !this.currentLecturer.firstName || !this.currentLecturer.facultyId || !this.currentLecturer.email) {
-            this.flashMessage.error('Vui lòng điền đầy đủ các thông tin bắt buộc!');
+        const l = this.currentLecturer;
+        if (!l.lecturerCode) {
+            this.flashMessage.error('Vui lòng nhập mã giảng viên');
+            return;
+        }
+        if (!l.lastName) {
+            this.flashMessage.error('Vui lòng nhập họ đệm giảng viên');
+            return;
+        }
+        if (!l.firstName) {
+            this.flashMessage.error('Vui lòng nhập tên giảng viên');
+            return;
+        }
+        if (!l.facultyId) {
+            this.flashMessage.error('Vui lòng chọn khoa trực thuộc');
+            return;
+        }
+        if (!l.email) {
+            this.flashMessage.error('Vui lòng nhập địa chỉ email');
             return;
         }
 

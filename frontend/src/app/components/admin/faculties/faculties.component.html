@@ -190,7 +190,7 @@
     <div (mousedown)="$event.stopPropagation()"
         class="bg-white rounded-xl shadow-md w-full max-w-lg animate-in zoom-in-95 duration-200">
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
-            <h3 class="text-[17px] font-bold text-slate-700">{{ isEditing ? 'Cập nhật thông tin Khoa' : 'Thêm Khoa
+            <h3 class="text-[17px] font-bold text-slate-900">{{ isEditing ? 'Cập nhật thông tin Khoa' : 'Thêm Khoa
                 mới' }}</h3>
             <button (click)="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fas fa-times"></i>
@@ -252,7 +252,7 @@
                 class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all">Hủy
                 bỏ</button>
             <button (click)="saveFaculty()"
-                class="px-6 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-md disabled:opacity-50"
+                class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all disabled:bg-slate-300"
                 [disabled]="savingFaculty">
                 <i *ngIf="savingFaculty" class="fas fa-circle-notch fa-spin mr-2"></i>
                 {{ savingFaculty ? 'Đang lưu...' : (isEditing ? 'Cập nhật' : 'Lưu thông tin') }}
@@ -266,7 +266,7 @@
     <div (mousedown)="$event.stopPropagation()"
         class="bg-white rounded-xl shadow-md w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <h3 class="text-[17px] font-bold text-slate-700">Xóa Khoa</h3>
+            <h3 class="text-[17px] font-bold text-slate-900">Xóa Khoa</h3>
             <button (click)="closeDeleteModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fas fa-times"></i>
             </button>

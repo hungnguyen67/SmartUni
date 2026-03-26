@@ -56,7 +56,7 @@ export class ProgramsComponent implements OnInit {
 
   loadMajors(): void {
     this.majorService.getMajors().subscribe(data => {
-      this.majors = data;
+      this.majors = data.sort((a, b) => (b.id || 0) - (a.id || 0));
       this.onSearch();
     });
   }
@@ -152,7 +152,7 @@ export class ProgramsComponent implements OnInit {
       majorName: '',
       description: '',
       facultyId: undefined,
-      status: 'ACTIVE'
+      status: 'DRAFT'
     };
     this.showModal = true;
   }
@@ -209,24 +209,26 @@ export class ProgramsComponent implements OnInit {
   }
 
   saveMajor(): void {
-    if (!this.currentMajor.majorCode) {
+    const m = this.currentMajor;
+    if (!m.majorCode) {
       this.flashMessage.error('Vui lòng nhập mã ngành học');
       return;
     }
-    if (!this.currentMajor.majorName) {
+    if (!m.majorName) {
       this.flashMessage.error('Vui lòng nhập tên ngành học');
       return;
     }
-    if (!this.currentMajor.facultyId) {
+    if (!m.facultyId) {
       this.flashMessage.error('Vui lòng chọn khoa trực thuộc');
       return;
     }
 
+    if (this.isEditing && !this.hasChanges()) {
+      this.flashMessage.info('Không có thay đổi nào để cập nhật');
+      return;
+    }
+
     if (this.isEditing) {
-      if (!this.hasChanges()) {
-        this.flashMessage.info('Không có thay đổi nào để cập nhật');
-        return;
-      }
       this.savingMajor = true;
       this.majorService.updateMajor(this.currentMajor.id!, this.currentMajor).subscribe({
         next: () => {
@@ -274,4 +276,4 @@ export class ProgramsComponent implements OnInit {
       default: return 'bg-slate-50 text-slate-600 border-slate-200';
     }
   }
-}
+}

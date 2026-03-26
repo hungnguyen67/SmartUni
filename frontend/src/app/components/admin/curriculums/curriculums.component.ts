@@ -98,14 +98,14 @@ export class CurriculumsComponent implements OnInit {
             blocks: this.curriculumService.getKnowledgeBlocks(),
             subjects: this.curriculumService.getAllCurriculumSubjects()
         }).subscribe(({ blocks, subjects }: { blocks: any[], subjects: any[] }) => {
-            this.knowledgeBlocks = blocks;
-            this.curriculumSubjects = subjects;
-            
+            this.knowledgeBlocks = blocks.sort((a, b) => (b.id || 0) - (a.id || 0));
+            this.curriculumSubjects = subjects.sort((a, b) => (b.id || 0) - (a.id || 0));
+
             blocks.forEach(block => {
                 if (block.blockType === 'MANDATORY') {
                     const blockSubjects = subjects.filter(s => s.blockId === block.id);
                     const totalCredits = blockSubjects.reduce((acc: number, s: any) => acc + (s.credits || 0), 0);
-                    
+
                     if (block.creditsRequired !== totalCredits) {
                         const updatedBlock = { ...block, creditsRequired: totalCredits };
                         this.curriculumService.updateKnowledgeBlock(block.id, updatedBlock).subscribe();
@@ -122,7 +122,7 @@ export class CurriculumsComponent implements OnInit {
 
     loadAllCurriculumSubjects(): void {
         this.curriculumService.getAllCurriculumSubjects().subscribe(data => {
-            this.curriculumSubjects = data;
+            this.curriculumSubjects = data.sort((a, b) => (b.id || 0) - (a.id || 0));
             if (this.activeTab === 'BLOCK') {
                 this.onFilter();
             }
@@ -131,7 +131,7 @@ export class CurriculumsComponent implements OnInit {
 
     loadCurriculums(): void {
         this.curriculumService.getCurriculums().subscribe(data => {
-            this.curriculums = data;
+            this.curriculums = data.sort((a, b) => (b.id || 0) - (a.id || 0));
             if (this.activeTab !== 'PROGRAM') {
                 this.onFilter();
             }
@@ -140,7 +140,7 @@ export class CurriculumsComponent implements OnInit {
 
     loadKnowledgeBlocks(): void {
         this.curriculumService.getKnowledgeBlocks().subscribe(data => {
-            this.knowledgeBlocks = data;
+            this.knowledgeBlocks = data.sort((a, b) => (b.id || 0) - (a.id || 0));
             if (this.activeTab === 'SUBJECT') {
                 this.onFilter();
             }
@@ -171,7 +171,7 @@ export class CurriculumsComponent implements OnInit {
         if (this.activeTab === 'PROGRAM') {
             this.curriculumService.getCurriculums().subscribe({
                 next: (data) => {
-                    this.curriculums = data;
+                    this.curriculums = data.sort((a, b) => (b.id || 0) - (a.id || 0));
                     this.onFilter();
                     this.loading = false;
                 },
@@ -180,7 +180,7 @@ export class CurriculumsComponent implements OnInit {
         } else if (this.activeTab === 'BLOCK') {
             this.curriculumService.getKnowledgeBlocks().subscribe({
                 next: (data) => {
-                    this.knowledgeBlocks = data;
+                    this.knowledgeBlocks = data.sort((a, b) => (b.id || 0) - (a.id || 0));
                     this.onFilter();
                     this.loading = false;
                 },
@@ -189,7 +189,7 @@ export class CurriculumsComponent implements OnInit {
         } else if (this.activeTab === 'SUBJECT') {
             this.curriculumService.getAllCurriculumSubjects().subscribe({
                 next: (data) => {
-                    this.curriculumSubjects = data;
+                    this.curriculumSubjects = data.sort((a, b) => (b.id || 0) - (a.id || 0));
                     this.onFilter();
                     this.loading = false;
                 },
@@ -201,7 +201,7 @@ export class CurriculumsComponent implements OnInit {
     onFilter(): void {
         const currentFilters = this.tabFilters[this.activeTab];
         const term = (currentFilters.searchTerm || '').toLowerCase();
-        
+
         if (this.activeTab === 'PROGRAM') {
             this.filteredCurriculums = this.curriculums.filter(c => {
                 const matchSearch = c.curriculumName.toLowerCase().includes(term) ||
@@ -215,13 +215,13 @@ export class CurriculumsComponent implements OnInit {
                 const matchSearch = b.blockName.toLowerCase().includes(term) ||
                     b.blockCode.toLowerCase().includes(term);
                 const matchCurriculum = !currentFilters.curriculumId || b.curriculumId === currentFilters.curriculumId;
-                
+
                 let matchMajor = true;
                 if (currentFilters.majorId) {
                     const curriculum = this.curriculums.find(c => c.id === b.curriculumId);
                     matchMajor = curriculum ? curriculum.majorId === currentFilters.majorId : false;
                 }
-                
+
                 return matchSearch && matchCurriculum && matchMajor;
             }).map(b => {
                 if (b.blockType === 'MANDATORY') {
@@ -236,13 +236,13 @@ export class CurriculumsComponent implements OnInit {
                     s.subjectCode.toLowerCase().includes(term);
                 const matchCurriculum = !currentFilters.curriculumId || s.curriculumId === currentFilters.curriculumId;
                 const matchBlock = !currentFilters.blockId || s.blockId === currentFilters.blockId;
-                
+
                 let matchMajor = true;
                 if (currentFilters.majorId) {
                     const curriculum = this.curriculums.find(c => c.id === s.curriculumId);
                     matchMajor = curriculum ? curriculum.majorId === currentFilters.majorId : false;
                 }
-                
+
                 return matchSearch && matchCurriculum && matchBlock && matchMajor;
             });
         }
@@ -257,7 +257,7 @@ export class CurriculumsComponent implements OnInit {
                 majorId: undefined,
                 appliedYear: new Date().getFullYear(),
                 totalCreditsRequired: 0,
-                status: 'ACTIVE'
+                status: 'DRAFT'
             };
         } else if (this.activeTab === 'BLOCK') {
             this.currentCurriculum = {
@@ -319,7 +319,7 @@ export class CurriculumsComponent implements OnInit {
 
     hasChanges(): boolean {
         if (!this.isEditing) return true;
-        
+
         if (this.activeTab === 'PROGRAM') {
             if (!this.originalCurriculum) return false;
             return this.currentCurriculum.curriculumName !== this.originalCurriculum.curriculumName ||
@@ -329,14 +329,14 @@ export class CurriculumsComponent implements OnInit {
         } else if (this.activeTab === 'BLOCK') {
             if (!this.originalItem) return false;
             return this.currentCurriculum.blockName !== this.originalItem.blockName ||
-                   this.currentCurriculum.blockCode !== this.originalItem.blockCode ||
-                   this.currentCurriculum.creditsRequired !== this.originalItem.creditsRequired ||
-                   this.currentCurriculum.blockType !== this.originalItem.blockType;
+                this.currentCurriculum.blockCode !== this.originalItem.blockCode ||
+                this.currentCurriculum.creditsRequired !== this.originalItem.creditsRequired ||
+                this.currentCurriculum.blockType !== this.originalItem.blockType;
         } else if (this.activeTab === 'SUBJECT') {
             if (!this.originalItem) return false;
             return this.currentCurriculum.blockId !== this.originalItem.blockId ||
-                   this.currentCurriculum.subjectId !== this.originalItem.subjectId ||
-                   this.currentCurriculum.recommendedSemester !== this.originalItem.recommendedSemester;
+                this.currentCurriculum.subjectId !== this.originalItem.subjectId ||
+                this.currentCurriculum.recommendedSemester !== this.originalItem.recommendedSemester;
         }
         return false;
     }
@@ -374,7 +374,9 @@ export class CurriculumsComponent implements OnInit {
                     }
                 });
             } else {
-                this.curriculumService.createCurriculum(this.currentCurriculum as CurriculumDTO).subscribe({
+                const data = { ...this.currentCurriculum as CurriculumDTO };
+                delete (data as any).id;
+                this.curriculumService.createCurriculum(data).subscribe({
                     next: () => {
                         this.flashMessage.success('Thêm CTĐT mới thành công');
                         this.loadData();
@@ -389,11 +391,20 @@ export class CurriculumsComponent implements OnInit {
             }
         } else if (this.activeTab === 'BLOCK') {
             const block = this.currentCurriculum as any;
-            
+
+            const blockId = Number(block.id);
+            const curriculumId = Number(block.curriculumId);
+
+            if (isNaN(curriculumId) || curriculumId <= 0) {
+                this.flashMessage.error('ID chương trình đào tạo không hợp lệ');
+                this.savingCurriculum = false;
+                return;
+            }
+
             if (block.blockType === 'MANDATORY') {
                 const blockSubjects = this.curriculumSubjects.filter(s => s.blockId === block.id);
                 block.creditsRequired = blockSubjects.reduce((acc, s) => acc + (s.credits || 0), 0);
-                
+
                 const info = this.getMandatoryCreditsInfo();
                 if (info.current > info.total) {
                     this.flashMessage.error(`Tổng tín chỉ bắt buộc (${info.current}) không được vượt quá tổng tín chỉ chương trình (${info.total})`);
@@ -403,12 +414,25 @@ export class CurriculumsComponent implements OnInit {
             }
 
             if (this.isEditing) {
+                if (isNaN(blockId) || blockId <= 0) {
+                    this.flashMessage.error('Không tìm thấy định danh khối để cập nhật');
+                    this.savingCurriculum = false;
+                    return;
+                }
                 if (!this.hasChanges()) {
                     this.flashMessage.info('Không có thay đổi nào để cập nhật');
                     this.savingCurriculum = false;
                     return;
                 }
-                this.curriculumService.updateKnowledgeBlock(block.id, block).subscribe({
+                const data = {
+                    id: blockId,
+                    blockCode: block.blockCode,
+                    blockName: block.blockName,
+                    curriculumId: curriculumId,
+                    creditsRequired: Number(block.creditsRequired) || 0,
+                    blockType: block.blockType
+                };
+                this.curriculumService.updateKnowledgeBlock(data.id, data as any).subscribe({
                     next: () => {
                         this.flashMessage.success('Cập nhật khối kiến thức thành công');
                         this.loadData();
@@ -421,7 +445,14 @@ export class CurriculumsComponent implements OnInit {
                     }
                 });
             } else {
-                this.curriculumService.createKnowledgeBlock(block).subscribe({
+                const data = {
+                    blockCode: block.blockCode,
+                    blockName: block.blockName,
+                    curriculumId: curriculumId,
+                    creditsRequired: Number(block.creditsRequired) || 0,
+                    blockType: block.blockType
+                };
+                this.curriculumService.createKnowledgeBlock(data as any).subscribe({
                     next: () => {
                         this.flashMessage.success('Thêm khối kiến thức thành công');
                         this.loadData();
@@ -436,16 +467,67 @@ export class CurriculumsComponent implements OnInit {
             }
         } else if (this.activeTab === 'SUBJECT') {
             const subject = this.currentCurriculum as any;
+
+            if (!subject.curriculumId || subject.curriculumId <= 0) {
+                this.flashMessage.error('Vui lòng chọn chương trình đào tạo');
+                this.savingCurriculum = false;
+                return;
+            }
+            if (!subject.blockId || subject.blockId <= 0) {
+                this.flashMessage.error('Vui lòng chọn khối kiến thức');
+                this.savingCurriculum = false;
+                return;
+            }
+            if (!this.isEditing && (!subject.subjectId || subject.subjectId <= 0)) {
+                this.flashMessage.error('Vui lòng chọn học phần để thêm vào khung');
+                this.savingCurriculum = false;
+                return;
+            }
+
+            const dataId = Number(subject.id);
+            const curriculumId = Number(subject.curriculumId);
+            const blockId = Number(subject.blockId);
+            const subjectId = Number(subject.subjectId);
+
+            if (isNaN(curriculumId) || curriculumId <= 0) {
+                this.flashMessage.error('ID chương trình đào tạo không hợp lệ');
+                this.savingCurriculum = false;
+                return;
+            }
+            if (isNaN(blockId) || blockId <= 0) {
+                this.flashMessage.error('ID khối kiến thức không hợp lệ');
+                this.savingCurriculum = false;
+                return;
+            }
+            if (!this.isEditing && (isNaN(subjectId) || subjectId <= 0)) {
+                this.flashMessage.error('ID học phần không hợp lệ');
+                this.savingCurriculum = false;
+                return;
+            }
+
+            const data: any = {
+                curriculumId: curriculumId,
+                blockId: blockId,
+                subjectId: subjectId,
+                recommendedSemester: Number(subject.recommendedSemester) || 1
+            };
+
             if (this.isEditing) {
+                if (isNaN(dataId) || dataId <= 0) {
+                    this.flashMessage.error('Không tìm thấy định danh bản ghi để cập nhật');
+                    this.savingCurriculum = false;
+                    return;
+                }
+                data.id = dataId;
                 if (!this.hasChanges()) {
                     this.flashMessage.info('Không có thay đổi nào để cập nhật');
                     this.savingCurriculum = false;
                     return;
                 }
-                this.curriculumService.updateCurriculumSubject(subject).subscribe({
+                this.curriculumService.updateCurriculumSubject(data).subscribe({
                     next: () => {
                         this.flashMessage.success('Cập nhật học phần theo khung thành công');
-                        this.syncBlockCredits(subject.blockId);
+                        this.syncBlockCredits(data.blockId);
                         this.loadData();
                         this.closeModal();
                         this.savingCurriculum = false;
@@ -456,10 +538,10 @@ export class CurriculumsComponent implements OnInit {
                     }
                 });
             } else {
-                this.curriculumService.addSubjectToCurriculum(subject).subscribe({
+                this.curriculumService.addSubjectToCurriculum(data).subscribe({
                     next: () => {
                         this.flashMessage.success('Thêm học phần vào khung thành công');
-                        this.syncBlockCredits(subject.blockId);
+                        this.syncBlockCredits(data.blockId);
                         this.loadData();
                         this.closeModal();
                         this.savingCurriculum = false;
@@ -487,8 +569,16 @@ export class CurriculumsComponent implements OnInit {
     confirmDelete(): void {
         if (this.curriculumToDelete) {
             this.deletingCurriculum = true;
+            const item = this.curriculumToDelete as any;
+            const itemId = Number(item.id);
+
             if (this.activeTab === 'PROGRAM') {
-                this.curriculumService.deleteCurriculum(this.curriculumToDelete.id).subscribe({
+                if (isNaN(itemId) || itemId <= 0) {
+                    this.flashMessage.error('ID chương trình đào tạo không hợp lệ');
+                    this.deletingCurriculum = false;
+                    return;
+                }
+                this.curriculumService.deleteCurriculum(itemId).subscribe({
                     next: () => {
                         this.flashMessage.success('Xóa chương trình đào tạo thành công');
                         this.loadData();
@@ -500,7 +590,12 @@ export class CurriculumsComponent implements OnInit {
                     }
                 });
             } else if (this.activeTab === 'BLOCK') {
-                this.curriculumService.deleteKnowledgeBlock(this.curriculumToDelete.id).subscribe({
+                if (isNaN(itemId) || itemId <= 0) {
+                    this.flashMessage.error('ID khối kiến thức không hợp lệ');
+                    this.deletingCurriculum = false;
+                    return;
+                }
+                this.curriculumService.deleteKnowledgeBlock(itemId).subscribe({
                     next: () => {
                         this.flashMessage.success('Xóa khối kiến thức thành công');
                         this.loadData();
@@ -512,12 +607,22 @@ export class CurriculumsComponent implements OnInit {
                     }
                 });
             } else if (this.activeTab === 'SUBJECT') {
-                const s = this.curriculumToDelete as any;
-                const blockId = s.blockId;
-                this.curriculumService.deleteCurriculumSubject(s.curriculumId, s.subjectId).subscribe({
+                const curriculumId = Number(item.curriculumId);
+                const subjectId = Number(item.subjectId);
+                const blockId = Number(item.blockId);
+
+                if (isNaN(curriculumId) || curriculumId <= 0 || isNaN(subjectId) || subjectId <= 0) {
+                    this.flashMessage.error('ID không hợp lệ để thực hiện xóa');
+                    this.deletingCurriculum = false;
+                    return;
+                }
+
+                this.curriculumService.deleteCurriculumSubject(curriculumId, subjectId).subscribe({
                     next: () => {
                         this.flashMessage.success('Xóa học phần khỏi khung thành công');
-                        this.syncBlockCredits(blockId);
+                        if (!isNaN(blockId) && blockId > 0) {
+                            this.syncBlockCredits(blockId);
+                        }
                         this.loadData();
                         this.closeDeleteModal();
                     },
@@ -627,21 +732,21 @@ export class CurriculumsComponent implements OnInit {
             if (!curriculumId) return this.knowledgeBlocks;
             return this.knowledgeBlocks.filter(b => b.curriculumId === curriculumId);
         }
-        
+
         // In the filter menu, filter based on current tab's selections
         const filter = this.tabFilters[this.activeTab];
-        
+
         // If curriculum is selected, show only blocks for that curriculum
         if (filter.curriculumId) {
             return this.knowledgeBlocks.filter(b => b.curriculumId === filter.curriculumId);
         }
-        
+
         // If only major is selected, show blocks for all curriculums of that major
         if (filter.majorId) {
             const allowedCurriculumIds = this.getAvailableCurriculumsForFilter().map(c => c.id);
             return this.knowledgeBlocks.filter(b => allowedCurriculumIds.includes(b.curriculumId));
         }
-        
+
         return this.knowledgeBlocks;
     }
 
@@ -751,7 +856,7 @@ export class CurriculumsComponent implements OnInit {
         if (!curriculum) return { current: 0, total: 0 };
         const blocks = this.knowledgeBlocks.filter(b => b.curriculumId === curriculum.id && b.blockType === 'MANDATORY');
         let existingSum = 0;
-        
+
         // Auto-recalculate current block's credits if it's mandatory
         if (this.activeTab === 'BLOCK' && this.currentCurriculum.blockType === 'MANDATORY') {
             const blockSubjects = this.curriculumSubjects.filter(s => s.blockId === this.currentCurriculum.id);
@@ -760,7 +865,7 @@ export class CurriculumsComponent implements OnInit {
 
         blocks.forEach(b => {
             if (this.activeTab === 'BLOCK' && this.isEditing && b.id === this.currentCurriculum.id) return;
-            
+
             // If it's a mandatory block, we should also auto-calculate its credits based on assigned subjects
             // but for now we rely on its stored value since it was calculated during its own save
             existingSum += (b.creditsRequired || 0);
@@ -777,7 +882,7 @@ export class CurriculumsComponent implements OnInit {
             this.curriculumSubjects = subjects;
             const blockSubjects = subjects.filter(s => s.blockId === blockId);
             const totalCredits = blockSubjects.reduce((acc, s) => acc + (s.credits || 0), 0);
-            
+
             // Only update if credits changed
             if (block.creditsRequired !== totalCredits) {
                 const updatedBlock = { ...block, creditsRequired: totalCredits };

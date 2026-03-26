@@ -65,7 +65,7 @@ export class FacultiesComponent implements OnInit {
 
     loadFaculties(): void {
         this.facultyService.getFaculties().subscribe(data => {
-            this.faculties = data;
+            this.faculties = data.sort((a, b) => (b.id || 0) - (a.id || 0));
             this.onSearch();
         });
     }
@@ -122,7 +122,7 @@ export class FacultiesComponent implements OnInit {
             facultyCode: '',
             facultyName: '',
             description: '',
-            status: 'ACTIVE'
+            status: 'DRAFT'
         };
         this.showModal = true;
     }

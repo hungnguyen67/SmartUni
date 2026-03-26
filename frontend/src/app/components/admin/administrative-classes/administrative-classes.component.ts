@@ -47,7 +47,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     students: StudentDTO[] = [];
     filteredStudents: StudentDTO[] = [];
     studentSearchTerm = '';
-    
+
     // Pagination for students
     studentCurrentPage = 1;
     studentItemsPerPage = 10;
@@ -109,7 +109,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
         this.loading = true;
         this.classService.getClasses().subscribe({
             next: (data: AdministrativeClassDTO[]) => {
-                this.classes = data;
+                this.classes = data.sort((a, b) => (b.id || 0) - (a.id || 0));
                 this.onSearch();
                 this.loading = false;
             },
@@ -201,9 +201,9 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
 
     getStatusLabel(status: string | undefined): string {
         const s = status || 'ALL';
-        const map: any = { 
-            'ACTIVE': 'Đang hoạt động', 
-            'INACTIVE': 'Ngưng hoạt động', 
+        const map: any = {
+            'ACTIVE': 'Đang hoạt động',
+            'INACTIVE': 'Ngưng hoạt động',
             'GRADUATED': 'Đã tốt nghiệp',
             'DRAFT': 'Bản nháp',
             'ALL': 'Tất cả trạng thái'
@@ -260,7 +260,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     onStudentFilterChange(): void {
         this.filteredStudents = this.students.filter(s => {
             const search = this.studentSearchTerm.toLowerCase();
-            return !search || 
+            return !search ||
                 s.studentCode.toLowerCase().includes(search) ||
                 (s.fullName && s.fullName.toLowerCase().includes(search));
         });
@@ -370,8 +370,29 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     }
 
     saveClass(): void {
-        if (!this.currentClass.classCode || !this.currentClass.majorId) {
-            this.flashMessage.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+        const c = this.currentClass;
+        if (!c.classCode) {
+            this.flashMessage.error('Vui lòng nhập mã lớp học');
+            return;
+        }
+        if (!c.className) {
+            this.flashMessage.error('Vui lòng nhập tên lớp học');
+            return;
+        }
+        if (!c.majorId) {
+            this.flashMessage.error('Vui lòng chọn ngành đào tạo');
+            return;
+        }
+        if (!c.academicYear) {
+            this.flashMessage.error('Vui lòng nhập niên khóa (VD: 2020-2024)');
+            return;
+        }
+        if (!c.cohort) {
+            this.flashMessage.error('Vui lòng nhập khóa học (VD: 65)');
+            return;
+        }
+        if (!c.advisorId) {
+            this.flashMessage.error('Vui lòng chọn cố vấn học tập');
             return;
         }
 
@@ -381,7 +402,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
         }
 
         this.savingClass = true;
-        const request = this.isEditing 
+        const request = this.isEditing
             ? this.classService.updateClass(this.currentClass.id!, this.currentClass)
             : this.classService.createClass(this.currentClass);
 
@@ -416,7 +437,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
         if (!this.selectedMajorId) return this.lecturers;
         const selectedMajor = this.majors.find(m => m.id === Number(this.selectedMajorId));
         if (!selectedMajor) return this.lecturers;
-        
+
         return this.lecturers.filter(l => l.facultyId === selectedMajor.facultyId);
     }
 
@@ -447,7 +468,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
         if (!this.currentClass.majorId) return this.lecturers;
         const selectedMajor = this.majors.find(m => m.id === Number(this.currentClass.majorId));
         if (!selectedMajor) return this.lecturers;
-        
+
         return this.lecturers.filter(l => l.facultyId === selectedMajor.facultyId);
     }
 
@@ -464,12 +485,12 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
     hasChanges(): boolean {
         if (!this.originalClass || !this.currentClass) return false;
         return this.currentClass.classCode !== this.originalClass.classCode ||
-               this.currentClass.className !== this.originalClass.className ||
-               this.currentClass.majorId !== this.originalClass.majorId ||
-               this.currentClass.academicYear !== this.originalClass.academicYear ||
-               this.currentClass.cohort !== this.originalClass.cohort ||
-               this.currentClass.advisorId !== this.originalClass.advisorId ||
-               this.currentClass.status !== this.originalClass.status;
+            this.currentClass.className !== this.originalClass.className ||
+            this.currentClass.majorId !== this.originalClass.majorId ||
+            this.currentClass.academicYear !== this.originalClass.academicYear ||
+            this.currentClass.cohort !== this.originalClass.cohort ||
+            this.currentClass.advisorId !== this.originalClass.advisorId ||
+            this.currentClass.status !== this.originalClass.status;
     }
 
     getMajorName(id: any): string {
