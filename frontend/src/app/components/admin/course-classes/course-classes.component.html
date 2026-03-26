@@ -126,7 +126,7 @@
 
                                 <div class="space-y-2">
                                     <label class="flex items-center gap-2 text-[14px] font-medium text-slate-600">
-                                        Lớp hành chính
+                                        Lớp học
                                     </label>
                                     <div class="relative">
                                         <button
@@ -144,7 +144,7 @@
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                                 [class.text-slate-900]="listAdminClassId === null"
                                                 [class.bg-blue-50]="listAdminClassId === null">
-                                                Tất cả lớp hành chính
+                                                Tất cả lớp học
                                             </div>
                                             <div *ngFor="let c of listFilteredAdminClasses"
                                                 (click)="listAdminClassId = c.id; activeDropdown = ''; $event.stopPropagation()"
@@ -414,10 +414,7 @@
                 <div class="bg-white p-5 rounded-md border border-slate-200 shadow-sm transition-all">
                     <div class="flex items-center justify-between mb-5 px-1">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg">
-                                <i class="fas fa-filter text-xs"></i>
-                            </div>
-                            <h2 class="text-xs font-black text-slate-700 uppercase tracking-tighter">Bộ lọc tìm kiếm
+                            <h2 class="text-xs font-black text-slate-700 uppercase tracking-tighter">Điều kiện tìm kiếm
                             </h2>
                         </div>
                         <button (click)="generateBatchClasses()" [disabled]="selectedDemandKeys.size === 0"
@@ -501,7 +498,7 @@
                         <div class="space-y-2">
                             <label
                                 class="flex items-center gap-2 text-[12px] font-bold text-slate-500 uppercase tracking-tight ml-1">
-                                Lớp hành chính
+                                Lớp học
                             </label>
                             <div class="relative">
                                 <button
@@ -519,7 +516,7 @@
                                         class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
                                         [class.text-slate-900]="selectionAdminClassId === null"
                                         [class.bg-blue-50]="selectionAdminClassId === null">
-                                        Chọn lớp hành chính
+                                        Chọn lớp học
                                     </div>
                                     <div *ngFor="let c of selectionFilteredAdminClasses"
                                         (click)="selectionAdminClassId = c.id; onSelectionFilterChange(); activeDropdown = ''; $event.stopPropagation()"

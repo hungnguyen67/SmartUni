@@ -243,15 +243,15 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     }
 
     getListAdminClassName(): string {
-        if (!this.listAdminClassId) return 'Tất cả lớp hành chính';
+        if (!this.listAdminClassId) return 'Tất cả lớp học';
         const adminClass = this.administrativeClasses.find(c => c.id == this.listAdminClassId);
-        return adminClass ? adminClass.className : 'Tất cả lớp hành chính';
+        return adminClass ? adminClass.className : 'Tất cả lớp học';
     }
 
     getSelectionAdminClassName(): string {
-        if (!this.selectionAdminClassId) return 'Chọn lớp hành chính';
+        if (!this.selectionAdminClassId) return 'Chọn lớp học';
         const adminClass = this.administrativeClasses.find(c => c.id == this.selectionAdminClassId);
-        return adminClass ? adminClass.className : 'Chọn lớp hành chính';
+        return adminClass ? adminClass.className : 'Chọn lớp học';
     }
 
     getListYearLabel(): string {
@@ -429,7 +429,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
 
             // Lọc theo Ngành học (So khớp tên vì DTO trả về tên)
             const matchesMajor = !this.listMajorId || c.majorName === selectedMajorName;
-            
+
             // Lọc theo Khóa học (Cohort)
             const matchesYear = !this.listYear || c.cohort == this.listYear;
 
@@ -696,7 +696,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         if (payload.classStatus === 'OPEN') {
             const requiredPeriods = (payload.theoryPeriods || 0) + (payload.practicalPeriods || 0);
             const totalScheduled = payload.schedules.reduce((sum: number, s: any) => sum + (s.endPeriod - s.startPeriod + 1), 0);
-            
+
             if (totalScheduled < requiredPeriods) {
                 this.flashMessage.error(`Lịch học chưa đủ tiết (${totalScheduled}/${requiredPeriods} tiết). Vui lòng xếp đủ lịch trước khi mở đăng ký!`);
                 this.isSubmitting = false;

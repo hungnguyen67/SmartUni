@@ -492,57 +492,61 @@ export class ScheduleComponent implements OnInit {
     }
 
     submitCopySchedule(): void {
-        if (!this.clipboardItem || !this.clipboardItem.classId) return;
+        // 1. Tạo bản chụp dữ liệu cục bộ (Snapshot) để tránh lỗi null khi modal đóng hoặc state thay đổi giữa chừng
+        const clipboard = this.clipboardItem;
+        const copyMode = this.copyOptions.type;
+        const currentWeek = this.getCurrentWeek();
 
-        // 1. Kiểm tra tùy chọn sao chép TRƯỚC (Bắt buộc)
-        if (!this.copyOptions.type) {
+        if (!clipboard || !clipboard.classId) {
+            this.flashMessage.error('Không tìm thấy thông tin buổi học để sao chép!');
+            return;
+        }
+
+        if (!copyMode) {
             this.flashMessage.warning('Vui lòng chọn một tùy chọn sao chép!');
             return;
         }
 
-        const currentWeek = this.getCurrentWeek();
         if (currentWeek === null) {
             this.flashMessage.error('Lịch học hiện tại nằm ngoài khoảng thời gian học kỳ!');
             return;
         }
 
-        // 2. Kiểm tra dữ liệu thiếu (Nếu thiếu Giảng viên hoặc Phòng sẽ CHẶN việc sao chép)
-        const isMissingLecturer = !this.clipboardItem.lecturerName || this.clipboardItem.lecturerName === 'Chưa xếp';
-        const isMissingRoom = !this.clipboardItem.room || this.clipboardItem.room === 'Chưa xếp';
+        // 2. Kiểm tra dữ liệu thiếu (Chặn sao chép nếu thiếu Giảng viên/Phòng học)
+        const isMissingLecturer = !clipboard.lecturerName || clipboard.lecturerName === 'Chưa xếp';
+        const isMissingRoom = !clipboard.room || clipboard.room === 'Chưa xếp';
 
         if (isMissingLecturer || isMissingRoom) {
             this.flashMessage.error('Không thể sao chép! Bạn phải xếp đầy đủ Giảng viên và Phòng học trước.');
-            this.showCopyModal = false;
             this.closeCopyModal();
             return;
         }
 
-        this.showCopyModal = false;
-        this.closeCopyModal();
-
-        const classId = this.clipboardItem.classId;
-        const itemDate = new Date(this.clipboardItem.scheduleDate);
+        // 3. Chuẩn bị dữ liệu sao chép (Sử dụng snapshot đã chụp)
+        const classId = clipboard.classId;
+        const itemDate = new Date(clipboard.scheduleDate);
         let dayOfWeekInt = itemDate.getDay() + 1;
-        if (dayOfWeekInt === 1) dayOfWeekInt = 8;
+        if (dayOfWeekInt === 1) dayOfWeekInt = 8; // Sunday -> 8
 
         const patternData = {
             dayOfWeek: dayOfWeekInt,
-            startPeriod: this.clipboardItem.startPeriod,
-            endPeriod: this.clipboardItem.endPeriod,
-            roomName: this.clipboardItem.room || 'Chưa xếp',
-            sessionType: this.clipboardItem.type || 'THEORY'
+            startPeriod: clipboard.startPeriod,
+            endPeriod: clipboard.endPeriod,
+            roomName: clipboard.room || 'Chưa xếp',
+            sessionType: clipboard.type || 'THEORY'
         };
 
         let fromWeek = currentWeek + 1;
         let toWeek = currentWeek + 1;
 
-        if (this.copyOptions.type === 'NEXT_WEEK') {
+        if (copyMode === 'NEXT_WEEK') {
             fromWeek = currentWeek + 1;
             toWeek = currentWeek + 1;
-        } else if (this.copyOptions.type === 'RANGE') {
+        } else if (copyMode === 'RANGE') {
             fromWeek = this.copyOptions.fromWeek || (currentWeek + 1);
             toWeek = this.copyOptions.toWeek || (currentWeek + 1);
-        } else if (this.copyOptions.type === 'ALL') {
+        } else if (copyMode === 'ALL') {
+            // Sao chép đến hết tiến độ
             let remainingPeriods = 0;
             const courseClass = this.classes.find(c => c.id === classId);
             if (courseClass) {
@@ -550,6 +554,8 @@ export class ScheduleComponent implements OnInit {
             }
 
             if (remainingPeriods <= 0) {
+                this.flashMessage.warning('Lớp học này đã đủ số tiết trong học kỳ!');
+                this.closeCopyModal();
                 return;
             }
 
@@ -592,26 +598,28 @@ export class ScheduleComponent implements OnInit {
         }
 
         if (fromWeek > toWeek) {
-            this.flashMessage.error('Tuần bắt đầu không thể lớn hơn tuần kết thúc!');
+            this.flashMessage.error('Thời gian học kỳ còn lại không đủ để thực hiện sao chép!');
+            this.closeCopyModal();
             return;
         }
 
         const patternsToCreate = [];
-
         if (this.copyOptions.isAlternateWeek) {
             const step = (this.copyOptions.alternateWeekCount || 1) + 1;
             for (let w = fromWeek; w <= toWeek; w += step) {
-                const pat = { ...patternData, fromWeek: w, toWeek: w };
-                patternsToCreate.push(pat);
+                patternsToCreate.push({ ...patternData, fromWeek: w, toWeek: w });
             }
         } else {
-            const pat = { ...patternData, fromWeek: fromWeek, toWeek: toWeek };
-            patternsToCreate.push(pat);
+            patternsToCreate.push({ ...patternData, fromWeek: fromWeek, toWeek: toWeek });
         }
 
         if (patternsToCreate.length > 0) {
             this.scheduleService.addPatternsBulk(classId, patternsToCreate).subscribe({
                 next: () => {
+                    const successMsg = copyMode === 'ALL'
+                        ? 'Sao chép hết tiến độ học kỳ thành công!'
+                        : 'Sao chép lịch học thành công!';
+                    this.flashMessage.success(successMsg);
                     this.loadScheduleForAdminClass();
                 },
                 error: (err) => {
@@ -620,6 +628,7 @@ export class ScheduleComponent implements OnInit {
                 }
             });
         }
+        this.closeCopyModal();
     }
 
     deleteScheduleItem(): void {
