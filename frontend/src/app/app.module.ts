@@ -36,6 +36,7 @@ import { SubjectsComponent } from './components/admin/subjects/subjects.componen
 import { UserScheduleComponent } from './components/user/user-schedule/user-schedule.component';
 import { CourseClassComponent } from './components/user/course-class/course-class.component';
 import { AdministrativeClassComponent } from './components/user/administrative-class/administrative-class.component';
+import { ExamScheduleComponent } from './components/admin/exam-schedule/exam-schedule.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -76,7 +77,7 @@ const routes: Routes = [
       { path: 'subjects', component: SubjectsComponent },
       { path: 'sections', component: CourseClassesComponent },
       { path: 'schedules', component: ScheduleComponent },
-      { path: 'exams', component: DashboardComponent },
+      { path: 'exams', component: ExamScheduleComponent },
       { path: 'grades', component: DashboardComponent },
       { path: 'reports', component: DashboardComponent },
       { path: 'notifications', component: DashboardComponent }
@@ -117,7 +118,8 @@ const routes: Routes = [
     RegistrationComponent,
     UserScheduleComponent,
     CourseClassComponent,
-    AdministrativeClassComponent
+    AdministrativeClassComponent,
+    ExamScheduleComponent
   ],
   imports: [
     BrowserModule,

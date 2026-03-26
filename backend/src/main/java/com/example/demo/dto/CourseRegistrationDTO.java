@@ -28,6 +28,7 @@ public class CourseRegistrationDTO {
     private LocalDate endDate;
     private String subjectType;
     private String classStatus;
+    private String className;
 
     public CourseRegistrationDTO() {
     }
@@ -214,5 +215,13 @@ public class CourseRegistrationDTO {
 
     public void setSubjectType(String subjectType) {
         this.subjectType = subjectType;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
     }
 }

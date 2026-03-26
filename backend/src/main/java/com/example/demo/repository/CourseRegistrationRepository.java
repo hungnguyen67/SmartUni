@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface CourseRegistrationRepository extends JpaRepository<CourseRegistration, Long> {
     List<CourseRegistration> findByStudentUserId(Long studentId);
     List<CourseRegistration> findByCourseClassId(Long courseClassId);
+    List<CourseRegistration> findByCourseClassIdIn(java.util.Collection<Long> courseClassIds);
     Optional<CourseRegistration> findByCourseClassIdAndStudentUserId(Long courseClassId, Long studentId);
     List<CourseRegistration> findByStudentUserIdAndCourseClassSemesterId(Long studentId, Long semesterId);
 }

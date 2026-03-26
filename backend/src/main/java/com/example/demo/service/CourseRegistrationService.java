@@ -207,10 +207,14 @@ public class CourseRegistrationService {
         }
 
         if (reg.getStudent() != null) {
-            dto.setStudentId(reg.getStudent().getUserId());
-            dto.setStudentCode(reg.getStudent().getStudentCode());
-            if (reg.getStudent().getUser() != null) {
-                dto.setStudentName(reg.getStudent().getUser().getFullName());
+            StudentProfile sp = reg.getStudent();
+            dto.setStudentId(sp.getUserId());
+            dto.setStudentCode(sp.getStudentCode());
+            if (sp.getUser() != null) {
+                dto.setStudentName(sp.getUser().getFullName());
+            }
+            if (sp.getAdministrativeClass() != null) {
+                dto.setClassName(sp.getAdministrativeClass().getClassName());
             }
         }
 
