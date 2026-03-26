@@ -435,10 +435,10 @@
                     <div class="relative">
                         <button
                             (click)="activeDropdown = activeDropdown === 'modalMajor' ? '' : 'modalMajor'; $event.stopPropagation()"
-                            class="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 shadow-sm hover:border-blue-300 transition-all">
+                            class="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm text-slate-900 shadow-sm">
                             <span>{{ getModalMajorLabel() }}</span>
-                            <i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-300"
-                                [class.rotate-90]="activeDropdown === 'modalMajor'"></i>
+                            <i class=" fas fa-chevron-right text-[10px] text-slate-400 transition-transform
+                            duration-300" [class.rotate-90]="activeDropdown === 'modalMajor'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalMajor'"
                             class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md overflow-y-auto custom-scrollbar max-h-60 animate-in fade-in zoom-in-95 duration-200 transform origin-top">
@@ -575,7 +575,7 @@
                         <div class="relative">
                             <button
                                 (click)="activeDropdown = activeDropdown === 'modalCurr' ? '' : 'modalCurr'; $event.stopPropagation()"
-                                class="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 shadow-sm transition-all text-left">
+                                class="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm text-slate-900 shadow-sm">
                                 <span class="truncate">{{ getModalCurriculumLabel() }}</span>
                                 <i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-300"
                                     [class.rotate-90]="activeDropdown === 'modalCurr'"></i>
@@ -597,7 +597,7 @@
                         <div class="relative">
                             <button
                                 (click)="activeDropdown = activeDropdown === 'modalBlock' ? '' : 'modalBlock'; $event.stopPropagation()"
-                                class="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 shadow-sm transition-all text-left">
+                                class="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm text-slate-900 shadow-sm">
                                 <span class="truncate">{{ getModalBlockLabel() }}</span>
                                 <i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-300"
                                     [class.rotate-90]="activeDropdown === 'modalBlock'"></i>
@@ -619,7 +619,7 @@
                         <div class="relative">
                             <button
                                 (click)="activeDropdown = activeDropdown === 'modalSubject' ? '' : 'modalSubject'; $event.stopPropagation()"
-                                class="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 shadow-sm transition-all text-left">
+                                class="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm text-slate-900 shadow-sm">
                                 <span class="truncate">{{ getModalSubjectLabel() }}</span>
                                 <i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-300"
                                     [class.rotate-90]="activeDropdown === 'modalSubject'"></i>
