@@ -102,7 +102,7 @@
 
                     <div class="flex items-center gap-2">
                         <button (click)="openAddModal()"
-                            class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all shadow-md">
+                            class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all">
                             <i class="fas fa-plus text-xs"></i>
                             Thêm Lịch thi
                         </button>
@@ -233,13 +233,10 @@
 
         <div class="p-8 overflow-y-auto custom-scrollbar space-y-8 flex-1">
             <div class="max-w-7xl mx-auto space-y-6">
-                <div class="bg-white p-5 rounded-md border border-slate-200 shadow-sm transition-all">
-                    <div class="flex items-center justify-between mb-5 px-1">
-                        <div class="flex items-center gap-3">
-                            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">I. ĐIỀU KIỆN TÌM KIẾM
-                            </h2>
-                        </div>
-                    </div>
+                <div
+                    class="bg-white p-7 pt-10 rounded-xl border border-slate-200 shadow-sm transition-all mb-6 relative">
+                    <span class="absolute -top-3 left-6 px-2 bg-white text-[15px] font-semibold text-slate-900">Điều
+                        kiện tìm kiếm</span>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="space-y-2">
@@ -343,14 +340,10 @@
                     </div>
                 </div>
 
-                <!-- SECTION II: EXAM INFO -->
-                <div class="bg-white p-5 rounded-md border border-slate-200 shadow-sm transition-all">
-                    <div class="flex items-center justify-between mb-5 px-1">
-                        <div class="flex items-center gap-3">
-                            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">II. THÔNG TIN LỊCH
-                                THI</h2>
-                        </div>
-                    </div>
+                <div
+                    class="bg-white p-7 pt-10 rounded-xl border border-slate-200 shadow-sm transition-all mb-6 relative">
+                    <span class="absolute -top-3 left-6 px-2 bg-white text-[15px] font-semibold text-slate-900">Thông
+                        tin lịch thi</span>
 
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <!-- Loại thi -->
@@ -466,7 +459,9 @@
                     <div
                         class="col-span-12 lg:col-span-5 bg-white rounded-md border border-slate-200 shadow-sm flex flex-col h-[400px]">
                         <div class="px-3 py-4 flex justify-between items-center h-14">
-                            <h4 class="text-sm font-bold text-slate-700">Danh sách phòng thi</h4>
+                            <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                Danh sách phòng thi
+                            </h4>
                             <div class="flex gap-2">
                                 <input type="text" [(ngModel)]="newRoomName" placeholder="Tên phòng"
                                     class="w-26 px-2 py-1.5 text-xs border border-slate-200 rounded text-slate-900 focus:border-blue-500 outline-none">
@@ -521,7 +516,9 @@
                     <div
                         class="col-span-12 lg:col-span-7 bg-white rounded-md border border-slate-200 shadow-sm flex flex-col h-[400px]">
                         <div class="px-3 py-4 flex justify-between items-center h-14">
-                            <h4 class="text-sm font-bold text-slate-700">Danh sách sinh viên</h4>
+                            <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                Danh sách sinh viên
+                            </h4>
                             <span class="text-slate-900 px-2.5 py-1 rounded-full text-sm font-semibold">
                                 {{ getArrangementSummary() }}
                             </span>
@@ -557,12 +554,10 @@
                     </div>
                 </div>
 
-                <div class="bg-white p-5 rounded-md border border-slate-200 shadow-sm transition-all">
-                    <div class="flex items-center justify-between mb-5 px-1">
-                        <div class="flex items-center gap-3">
-                            <h2 class="text-sm font-bold text-slate-900">III. THIẾT LẬP SẮP XẾP</h2>
-                        </div>
-                    </div>
+                <div
+                    class="bg-white p-7 pt-10 rounded-xl border border-slate-200 shadow-sm transition-all mb-10 relative">
+                    <span class="absolute -top-3 left-6 px-2 bg-white text-[15px] font-semibold text-slate-900">Thiết
+                        lập sắp xếp</span>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <!-- Cách sắp xếp -->
@@ -631,7 +626,7 @@
                 class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all">Hủy
                 bỏ</button>
             <button (click)="submitAutoArrange()" [disabled]="isSubmitting"
-                class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all shadow-md">
+                class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all">
                 <i *ngIf="isSubmitting" class="fas fa-circle-notch fa-spin"></i>
                 <span>{{ isSubmitting ? 'ĐANG XỬ LÝ...' : 'Lưu danh sách' }}</span>
             </button>

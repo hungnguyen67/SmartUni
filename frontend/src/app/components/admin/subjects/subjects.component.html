@@ -48,7 +48,7 @@
                                                 [class.rotate-90]="activeDropdown === 'status'"></i>
                                         </button>
                                         <div *ngIf="activeDropdown === 'status'"
-                                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                                             <div (click)="selectedStatus='ALL'; activeDropdown=''"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                                 [class.text-slate-900]="selectedStatus === 'ALL'"
@@ -93,7 +93,7 @@
                     <!-- Add Button -->
                     <div class="flex items-center gap-2">
                         <button (click)="openAddModal()"
-                            class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all shadow-md">
+                            class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all">
                             <i class="fas fa-plus text-xs"></i>
                             Thêm Học phần
                         </button>
@@ -102,7 +102,7 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto text-slate-900">
+        <div class="overflow-x-auto text-slate-900 custom-scrollbar">
             <table class="w-full table-auto border-collapse">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-200">
@@ -199,7 +199,7 @@
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <div class="p-6 overflow-y-auto space-y-5">
+        <div class="p-6 overflow-y-auto custom-scrollbar space-y-5">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 <div class="md:col-span-2 pb-1 mb-1">
                     <span class="text-sm font-bold text-slate-900 uppercase tracking-wider">I. Thông tin cơ bản</span>
@@ -242,7 +242,7 @@
                                 [class.rotate-90]="activeDropdown === 'modalStatus'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalStatus'"
-                            class="absolute z-10 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                            class="absolute z-10 w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-top custom-scrollbar overflow-y-auto">
                             <div (click)="currentSubject.status = 'ACTIVE'; activeDropdown = ''"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
                                 Đang hoạt động
@@ -299,7 +299,7 @@
                                     [class.rotate-90]="activeDropdown === 'preSub'"></i>
                             </button>
                             <div *ngIf="activeDropdown === 'preSub'"
-                                class="absolute z-20 w-full bottom-full mb-2 bg-white border border-slate-200 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-bottom max-h-60 overflow-y-auto">
+                                class="absolute z-20 w-full bottom-full mb-2 bg-white border border-slate-200 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-bottom max-h-60 overflow-y-auto custom-scrollbar">
                                 <div (click)="selectRelationSubject('PREREQUISITE', ''); activeDropdown = ''"
                                     class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
                                     -- Không chọn --
@@ -307,7 +307,7 @@
                                 <div *ngFor="let s of subjects" [hidden]="s.subjectCode === currentSubject.subjectCode"
                                     (click)="selectRelationSubject('PREREQUISITE', s.subjectCode); activeDropdown = ''"
                                     class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0">
-                                    {{ s.name }}
+                                    {{ s.subjectCode }} - {{ s.name }}
                                 </div>
                             </div>
                         </div>
@@ -379,7 +379,7 @@
                                     [class.rotate-90]="activeDropdown === 'eqSub'"></i>
                             </button>
                             <div *ngIf="activeDropdown === 'eqSub'"
-                                class="absolute z-20 w-full bottom-full mb-2 bg-white border border-slate-200 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-bottom max-h-60 overflow-y-auto">
+                                class="absolute z-20 w-full bottom-full mb-2 bg-white border border-slate-200 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-bottom max-h-60 overflow-y-auto custom-scrollbar">
                                 <div (click)="selectRelationSubject('EQUIVALENT', ''); activeDropdown = ''"
                                     class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
                                     -- Không chọn --

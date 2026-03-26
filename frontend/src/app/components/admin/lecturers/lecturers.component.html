@@ -46,7 +46,7 @@
                                                 [class.rotate-90]="activeDropdown === 'faculty'"></i>
                                         </button>
                                         <div *ngIf="activeDropdown === 'faculty'"
-                                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                                             <div (click)="setFilterFaculty(null)"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                                 [class.text-slate-900]="filterFaculty === null"
@@ -78,7 +78,7 @@
                                                 [class.rotate-90]="activeDropdown === 'status'"></i>
                                         </button>
                                         <div *ngIf="activeDropdown === 'status'"
-                                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                                             <div (click)="setFilterStatus('')"
                                                 class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                                 [class.text-slate-900]="filterStatus === ''"
@@ -128,7 +128,7 @@
 
                     <div class="flex items-center gap-2">
                         <button (click)="openAddModal()"
-                            class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all shadow-md">
+                            class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all">
                             <i class="fas fa-plus text-xs"></i>
                             Thêm Giảng viên
                         </button>
@@ -137,7 +137,7 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full table-auto border-collapse">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-200">
@@ -241,7 +241,7 @@
             </button>
         </div>
 
-        <div class="p-6 overflow-y-auto space-y-5">
+        <div class="p-6 overflow-y-auto custom-scrollbar space-y-5">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 <div class="md:col-span-2 pb-1 mb-1">
                     <span class="text-sm font-bold text-slate-900 uppercase tracking-wider">I. Thông tin tài khoản &
@@ -350,7 +350,7 @@
                                 [class.rotate-90]="activeDropdown === 'modalFaculty'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalFaculty'"
-                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-md max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
+                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-md max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
                             <div *ngFor="let faculty of faculties"
                                 (click)="currentLecturer.facultyId = faculty.id; currentLecturer.facultyName = faculty.facultyName; activeDropdown = ''"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50 last:border-0">
@@ -370,7 +370,7 @@
                                 [class.rotate-90]="activeDropdown === 'modalStatus'"></i>
                         </button>
                         <div *ngIf="activeDropdown === 'modalStatus'"
-                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-bottom">
+                            class="absolute z-[90] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-md animate-in fade-in zoom-in-95 duration-200 transform origin-bottom custom-scrollbar">
                             <div (click)="setLecturerStatus('WORKING')"
                                 class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer text-slate-900 border-b border-slate-50">
                                 Đang giảng dạy</div>

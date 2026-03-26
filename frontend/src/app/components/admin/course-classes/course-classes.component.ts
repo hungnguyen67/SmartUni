@@ -44,7 +44,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
 
     // Pagination - Bảng Thống kê dự kiến
     demandCurrentPage = 1;
-    demandItemsPerPage = 10;
+    demandItemsPerPage = 9999;
     demandTotalItems = 0;
     get demandTotalPages(): number { return Math.max(1, Math.ceil(this.demandTotalItems / this.demandItemsPerPage)); }
     get demandMinEnd(): number { return Math.min(this.demandCurrentPage * this.demandItemsPerPage, this.demandTotalItems); }
@@ -318,14 +318,24 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
 
     loadAnalysis(): void {
         if (!this.selectedSemesterId) return;
+        
+        // Reset selections to prevent stale data usage
+        this.selectedDemandKeys.clear();
+        this.allSelected = false;
+
         this.courseClassService.getDemandAnalysis(
             this.selectedSemesterId,
             this.selectionYear || undefined,
             this.selectionMajorId || undefined
-        ).subscribe(data => {
-            this.demandAnalysis = data;
-            this.onSelectionFilterChange();
-            this.calculateOverallStats();
+        ).subscribe({
+            next: (data) => {
+                this.demandAnalysis = data;
+                this.onSelectionFilterChange();
+                this.calculateOverallStats();
+            },
+            error: (err) => {
+                console.error('Lỗi tải dữ liệu dự kiến', err);
+            }
         });
     }
 
@@ -346,14 +356,24 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         }
 
         this.allSelected = !this.allSelected;
-        if (this.allSelected) {
-            canSelect.forEach(d => {
-                const key = `${d.subjectId}_${d.adminClassId}`;
+        canSelect.forEach(d => {
+            const key = `${d.subjectId}_${d.adminClassId}`;
+            if (this.allSelected) {
                 this.selectedDemandKeys.add(key);
-            });
-        } else {
-            this.selectedDemandKeys.clear();
-        }
+            } else {
+                this.selectedDemandKeys.delete(key);
+            }
+        });
+    }
+
+    getEligibleCount(): number {
+        return this.filteredDemandAnalysis.filter(d => d.openedClasses === 0).length;
+    }
+
+    getVisibleSelectionCount(): number {
+        return this.filteredDemandAnalysis.filter(d => 
+            this.isDemandSelected(d) && d.openedClasses === 0
+        ).length;
     }
 
     toggleSelect(demand: any): void {
@@ -364,8 +384,10 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         } else {
             this.selectedDemandKeys.add(key);
         }
+        
         const canSelect = this.filteredDemandAnalysis.filter(d => d.openedClasses === 0);
-        this.allSelected = canSelect.length > 0 && this.selectedDemandKeys.size === canSelect.length;
+        this.allSelected = canSelect.length > 0 && 
+            canSelect.every(d => this.selectedDemandKeys.has(`${d.subjectId}_${d.adminClassId}`));
     }
 
     isDemandSelected(demand: any): boolean {
@@ -373,21 +395,14 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     }
 
     generateBatchClasses(): void {
-        if (this.groupBy === 'subject') {
-            alert('Vui lòng chuyển sang "Nhóm theo Môn & Lớp" để thực hiện khởi tạo hàng loạt cho từng lớp hành chính!');
-            return;
-        }
-        if (this.selectedDemandKeys.size === 0) {
-            alert('Vui lòng chọn ít nhất một môn học để khởi tạo!');
-            return;
-        }
-
-        const demandsToCreate = this.filteredDemandAnalysis.filter(d =>
-            this.selectedDemandKeys.has(`${d.subjectId}_${d.adminClassId}`) && d.openedClasses === 0
+        const demandsToCreate = this.filteredDemandAnalysis.filter(d => 
+            this.isDemandSelected(d) && d.openedClasses === 0
         );
 
         if (demandsToCreate.length === 0) {
-            this.flashMessage.warning('Các học phần đã chọn đều đã được tạo lớp!');
+            this.flashMessage.warning('Vui lòng chọn ít nhất một môn học để khởi tạo!');
+            this.selectedDemandKeys.clear();
+            this.allSelected = false;
             return;
         }
 
@@ -448,7 +463,15 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     onSelectionFilterChange(): void {
         const search = this.selectionSearchTerm.toLowerCase();
 
-        // Filter demand analysis list
+        // 1. Nếu chưa có bất kỳ bộ lọc chính nào, ép bảng về rỗng để đồng bộ với UI
+        if (!this.selectionMajorId && !this.selectionYear && !this.selectionAdminClassId) {
+            this.demandTotalItems = 0;
+            this.updateDemandPage([]);
+            this.allSelected = false;
+            return;
+        }
+
+        // 2. Chỉ thực hiện lọc khi đã chọn ít nhất một thông tin Ngành/Khóa/Lớp
         let filteredDemand = this.demandAnalysis.filter(d => {
             const matchesSearch = !search ||
                 d.subjectName.toLowerCase().includes(search) ||
@@ -463,8 +486,10 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         this.demandCurrentPage = 1;
         this.updateDemandPage(filteredDemand);
 
-        this.selectedDemandKeys.clear();
-        this.allSelected = false;
+        // Sync allSelected based on the new visible results
+        const canSelect = filteredDemand.filter(d => d.openedClasses === 0);
+        this.allSelected = canSelect.length > 0 && 
+            canSelect.every(d => this.selectedDemandKeys.has(`${d.subjectId}_${d.adminClassId}`));
     }
 
     private _allFilteredClasses: CourseClass[] = [];
@@ -545,6 +570,8 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
 
     closeSelectionModal(): void {
         this.isSelectionModalOpen = false;
+        this.selectedDemandKeys.clear();
+        this.allSelected = false;
     }
 
     onSubjectSelect(): void {
