@@ -14,11 +14,13 @@ public class ExamScheduleDTO {
     private LocalTime firstSlotStart;
     private String status;
     private Integer totalStudents;
-    private List<RoomInfo> rooms;
     private String proctorName;
     private String proctorCode;
     private String proctorEmail;
     private String createdByName;
+
+    private List<RoomInfo> rooms;
+    private List<SlotInfo> slots;
 
     public static class CourseClassInfo {
         private Long id;
@@ -58,6 +60,19 @@ public class ExamScheduleDTO {
         public void setCapacity(Integer capacity) { this.capacity = capacity; }
     }
 
+    public static class SlotInfo {
+        private Integer slotNo;
+        private LocalTime startTime;
+        private LocalTime endTime;
+
+        public Integer getSlotNo() { return slotNo; }
+        public void setSlotNo(Integer slotNo) { this.slotNo = slotNo; }
+        public LocalTime getStartTime() { return startTime; }
+        public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
+        public LocalTime getEndTime() { return endTime; }
+        public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
+    }
+
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -77,9 +92,6 @@ public class ExamScheduleDTO {
     public void setStatus(String status) { this.status = status; }
     public Integer getTotalStudents() { return totalStudents; }
     public void setTotalStudents(Integer totalStudents) { this.totalStudents = totalStudents; }
-    public List<RoomInfo> getRooms() { return rooms; }
-    public void setRooms(List<RoomInfo> rooms) { this.rooms = rooms; }
-
     public String getProctorName() { return proctorName; }
     public void setProctorName(String proctorName) { this.proctorName = proctorName; }
     public String getProctorCode() { return proctorCode; }
@@ -88,4 +100,9 @@ public class ExamScheduleDTO {
     public void setProctorEmail(String proctorEmail) { this.proctorEmail = proctorEmail; }
     public String getCreatedByName() { return createdByName; }
     public void setCreatedByName(String createdByName) { this.createdByName = createdByName; }
+    
+    public List<RoomInfo> getRooms() { return rooms; }
+    public void setRooms(List<RoomInfo> rooms) { this.rooms = rooms; }
+    public List<SlotInfo> getSlots() { return slots; }
+    public void setSlots(List<SlotInfo> slots) { this.slots = slots; }
 }

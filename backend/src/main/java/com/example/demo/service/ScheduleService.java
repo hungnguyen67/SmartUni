@@ -300,10 +300,15 @@ public class ScheduleService {
                 attendanceRepository.findBySessionIdAndStudentUserId(session.getId(), student.getUserId())
                     .ifPresent(a -> {
                         dto.setEnteredCode(a.getStudentEnteredCode());
-                        dto.setSelfAttended(a.getStudentEnteredCode() != null && !a.getStudentEnteredCode().isEmpty());
+                        boolean hasCode = a.getStudentEnteredCode() != null && !a.getStudentEnteredCode().isEmpty();
+                        dto.setSelfAttended(hasCode);
                         
-                        // Only show status in UI if session is closed OR if it was manually marked by lecturer
-                        // (Manually marked means getStudentEnteredCode is null)
+                        // Nếu sinh viên đã tự điểm danh bằng mã, mặc định hiển thị là Có mặt để giảng viên dễ theo dõi
+                        if (hasCode) {
+                            dto.setPresent(true);
+                        }
+
+                        // Hiển thị trạng thái chính xác nếu phiên đã đóng hoặc được tích tay (không có mã)
                         if (!session.getIsActive() || a.getStudentEnteredCode() == null) {
                             dto.setAbsent(a.getStatus() == AttendanceStatus.ABSENT);
                             dto.setExcused(a.getStatus() == AttendanceStatus.EXCUSED);
@@ -594,8 +599,8 @@ public class ScheduleService {
             attendance.setStatus(record.getStatus());
             attendance.setAbsentPeriods(record.getAbsentPeriods());
             attendance.setMarkedAt(java.time.LocalDateTime.now());
-            // This is now a manual handle, clear any previously entered student codes
-            attendance.setStudentEnteredCode(null);
+            // Giữ lại mã đã nhập để không làm mất dấu tick xanh trong UI
+            // attendance.setStudentEnteredCode(null);
             
             attendanceRepository.save(attendance);
         }
@@ -624,10 +629,17 @@ public class ScheduleService {
             
             reg.setAttendanceScore(Math.round(attendanceScore * 10.0) / 10.0);
             
-            // Recompute total score
-            double total = reg.getAttendanceScore() * courseClass.getAttendanceWeight() +
-                          reg.getMidtermScore() * courseClass.getMidtermWeight() +
-                          reg.getFinalScore() * courseClass.getFinalWeight();
+            // Recompute total score - Handle null weights and scores
+            double attWeight = (courseClass.getAttendanceWeight() != null) ? courseClass.getAttendanceWeight() : 0.1;
+            double midWeight = (courseClass.getMidtermWeight() != null) ? courseClass.getMidtermWeight() : 0.3;
+            double finWeight = (courseClass.getFinalWeight() != null) ? courseClass.getFinalWeight() : 0.6;
+
+            double midScore = (reg.getMidtermScore() != null) ? reg.getMidtermScore() : 0.0;
+            double finScore = (reg.getFinalScore() != null) ? reg.getFinalScore() : 0.0;
+
+            double total = reg.getAttendanceScore() * attWeight +
+                           midScore * midWeight +
+                           finScore * finWeight;
             reg.setTotalScore(Math.round(total * 100.0) / 100.0);
             reg.setScoreUpdatedAt(java.time.LocalDateTime.now());
             

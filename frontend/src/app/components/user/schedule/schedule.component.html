@@ -51,7 +51,7 @@
                    after:absolute after:top-1/2 after:left-0 after:w-full after:h-px after:bg-slate-200 after:-translate-y-1/2">
 
                             <div *ngFor="let item of getItemsStartingAt(day.isoDate, period)"
-                                (click)="openSessionDetail(item.id)"
+                                (click)="item.isExam ? openExamDetail(item) : openSessionDetail(item.id)"
                                 class="absolute left-[0px] right-[0px] z-30 bg-white shadow-md flex flex-col overflow-hidden transition-all hover:z-40 cursor-pointer group/item rounded-none border-none"
                                 [style.top.px]="getTopOffset(item)" [style.height.px]="getItemHeight(item) - 2">
 
@@ -61,16 +61,18 @@
                                         <div class="text-[12px] font-bold leading-tight uppercase truncate">
                                             {{ item.isExam ? '[THI] ' + item.subjectName : item.subjectName }}
                                         </div>
-                                        <span *ngIf="item.isExam" class="px-1 py-0.5 bg-white/20 rounded text-[9px] font-black tracking-tighter uppercase whitespace-nowrap">Lịch thi</span>
+                                        <span *ngIf="item.isExam"></span>
                                     </div>
                                     <div class="text-[11px] font-medium opacity-90">
                                         {{ getStartTime(item) }} - {{ getEndTime(item) }}
-                                        <span *ngIf="!item.isExam">(Tiết {{ item.startPeriod }}-{{ item.endPeriod }})</span>
+                                        <span *ngIf="!item.isExam">(Tiết {{ item.startPeriod }}-{{ item.endPeriod
+                                            }})</span>
                                         <span *ngIf="item.isExam" class="ml-1 font-bold">({{ item.examFormat }})</span>
                                     </div>
                                 </div>
 
-                                <div class="p-3 flex-1 flex flex-col justify-between overflow-hidden" [class.bg-red-50]="item.isExam">
+                                <div class="p-3 flex-1 flex flex-col justify-between overflow-hidden"
+                                    [class.bg-white]="item.isExam">
                                     <div class="flex flex-col gap-1.5">
                                         <div class="flex items-center gap-2">
                                             <span class="text-[11px] text-slate-800 font-bold truncate">
@@ -78,14 +80,13 @@
                                             </span>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <span *ngIf="!item.isExam" class="text-[11px] text-slate-500 font-medium truncate">
+                                            <span *ngIf="!item.isExam"
+                                                class="text-[11px] text-slate-500 font-medium truncate">
                                                 GV: {{ item.lecturerName }}
                                             </span>
-                                            <span *ngIf="item.isExam && item.studentCode" class="text-[11px] text-red-600 font-bold truncate italic">
+                                            <span *ngIf="item.isExam && item.studentCode"
+                                                class="text-[11px] text-slate-500 font-bold truncate italic">
                                                 SBD: {{ item.rollNumber || 'Chưa có' }}
-                                            </span>
-                                            <span *ngIf="item.isExam && !item.studentCode" class="text-[11px] text-red-600 font-bold truncate italic">
-                                                Lịch coi thi
                                             </span>
                                         </div>
                                     </div>
@@ -278,7 +279,7 @@
                             <tr *ngFor="let student of selectedSession.students; let i = index"
                                 class="transition-colors">
 
-                                <td class="px-4 py-4 text-center">{{ i + 1 }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ i + 1 }}</td>
 
                                 <td *ngIf="isLecturer" class="px-4 py-4 text-sm text-slate-900">
                                     ({{ student.absentSessions }}/{{ student.absentPeriods }}/{{
@@ -348,4 +349,89 @@
             </div>
         </div>
     </div>
-</div>
+    <!-- Exam Detail Modal -->
+    <div *ngIf="showExamModal" class="fixed inset-0 z-[100] flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="closeExamDetail()"></div>
+
+        <div *ngIf="selectedExam"
+            class="relative w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+
+            <header class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="font-bold text-slate-900 text-[18px]">Chi tiết lịch {{ isLecturer ? 'coi' : '' }} thi
+                </h3>
+                <button (click)="closeExamDetail()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </header>
+
+            <div class="flex-1 overflow-auto custom-scrollbar p-4">
+                <div>
+                    <!-- Exam Header Info -->
+                    <div class="text-center space-y-6">
+                        <h2 class="text-[20px] font-bold text-slate-900">Học phần thi: {{
+                            selectedExam.subjectName }}</h2>
+
+                        <div class="grid grid-cols-2 gap-y-4 gap-x-12 text-left p-8">
+                            <div class="flex items-center gap-4">
+                                <span class="text-slate-700 font-medium text-[15px] w-32 shrink-0">Hình thức thi:</span>
+                                <span class="text-slate-900 font-semibold text-[15px]">{{ selectedExam.examFormat
+                                    }}</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-slate-700 font-medium text-[15px] w-32 shrink-0">Ngày thi:</span>
+                                <span class="text-slate-900 font-semibold text-[15px]">{{ selectedExam.scheduleDate
+                                    }}</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-slate-700 font-medium text-[15px] w-32 shrink-0">Phòng thi:</span>
+                                <span class="text-slate-900 font-semibold text-[15px]">{{
+                                    selectedExam.roomName }}</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-slate-700 font-medium text-[15px] w-32 shrink-0">Giờ thi:</span>
+                                <span class="text-slate-900 font-semibold text-[15px]">{{ getStartTime(selectedExam) }}
+                                    -
+                                    {{
+                                    getEndTime(selectedExam) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Exams List -->
+                    <div class="space-y-6">
+                        <h4 class="text-[20px] font-bold text-slate-800 text-center">Lịch {{ isLecturer ? 'coi' : '' }}
+                            thi trong tháng</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-auto border-collapse text-[13px]">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-900">
+                                        <th class="px-4 py-4 text-sm font-semibold text-center w-16">STT</th>
+                                        <th class="px-4 py-4 text-sm font-semibold text-left">Hình thức thi</th>
+                                        <th class="px-4 py-4 text-sm font-semibold text-left">Ngày thi</th>
+                                        <th class="px-4 py-4 text-sm font-semibold text-left">Giờ thi</th>
+                                        <th class="px-4 py-4 text-sm font-semibold text-left">Phòng thi</th>
+                                        <th class="px-4 py-4 text-sm font-semibold text-left">Học phần thi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr *ngFor="let ex of monthExams; let i = index" class="transition-colors"
+                                        [ngClass]="{'bg-blue-50/30': ex.id === selectedExam.id}">
+                                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ i + 1 }}</td>
+                                        <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ ex.examFormat }}</td>
+                                        <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ ex.scheduleDate |
+                                            date:'dd/MM/yyyy' }}</td>
+                                        <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ getStartTime(ex) }}
+                                            - {{ getEndTime(ex) }}
+                                        </td>
+                                        <td class="px-4 py-4 text-sm text-slate-900 text-left">{{
+                                            ex.roomName }}</td>
+                                        <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ ex.subjectName }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

@@ -16,7 +16,10 @@ export class UserScheduleComponent implements OnInit {
   errorMessage: string = '';
   isLecturer: boolean = false;
   showModal: boolean = false;
+  showExamModal: boolean = false;
   selectedSession: any = null;
+  selectedExam: any = null;
+  monthExams: any[] = [];
   loadingModal: boolean = false;
   periods = Array.from({ length: 17 }, (_, i) => i + 1);
   periodTimes: { [key: number]: string } = {
@@ -104,7 +107,7 @@ export class UserScheduleComponent implements OnInit {
       exams: examObservable
     }).subscribe({
       next: (result) => {
-        const normalizedExams = result.exams.map(e => this.normalizeExam(e));
+        const normalizedExams = result.exams.flatMap(e => this.normalizeExams(e));
         this.scheduleItems = [...result.regular, ...normalizedExams];
         this.loading = false;
         this.updateDisplayedPeriods();
@@ -120,11 +123,47 @@ export class UserScheduleComponent implements OnInit {
     });
   }
 
-  normalizeExam(exam: any): any {
+  ensureStringDate(date: any): string {
+    if (!date) return '';
+    if (Array.isArray(date)) {
+      // Chuyển mảng [yyyy, m, d] sang yyyy-MM-dd để đảm bảo filter lưới lịch (yyyy-mm-dd) không bị lỗi
+      const y = date[0];
+      const m = String(date[1]).padStart(2, '0');
+      const d = String(date[2]).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    return String(date);
+  }
+
+  normalizeExams(exam: any): any[] {
     const isLecturer = this.authService.getRole() === 'LECTURER';
-    return {
-      id: -1, 
-      scheduleDate: exam.examDate,
+    
+    // Nếu là giảng viên và có các ca thi (slots), gộp chúng thành 1 khối LIỀN MẠCH
+    if (isLecturer && exam.slots && exam.slots.length > 0) {
+      // Tìm thời gian bắt đầu của ca đầu và kết thúc của ca cuối
+      const sortedSlots = [...exam.slots].sort((a,b) => String(a.startTime).localeCompare(String(b.startTime)));
+      const overallStartTime = sortedSlots[0].startTime;
+      const overallEndTime = sortedSlots[sortedSlots.length - 1].endTime;
+
+      return [{
+        id: exam.id,
+        scheduleDate: this.ensureStringDate(exam.examDate),
+        startTime: overallStartTime,
+        endTime: overallEndTime,
+        duration: null, // Dùng endTime thực tế
+        subjectName: exam.courseClass?.subjectName,
+        roomName: exam.rooms?.map((r: any) => r.roomName).join(', '),
+        isExam: true,
+        examFormat: exam.examFormat,
+        startPeriod: this.timeToPeriod(overallStartTime),
+        allSlots: exam.slots 
+      }];
+    }
+
+    // Nếu là sinh viên (hoặc là GV nhưng k có slot - fallback), trả về 1 mục duy nhất
+    return [{
+      id: exam.id,
+      scheduleDate: this.ensureStringDate(exam.examDate),
       startTime: isLecturer ? exam.firstSlotStart : exam.startTime,
       endTime: isLecturer ? null : exam.endTime,
       duration: isLecturer ? exam.durationMinutes : exam.duration,
@@ -135,14 +174,38 @@ export class UserScheduleComponent implements OnInit {
       studentCode: exam.studentCode,
       rollNumber: exam.rollNumber,
       startPeriod: this.timeToPeriod(isLecturer ? exam.firstSlotStart : exam.startTime)
-    };
+    }];
+  }
+
+  openExamDetail(item: any): void {
+    console.log('DEBUG: Opening Exam Detail', item);
+    this.selectedExam = item;
+    this.showExamModal = true;
+    this.renderer.addClass(document.body, 'overflow-hidden');
+
+    // Lọc lịch thi trong cùng tháng
+    const dateStr = this.ensureStringDate(item.scheduleDate);
+    if (dateStr) {
+      // Vì đã chuyển về yyyy-mm-dd, ta lấy 7 ký tự đầu là yyyy-mm
+      const monthPrefix = dateStr.substring(0, 7); 
+      this.monthExams = this.scheduleItems
+        .filter(i => i.isExam && i.scheduleDate && this.ensureStringDate(i.scheduleDate).startsWith(monthPrefix))
+        .sort((a, b) => this.ensureStringDate(a.scheduleDate).localeCompare(this.ensureStringDate(b.scheduleDate)));
+    }
+  }
+
+  closeExamDetail(): void {
+    this.showExamModal = false;
+    this.renderer.removeClass(document.body, 'overflow-hidden');
+    this.selectedExam = null;
+    this.monthExams = [];
   }
 
   timeToPeriod(time: any): number {
     if (!time) return 1;
     const timeStr = this.formatBackendTime(time);
     const mins = this.timeToMinutes(timeStr);
-    
+
     // Logic: Find the closest period starting at or before this time
     for (let p = 17; p >= 1; p--) {
       if (mins >= this.timeToMinutes(this.realPeriodTimes[p])) return p;
@@ -213,7 +276,7 @@ export class UserScheduleComponent implements OnInit {
 
     const newPeriods = [];
     for (let i = startP; i <= endP; i++) {
-       newPeriods.push(i);
+      newPeriods.push(i);
     }
     this.periods = newPeriods;
   }
@@ -344,7 +407,7 @@ export class UserScheduleComponent implements OnInit {
     if (item.endTime) {
       return this.formatBackendTime(item.endTime);
     }
-    
+
     if (item.isExam && item.duration) {
       const sMins = this.timeToMinutes(this.getStartTime(item));
       const eMins = sMins + (item.duration || 60);

@@ -65,9 +65,9 @@ public class CourseRegistration implements Serializable {
             return;
         }
         
-        double attWeight = (courseClass != null) ? courseClass.getAttendanceWeight() : 0.1;
-        double midWeight = (courseClass != null) ? courseClass.getMidtermWeight() : 0.3;
-        double finWeight = (courseClass != null) ? courseClass.getFinalWeight() : 0.6;
+        double attWeight = (courseClass != null && courseClass.getAttendanceWeight() != null) ? courseClass.getAttendanceWeight() : 0.1;
+        double midWeight = (courseClass != null && courseClass.getMidtermWeight() != null) ? courseClass.getMidtermWeight() : 0.3;
+        double finWeight = (courseClass != null && courseClass.getFinalWeight() != null) ? courseClass.getFinalWeight() : 0.6;
         
         double total = (attendanceScore * attWeight) + (midtermScore * midWeight) + (finalScore * finWeight);
         this.totalScore = Math.round(total * 100.0) / 100.0;

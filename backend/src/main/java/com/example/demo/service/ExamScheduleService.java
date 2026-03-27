@@ -237,6 +237,18 @@ public class ExamScheduleService {
             dto.setCreatedByName(cUser.getFullName() != null ? cUser.getFullName() : cUser.getEmail());
         }
 
+        // Map slots
+        List<ExamSlot> slots = examSlotRepository.findByExamScheduleId(entity.getId());
+        if (slots != null) {
+            dto.setSlots(slots.stream().map(s -> {
+                com.example.demo.dto.ExamScheduleDTO.SlotInfo si = new com.example.demo.dto.ExamScheduleDTO.SlotInfo();
+                si.setSlotNo(s.getSlotNo());
+                si.setStartTime(s.getStartTime());
+                si.setEndTime(s.getEndTime());
+                return si;
+            }).collect(Collectors.toList()));
+        }
+
         return dto;
     }
 
