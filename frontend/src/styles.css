@@ -8,7 +8,32 @@ app-root {
     height: 100%;
 }
 
+/* ===== Global Scrollbar ===== */
+*::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
 
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+/* ===== Custom Scrollbar Class (giữ lại để tương thích) ===== */
 .custom-scrollbar::-webkit-scrollbar {
     width: 5px;
     height: 5px;
@@ -25,4 +50,4 @@ app-root {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
-}
+}

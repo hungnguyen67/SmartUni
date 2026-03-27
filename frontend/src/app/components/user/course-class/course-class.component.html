@@ -1,34 +1,4 @@
 <div class="h-full flex flex-col space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Quản lý Lớp HP</h2>
-            <p class="text-[13px] text-slate-500 mt-0.5">Danh sách các lớp học phần bạn đang hoặc đã giảng dạy</p>
-        </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-md shadow-sm border border-slate-100 flex items-center gap-4">
-            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
-                <i class="fas fa-chalkboard-teacher"></i>
-            </div>
-            <div>
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng số lớp</p>
-                <p class="text-xl font-bold text-slate-800">{{allCourseClasses.length}}</p>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-md shadow-sm border border-slate-100 flex items-center gap-4">
-            <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center">
-                <i class="fas fa-users"></i>
-            </div>
-            <div>
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Lớp đang dạy</p>
-                <p class="text-xl font-bold text-slate-800">{{ongoingCount}}</p>
-            </div>
-        </div>
-    </div>
-
     <div class="bg-white rounded-lg shadow-sm border border-slate-200">
         <div class="px-6 py-7">
             <div class="pb-7">
@@ -59,7 +29,7 @@
                             </button>
 
                             <!-- Filter Dropdown -->
-                            <div *ngIf="showFilter"
+                            <div *ngIf="showFilter" (click)="$event.stopPropagation()"
                                 class="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-lg shadow-md z-50 animate-in fade-in zoom-in-95 duration-200">
                                 <div class="px-4 py-3 border-b border-slate-100">
                                     <span class="font-bold text-slate-700">Bộ lọc nâng cao</span>
@@ -77,12 +47,13 @@
                                                     [class.rotate-90]="activeDropdown === 'semester'"></i>
                                             </button>
                                             <div *ngIf="activeDropdown === 'semester'"
-                                                class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-md overflow-y-auto max-h-48 transform origin-top animate-in fade-in zoom-in-95 duration-200">
+                                                class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-md overflow-y-auto max-h-48 custom-scrollbar transform origin-top animate-in fade-in zoom-in-95 duration-200">
                                                 <div *ngFor="let s of semesters"
                                                     (click)="selectedSemesterId = s.id; loadMyClasses(); activeDropdown = ''"
-                                                    class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-50"
+                                                    class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                    [class.text-slate-900]="selectedSemesterId === s.id"
                                                     [class.bg-blue-50]="selectedSemesterId === s.id">
-                                                    {{s.name}} ({{s.academicYear}})
+                                                    {{s.name}}
                                                 </div>
                                             </div>
                                         </div>
@@ -90,7 +61,7 @@
 
                                     <!-- Subject -->
                                     <div class="space-y-2">
-                                        <label class="text-[14px] font-medium text-slate-600">Môn học</label>
+                                        <label class="text-[14px] font-medium text-slate-600">Học phần</label>
                                         <div class="relative">
                                             <button
                                                 (click)="activeDropdown = (activeDropdown === 'subject' ? '' : 'subject')"
@@ -100,15 +71,23 @@
                                                     [class.rotate-90]="activeDropdown === 'subject'"></i>
                                             </button>
                                             <div *ngIf="activeDropdown === 'subject'"
-                                                class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-md overflow-y-auto max-h-48 transform origin-top animate-in fade-in zoom-in-95 duration-200">
-                                                <div (click)="selectedSubjectId = null; onFilterChange(); activeDropdown = ''"
-                                                    class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-50">
-                                                    Tất cả môn học</div>
-                                                <div *ngFor="let m of subjects"
-                                                    (click)="selectedSubjectId = m.id; onFilterChange(); activeDropdown = ''"
-                                                    class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer transition-colors"
-                                                    [class.bg-blue-50]="selectedSubjectId === m.id">
-                                                    {{m.name}}
+                                                class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-md overflow-y-auto max-h-48 custom-scrollbar transform origin-top animate-in fade-in zoom-in-95 duration-200">
+                                                <div (click)="selectedSubjectId = null; activeDropdown = ''"
+                                                    class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                    [class.text-slate-900]="selectedSubjectId === null"
+                                                    [class.bg-blue-50]="selectedSubjectId === null">
+                                                    Chọn học phần
+                                                </div>
+                                                <div *ngIf="availableSubjects.length === 0"
+                                                    class="px-4 py-3 text-sm text-slate-400 italic">
+                                                    Không có học phần nào
+                                                </div>
+                                                <div *ngFor="let m of availableSubjects"
+                                                    (click)="selectedSubjectId = m.subjectId; activeDropdown = ''"
+                                                    class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                    [class.text-slate-900]="selectedSubjectId === m.subjectId"
+                                                    [class.bg-blue-50]="selectedSubjectId === m.subjectId">
+                                                    {{m.subjectName}}
                                                 </div>
                                             </div>
                                         </div>
@@ -127,13 +106,17 @@
                                                     [class.rotate-90]="activeDropdown === 'status'"></i>
                                             </button>
                                             <div *ngIf="activeDropdown === 'status'"
-                                                class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-md overflow-y-auto max-h-48 transform origin-top animate-in fade-in zoom-in-95 duration-200">
-                                                <div (click)="selectedStatus = ''; onFilterChange(); activeDropdown = ''"
-                                                    class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer transition-colors border-b border-slate-50">
-                                                    Tất cả trạng thái</div>
+                                                class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-md overflow-y-auto max-h-48 custom-scrollbar transform origin-top animate-in fade-in zoom-in-95 duration-200">
+                                                <div (click)="selectedStatus = ''; activeDropdown = ''"
+                                                    class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                    [class.text-slate-900]="selectedStatus === ''"
+                                                    [class.bg-blue-50]="selectedStatus === ''">
+                                                    Tất cả trạng thái
+                                                </div>
                                                 <div *ngFor="let s of ['PLANNING','OPEN','ONGOING','CLOSED','CANCELLED']"
-                                                    (click)="selectedStatus = s; onFilterChange(); activeDropdown = ''"
-                                                    class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer transition-colors"
+                                                    (click)="selectedStatus = s; activeDropdown = ''"
+                                                    class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                    [class.text-slate-900]="selectedStatus === s"
                                                     [class.bg-blue-50]="selectedStatus === s">
                                                     {{getStatusLabel(s)}}
                                                 </div>
@@ -147,7 +130,7 @@
                                         class="px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-all">
                                         Đặt lại
                                     </button>
-                                    <button (click)="showFilter = false"
+                                    <button (click)="onFilterChange(); showFilter = false"
                                         class="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md transition-all">
                                         Áp dụng
                                     </button>
@@ -375,10 +358,10 @@
                                 </td>
 
                                 <td class="px-4 py-4 text-sm text-slate-900 text-center uppercase">
-                                    {{ reg.totalScore }}
+                                    <span *ngIf="reg.totalScore != null">{{ reg.totalScore }}</span>
                                 </td>
                                 <td class="px-4 py-4 text-sm text-slate-900 text-center uppercase">
-                                    {{ reg.gradeLetter }}
+                                    <span *ngIf="reg.totalScore != null">{{ reg.gradeLetter }}</span>
                                 </td>
                                 <td class="px-4 py-4 text-sm text-slate-900 text-center uppercase">
                                     <span *ngIf="reg.totalScore != null">
