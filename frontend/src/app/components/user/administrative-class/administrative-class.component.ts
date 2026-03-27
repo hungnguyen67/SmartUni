@@ -35,7 +35,7 @@ export class AdministrativeClassComponent implements OnInit, OnDestroy {
     
     // Pagination for students
     studentCurrentPage = 1;
-    studentItemsPerPage = 10;
+    studentItemsPerPage = 999;
     studentTotalItems = 0;
 
     // Pagination

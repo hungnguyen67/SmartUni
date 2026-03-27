@@ -29,6 +29,7 @@ public class CourseRegistrationDTO {
     private String subjectType;
     private String classStatus;
     private String className;
+    private String adminClassCode;
 
     public CourseRegistrationDTO() {
     }
@@ -223,5 +224,13 @@ public class CourseRegistrationDTO {
 
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    public String getAdminClassCode() {
+        return adminClassCode;
+    }
+
+    public void setAdminClassCode(String adminClassCode) {
+        this.adminClassCode = adminClassCode;
     }
 }

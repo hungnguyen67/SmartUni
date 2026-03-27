@@ -45,6 +45,7 @@ export class ScheduleComponent implements OnInit {
     selectedScheduleItem: any = null;
     activeDropdown: string = '';
     searchTerm: string = '';
+    periodItemsMap: { [key: string]: any[] } = {};
 
     loading = false;
     conflicts: ConflictInfo[] = [];
@@ -249,6 +250,7 @@ export class ScheduleComponent implements OnInit {
 
                 this.allInstances = newAllInstances;
                 this.scheduleItems = newScheduleItems;
+                this.updatePeriodItemsMap();
 
                 if (this.selectedScheduleItem) {
                     const updated = this.scheduleItems.find(i =>
@@ -436,10 +438,19 @@ export class ScheduleComponent implements OnInit {
         return ((this.timeToMinutes(startTime) - this.timeToMinutes(slotTime)) / 60) * 100;
     }
 
-    getItemsForDayAndPeriod(dayDateStr: string, period: number): any[] {
-        return this.scheduleItems.filter(item => {
-            return item.scheduleDate === dayDateStr && item.startPeriod === period;
+    updatePeriodItemsMap(): void {
+        this.periodItemsMap = {};
+        this.scheduleItems.forEach(item => {
+            const key = `${item.scheduleDate}_${item.startPeriod}`;
+            if (!this.periodItemsMap[key]) {
+                this.periodItemsMap[key] = [];
+            }
+            this.periodItemsMap[key].push(item);
         });
+    }
+
+    getItemsForDayAndPeriod(dayDateStr: string, period: number): any[] {
+        return this.periodItemsMap[`${dayDateStr}_${period}`] || [];
     }
 
     selectScheduleItem(item: any): void {
@@ -1034,23 +1045,10 @@ export class ScheduleComponent implements OnInit {
     onPeriodMouseEnter(period: number): void {
         if (this.isResizing && this.resizingItem) {
             if (period >= this.resizingItem.startPeriod) {
-                // Lấy thông tin lớp học phần để kiểm tra số tiết
-                const courseClass = this.classes.find(c => c.id === this.resizingItem.classId);
-                if (courseClass) {
-                    const remaining = this.getRemainingPeriods(courseClass) + this.resizingOriginalDuration;
-                    const newDuration = period - this.resizingItem.startPeriod + 1;
-
-                    // Nếu thời lượng mới kéo dãn vuợt quá số lượng cho phép, bị chặn lại ở mức tối đa có thể
-                    if (newDuration > remaining) {
-                        const maxAllowedPeriod = this.resizingItem.startPeriod + remaining - 1;
-                        this.newEndPeriod = maxAllowedPeriod;
-                        this.resizingItem.endPeriod = maxAllowedPeriod;
-                        return;
-                    }
-                }
-
                 this.newEndPeriod = period;
                 this.resizingItem.endPeriod = period;
+                // Cập nhật map để template hiển thị mượt mà
+                this.updatePeriodItemsMap();
             }
         }
     }

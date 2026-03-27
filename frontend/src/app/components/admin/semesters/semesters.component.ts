@@ -30,6 +30,7 @@ export class SemestersComponent implements OnInit {
     semesterToDeleteId: number | null = null;
     savingSemester: boolean = false;
     originalSemester: any = null;
+    submitted: boolean = false;
 
     constructor(
         private semesterService: SemesterService,
@@ -153,6 +154,7 @@ export class SemestersComponent implements OnInit {
     openAddModal(): void {
         this.isEditing = false;
         this.currentSemester = this.getEmptySemester();
+        this.submitted = false;
         this.showModal = true;
     }
 
@@ -160,20 +162,47 @@ export class SemestersComponent implements OnInit {
         this.isEditing = true;
         this.currentSemester = { ...semester };
         this.originalSemester = { ...semester };
+        this.submitted = false;
         this.showModal = true;
     }
 
     closeModal(): void {
         this.showModal = false;
+        this.submitted = false;
     }
 
     saveSemester(): void {
+        this.submitted = true;
+
         if (!this.currentSemester.name) {
             this.flashMessage.error('Vui lòng nhập tên học kỳ');
             return;
         }
-        if (!this.currentSemester.academicYear) {
-            this.flashMessage.error('Vui lòng nhập năm học');
+        if (!this.currentSemester.startDate) {
+            this.flashMessage.error('Vui lòng chọn ngày bắt đầu');
+            return;
+        }
+        if (!this.currentSemester.endDate) {
+            this.flashMessage.error('Vui lòng chọn ngày kết thúc');
+            return;
+        }
+
+        const start = new Date(this.currentSemester.startDate).getTime();
+        const end = new Date(this.currentSemester.endDate).getTime();
+        if (start > end) {
+            this.flashMessage.error('Thời gian không hợp lệ: Ngày kết thúc phải diễn ra sau ngày bắt đầu');
+            return;
+        }
+
+        // Check duplicate academicYear + semesterOrder
+        const isDuplicate = this.semesters.some(s => 
+            s.academicYear === this.currentSemester.academicYear && 
+            s.semesterOrder === this.currentSemester.semesterOrder &&
+            (!this.isEditing || s.id !== this.currentSemester.id)
+        );
+
+        if (isDuplicate) {
+            this.flashMessage.error(`Học kỳ ${this.currentSemester.semesterOrder} của năm học ${this.currentSemester.academicYear} đã tồn tại trong hệ thống`);
             return;
         }
 

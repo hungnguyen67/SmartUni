@@ -215,6 +215,7 @@ public class CourseRegistrationService {
             }
             if (sp.getAdministrativeClass() != null) {
                 dto.setClassName(sp.getAdministrativeClass().getClassName());
+                dto.setAdminClassCode(sp.getAdministrativeClass().getClassCode());
             }
         }
 
@@ -246,9 +247,6 @@ public class CourseRegistrationService {
         reg.setCourseClass(cc);
         reg.setStatus(CourseRegistration.RegistrationStatus.REGISTERED);
 
-        cc.setCurrentEnrolled(cc.getCurrentEnrolled() + 1);
-        courseClassRepository.save(cc);
-
         com.example.demo.dto.CourseRegistrationDTO result = convertToDTO(registrationRepository.save(reg));
         
         // Gửi tín hiệu realtime qua WebSocket
@@ -261,10 +259,6 @@ public class CourseRegistrationService {
     public void drop(Long registrationId) {
         CourseRegistration reg = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new RuntimeException("Registration not found"));
-
-        CourseClass cc = reg.getCourseClass();
-        cc.setCurrentEnrolled(Math.max(0, cc.getCurrentEnrolled() - 1));
-        courseClassRepository.save(cc);
 
         registrationRepository.delete(reg);
         

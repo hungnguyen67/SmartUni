@@ -184,8 +184,8 @@
                                         (dragstart)="onItemDragStart($event, item)"
                                         [style.height]="'calc(' + (item.endPeriod - item.startPeriod + 1) + ' * 32px)'"
                                         class="absolute top-0 left-0 right-0 z-30 mx-0.5 rounded-sm bg-white border border-blue-200 border-l-[6px] p-1 shadow-sm hover:shadow-md cursor-pointer select-none ring-1 ring-blue-100/50 overflow-hidden flex flex-col"
-                                        [class.transition-all]="!isResizing"
-                                        [class.ring-offset-1]="isResizing && resizingItem?.id === item.id">
+                                        [class.pointer-events-none]="isResizing" [class.transition-all]="!isResizing"
+                                        [class.ring-2]="selectedScheduleItem?.id === item.id">
 
                                         <div class="absolute inset-0 opacity-10 pointer-events-none"
                                             [ngClass]="item.color"></div>
@@ -625,39 +625,3 @@
         </div>
     </div>
 </div>
-
-<style>
-    :host {
-        display: block;
-        overflow: hidden;
-        width: 100%;
-        height: 100%;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 5px;
-        height: 5px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 5px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-
-    .is-resizing .absolute {
-        pointer-events: none !important;
-        transition: none !important;
-    }
-
-    .is-resizing table {
-        cursor: ns-resize !important;
-    }
-</style>

@@ -75,20 +75,22 @@ public class SubjectService {
     }
 
     private void updateRelations(Subject subject, List<SubjectRelationDTO> relationDTOs) {
-        if (relationDTOs == null) return;
-        
+        if (relationDTOs == null)
+            return;
+
         // Delete existing relations
         prerequisiteRepository.deleteBySubjectId(subject.getId());
         equivalentRepository.deleteBySubjectId(subject.getId());
-        
+
         // Add new relations
         for (SubjectRelationDTO relDTO : relationDTOs) {
             String subjectCode = relDTO.getSubjectCode();
-            if (subjectCode == null || subjectCode.isEmpty()) continue;
+            if (subjectCode == null || subjectCode.isEmpty())
+                continue;
 
             Subject targetSubject = subjectRepository.findBySubjectCode(subjectCode)
                     .orElseThrow(() -> new RuntimeException("Relation subject not found: " + subjectCode));
-            
+
             String type = relDTO.getRelationType();
             if ("PREREQUISITE".equals(type) || "COREQUISITE".equals(type)) {
                 SubjectPrerequisite pre = new SubjectPrerequisite();
@@ -96,7 +98,8 @@ public class SubjectService {
                 pre.setSubject(subject);
                 pre.setPrerequisiteSubject(targetSubject);
                 pre.setMinGradeRequired(relDTO.getMinGrade() != null ? relDTO.getMinGrade() : "D");
-                pre.setIsCorequisite("COREQUISITE".equals(type) || (relDTO.getIsParallel() != null && relDTO.getIsParallel()));
+                pre.setIsCorequisite(
+                        "COREQUISITE".equals(type) || (relDTO.getIsParallel() != null && relDTO.getIsParallel()));
                 prerequisiteRepository.save(pre);
             } else if ("EQUIVALENT".equals(type)) {
                 SubjectEquivalent eq = new SubjectEquivalent();
@@ -127,29 +130,27 @@ public class SubjectService {
         dto.setUpdatedAt(subject.getUpdatedAt());
 
         List<SubjectRelationDTO> relations = new ArrayList<>();
-        
+
         // Fetch Prerequisites & Corequisites
         prerequisiteRepository.findBySubjectId(subject.getId()).stream()
                 .map(p -> {
                     SubjectRelationDTO r = new SubjectRelationDTO(
-                        p.getIsCorequisite() ? "COREQUISITE" : "PREREQUISITE",
-                        p.getPrerequisiteSubject().getSubjectCode(),
-                        p.getPrerequisiteSubject().getName()
-                    );
+                            p.getIsCorequisite() ? "COREQUISITE" : "PREREQUISITE",
+                            p.getPrerequisiteSubject().getSubjectCode(),
+                            p.getPrerequisiteSubject().getName());
                     r.setMinGrade(p.getMinGradeRequired());
                     r.setIsParallel(p.getIsCorequisite()); // Assuming parallel means corequisite here
                     return r;
                 })
                 .forEach(relations::add);
-        
+
         // Fetch Equivalents
         equivalentRepository.findBySubjectId(subject.getId()).stream()
                 .map(e -> {
                     SubjectRelationDTO r = new SubjectRelationDTO(
-                        "EQUIVALENT",
-                        e.getEquivalentSubject().getSubjectCode(),
-                        e.getEquivalentSubject().getName()
-                    );
+                            "EQUIVALENT",
+                            e.getEquivalentSubject().getSubjectCode(),
+                            e.getEquivalentSubject().getName());
                     r.setMinGrade(e.getMinGradeRequired());
                     r.setEffectiveFrom(e.getEffectiveFrom());
                     r.setEffectiveTo(e.getEffectiveTo());

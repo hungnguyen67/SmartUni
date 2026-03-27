@@ -51,8 +51,8 @@ public class CourseClass {
     @Column(name = "max_students")
     private Integer maxStudents = 40;
 
-    @Column(name = "current_enrolled")
-    private Integer currentEnrolled = 0;
+    @org.hibernate.annotations.Formula("(SELECT COUNT(*) FROM course_registrations cr WHERE cr.course_class_id = id)")
+    private Integer currentEnrolled;
 
     @Column(name = "allow_register")
     private Boolean allowRegister = true;

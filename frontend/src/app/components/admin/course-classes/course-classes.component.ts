@@ -98,6 +98,12 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     deletingFaculty: boolean = false;
     courseClassToDelete: any = null;
     originalFormJson: string = '';
+
+    isDetailModalOpen = false;
+    selectedClassDetails: any = null;
+    classRegistrations: any[] = [];
+    registrationSearchText = '';
+
     constructor(
         private courseClassService: CourseClassService,
         private semesterService: SemesterService,
@@ -145,6 +151,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     handleBackdropClick(event: MouseEvent): void {
         if (event.target === event.currentTarget) {
             this.closeModal();
+            this.closeDetailModal();
             this.isDeleteModalOpen = false;
             this.isSelectionModalOpen = false;
         }
@@ -318,7 +325,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
 
     loadAnalysis(): void {
         if (!this.selectedSemesterId) return;
-        
+
         // Reset selections to prevent stale data usage
         this.selectedDemandKeys.clear();
         this.allSelected = false;
@@ -371,7 +378,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     }
 
     getVisibleSelectionCount(): number {
-        return this.filteredDemandAnalysis.filter(d => 
+        return this.filteredDemandAnalysis.filter(d =>
             this.isDemandSelected(d) && d.openedClasses === 0
         ).length;
     }
@@ -384,9 +391,9 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         } else {
             this.selectedDemandKeys.add(key);
         }
-        
+
         const canSelect = this.filteredDemandAnalysis.filter(d => d.openedClasses === 0);
-        this.allSelected = canSelect.length > 0 && 
+        this.allSelected = canSelect.length > 0 &&
             canSelect.every(d => this.selectedDemandKeys.has(`${d.subjectId}_${d.adminClassId}`));
     }
 
@@ -395,7 +402,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     }
 
     generateBatchClasses(): void {
-        const demandsToCreate = this.filteredDemandAnalysis.filter(d => 
+        const demandsToCreate = this.filteredDemandAnalysis.filter(d =>
             this.isDemandSelected(d) && d.openedClasses === 0
         );
 
@@ -488,7 +495,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
 
         // Sync allSelected based on the new visible results
         const canSelect = filteredDemand.filter(d => d.openedClasses === 0);
-        this.allSelected = canSelect.length > 0 && 
+        this.allSelected = canSelect.length > 0 &&
             canSelect.every(d => this.selectedDemandKeys.has(`${d.subjectId}_${d.adminClassId}`));
     }
 
@@ -596,7 +603,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         const subjectCode = this.selectedDemand.subjectCode;
         const nextNum = (this.selectedDemand.openedClasses || 0) + 1;
         this.courseClassForm.classCode = `${subjectCode}_${nextNum.toString().padStart(2, '0')}`;
-        this.courseClassForm.maxStudents = 40;
+        this.courseClassForm.maxStudents = 12;
         this.courseClassForm.classStatus = 'PLANNING';
 
         this.onBatchCountChange();
@@ -658,12 +665,69 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         this.isModalOpen = false;
     }
 
+    openClassDetail(cc: any): void {
+        this.selectedClassDetails = cc;
+        this.loading = true;
+        this.registrationService.getRegistrationsByClass(cc.id).subscribe({
+            next: (data) => {
+                this.classRegistrations = data.map((reg: any) => {
+                    let firstName = reg.firstName || '';
+                    let lastName = reg.lastName || '';
+
+                    if (!firstName && !lastName && reg.studentName) {
+                        const name = reg.studentName.trim();
+                        const lastSpaceIndex = name.lastIndexOf(' ');
+                        if (lastSpaceIndex !== -1) {
+                            firstName = name.substring(lastSpaceIndex + 1);
+                            lastName = name.substring(0, lastSpaceIndex);
+                        } else {
+                            firstName = name;
+                            lastName = '';
+                        }
+                    }
+
+                    return {
+                        ...reg,
+                        firstName,
+                        lastName
+                    };
+                }).sort((a: any, b: any) => a.id - b.id);
+                this.isDetailModalOpen = true;
+                this.loading = false;
+            },
+            error: (err) => {
+                console.error('Error loading class registrations', err);
+                this.flashMessage.error('Không thể tải danh sách sinh viên');
+                this.loading = false;
+            }
+        });
+    }
+
+    closeDetailModal(): void {
+        this.isDetailModalOpen = false;
+        this.selectedClassDetails = null;
+        this.classRegistrations = [];
+        this.registrationSearchText = '';
+    }
+
+    get filteredClassRegistrations(): any[] {
+        if (!this.registrationSearchText?.trim()) return this.classRegistrations;
+        const term = this.registrationSearchText.toLowerCase().trim();
+        return this.classRegistrations.filter(reg =>
+            reg.studentName?.toLowerCase().includes(term) ||
+            reg.studentCode?.toLowerCase().includes(term) ||
+            reg.lastName?.toLowerCase().includes(term) ||
+            reg.firstName?.toLowerCase().includes(term) ||
+            reg.adminClassCode?.toLowerCase().includes(term)
+        );
+    }
+
     getEmptyForm(): any {
         return {
             classCode: '',
             subjectId: null,
             lecturerId: null,
-            maxStudents: 40,
+            maxStudents: 12,
             classStatus: 'PLANNING',
             currentEnrolled: 0,
             registrationStart: null,
@@ -722,12 +786,19 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         // Validate full schedule before opening registration
         if (payload.classStatus === 'OPEN') {
             const requiredPeriods = (payload.theoryPeriods || 0) + (payload.practicalPeriods || 0);
-            const totalScheduled = payload.schedules.reduce((sum: number, s: any) => sum + (s.endPeriod - s.startPeriod + 1), 0);
+            const weeklyScheduled = payload.schedules.reduce((sum: number, s: any) => sum + (s.endPeriod - s.startPeriod + 1), 0);
+            
+            // Assuming a standard 15-week semester for the validation estimate
+            const estimatedTotal = weeklyScheduled * 15;
 
-            if (totalScheduled < requiredPeriods) {
-                this.flashMessage.error(`Lịch học chưa đủ tiết (${totalScheduled}/${requiredPeriods} tiết). Vui lòng xếp đủ lịch trước khi mở đăng ký!`);
+            if (weeklyScheduled === 0) {
+                this.flashMessage.error('Vui lòng xếp lịch học (thời khóa biểu hàng tuần) trước khi mở đăng ký!');
                 this.isSubmitting = false;
                 return;
+            }
+
+            if (estimatedTotal < requiredPeriods) {
+                this.flashMessage.warning(`Lưu ý: Lịch học hàng tuần (${weeklyScheduled} tiết/tuần) có thể chưa đủ cho tổng số ${requiredPeriods} tiết của môn học. Hệ thống vẫn cho phép lưu nhưng bạn nên kiểm tra lại.`);
             }
         }
 

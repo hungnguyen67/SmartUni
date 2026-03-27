@@ -79,13 +79,22 @@ public class StudentService {
 
         StudentProfile profile = new StudentProfile();
         profile.setUser(user);
-        profile.setUserId(user.getId());
+        // Hibernate handles userId via @MapsId
         updateProfileFields(profile, dto);
         profile.setCreatedAt(LocalDateTime.now());
 
-        studentProfileRepository.save(profile);
-        return convertToDTO(profile);
+        try {
+            studentProfileRepository.save(profile);
+            return convertToDTO(profile);
+        } catch (Exception e) {
+            System.err.println("Error saving student profile: " + e.getMessage());
+            if (e.getCause() != null) {
+                System.err.println("Cause: " + e.getCause().getMessage());
+            }
+            throw new RuntimeException("Lỗi lưu thông tin sinh viên: " + e.getMessage());
+        }
     }
+
 
     @Transactional
     public StudentDTO updateStudent(Long id, StudentDTO dto) {
@@ -97,10 +106,15 @@ public class StudentService {
         userRepository.save(user);
 
         updateProfileFields(profile, dto);
-        studentProfileRepository.save(profile);
-
-        return convertToDTO(profile);
+        try {
+            studentProfileRepository.save(profile);
+            return convertToDTO(profile);
+        } catch (Exception e) {
+            System.err.println("Error updating student profile: " + e.getMessage());
+            throw new RuntimeException("Lỗi cập nhật sinh viên: " + e.getMessage());
+        }
     }
+
 
     @Transactional
     public void deleteStudent(Long id) {
