@@ -37,6 +37,12 @@ public class ExamScheduleService {
     @Autowired
     private CourseRegistrationRepository registrationRepository;
 
+    @Autowired
+    private LecturerProfileRepository lecturerRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
     @Transactional
     public ExamSchedule createExamSchedule(ExamScheduleCreateDTO dto) {
         Long primaryClassId = dto.getCourseClassId();
@@ -62,6 +68,14 @@ public class ExamScheduleService {
         schedule.setArrangementMode(dto.getArrangementMode());
         schedule.setIsShuffled(dto.getIsShuffled());
         schedule.setHasRollNumbers(dto.getHasRollNumbers());
+
+        if (dto.getProctorId() != null) {
+            lecturerRepository.findById(dto.getProctorId()).ifPresent(schedule::setProctor);
+        }
+        if (dto.getCreatedById() != null) {
+            userRepository.findById(dto.getCreatedById()).ifPresent(schedule::setCreatedBy);
+        }
+
         schedule.setStatus("ARRANGED");
 
         schedule = examScheduleRepository.save(schedule);
@@ -148,7 +162,6 @@ public class ExamScheduleService {
                     assignment.setExamSlot(slot);
                     assignment.setRoomName(roomName);
                     assignment.setStudent(student);
-                    assignment.setSeatNumber(String.format("%02d", seat));
                     
                     if (dto.getHasRollNumbers() != null && dto.getHasRollNumbers()) {
                         String rollNo = String.format("%s%03d", dto.getExamType().substring(0, 1), studentIndex + 1);
@@ -188,6 +201,7 @@ public class ExamScheduleService {
             info.setClassName(entity.getCourseClass().getClassName());
             info.setCurrentEnrolled(entity.getCourseClass().getCurrentEnrolled());
             if (entity.getCourseClass().getSubject() != null) {
+                info.setSubjectCode(entity.getCourseClass().getSubject().getSubjectCode());
                 info.setSubjectName(entity.getCourseClass().getSubject().getName());
             }
             if (entity.getCourseClass().getSemester() != null) {
@@ -206,6 +220,23 @@ public class ExamScheduleService {
             }).collect(Collectors.toList()));
         }
 
+        if (entity.getProctor() != null && entity.getProctor().getUser() != null) {
+            User pUser = entity.getProctor().getUser();
+            dto.setProctorName(pUser.getFullName() != null ? pUser.getFullName() : pUser.getEmail());
+            dto.setProctorCode(entity.getProctor().getLecturerCode());
+            dto.setProctorEmail(pUser.getEmail());
+        } else if (entity.getCourseClass() != null && entity.getCourseClass().getLecturer() != null) {
+            LecturerProfile lp = entity.getCourseClass().getLecturer();
+            User lUser = lp.getUser();
+            dto.setProctorName(lUser != null && lUser.getFullName() != null ? lUser.getFullName() : "Chưa phân công");
+            dto.setProctorCode(lp.getLecturerCode());
+        }
+
+        if (entity.getCreatedBy() != null) {
+            User cUser = entity.getCreatedBy();
+            dto.setCreatedByName(cUser.getFullName() != null ? cUser.getFullName() : cUser.getEmail());
+        }
+
         return dto;
     }
 
@@ -215,5 +246,40 @@ public class ExamScheduleService {
 
     public List<String> getAllAssignedKeys(Long semesterId, String examType) {
         return assignmentRepository.findAllAssignedStudentSubjectKeys(semesterId, ExamSchedule.ExamType.valueOf(examType));
+    }
+
+    public List<com.example.demo.dto.ExamScheduleDTO> getLecturerExamSchedules(Long lecturerId) {
+        java.util.Set<ExamSchedule> schedules = new java.util.HashSet<>();
+        schedules.addAll(examScheduleRepository.findByProctorUserId(lecturerId));
+        schedules.addAll(examScheduleRepository.findByCourseClassLecturerUserId(lecturerId));
+        return schedules.stream().map(this::convertToDTO).collect(Collectors.toList());
+    }
+
+    public List<com.example.demo.dto.StudentExamDTO> getStudentExamSchedules(Long studentId) {
+        return assignmentRepository.findByStudentUserId(studentId).stream()
+                .map(this::convertToStudentDTO)
+                .collect(Collectors.toList());
+    }
+
+    private com.example.demo.dto.StudentExamDTO convertToStudentDTO(ExamStudentAssignment entity) {
+        com.example.demo.dto.StudentExamDTO dto = new com.example.demo.dto.StudentExamDTO();
+        ExamSchedule schedule = entity.getExamSchedule();
+        ExamSlot slot = entity.getExamSlot();
+
+        dto.setSubjectCode(schedule.getCourseClass().getSubject().getSubjectCode());
+        dto.setSubjectName(schedule.getCourseClass().getSubject().getName());
+        dto.setExamDate(schedule.getExamDate());
+        dto.setStartTime(slot.getStartTime());
+        dto.setEndTime(slot.getEndTime());
+        dto.setExamFormat(schedule.getExamFormat());
+        dto.setRoomName(entity.getRoomName());
+        dto.setRollNumber(entity.getRollNumber());
+        dto.setStudentName(entity.getStudent().getUser().getFullName());
+        dto.setStudentCode(entity.getStudent().getStudentCode());
+        if (schedule.getCourseClass() != null && schedule.getCourseClass().getSemester() != null) {
+            dto.setSemesterId(schedule.getCourseClass().getSemester().getId());
+        }
+        
+        return dto;
     }
 }

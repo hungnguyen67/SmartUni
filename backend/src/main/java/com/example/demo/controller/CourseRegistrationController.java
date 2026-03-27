@@ -1,6 +1,5 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.CourseRegistration;
 import com.example.demo.service.CourseRegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

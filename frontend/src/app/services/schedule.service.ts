@@ -87,4 +87,12 @@ export class ScheduleService {
     finalizeAttendance(instanceId: number): Observable<void> {
         return this.http.post<void>(`${this.apiUrl}/attendance/finalize`, {}, { params: { instanceId } });
     }
+
+    getStudentExamSchedules(studentId: number): Observable<any[]> {
+        return this.http.get<any[]>(`http://localhost:8001/api/user/exam-schedules/student/${studentId}`);
+    }
+
+    getLecturerExamSchedules(lecturerId: number): Observable<any[]> {
+        return this.http.get<any[]>(`http://localhost:8001/api/user/exam-schedules/lecturer/${lecturerId}`);
+    }
 }

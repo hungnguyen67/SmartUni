@@ -101,7 +101,6 @@ public class ProfileController {
             User user = userOpt.get();
             String oldPassword = passwordData.get("oldPassword");
             String newPassword = passwordData.get("newPassword");
-            String confirmPassword = passwordData.get("confirmPassword");
 
             if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Mật khẩu cũ không chính xác"));

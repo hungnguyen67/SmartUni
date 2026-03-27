@@ -422,6 +422,39 @@
                             </div>
                         </div>
 
+                        <!-- Cán bộ coi thi -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-slate-900">Cán bộ coi thi <span
+                                    class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <button
+                                    (click)="activeDropdown = activeDropdown === 'modalProctor' ? '' : 'modalProctor'; $event.stopPropagation()"
+                                    class="w-full px-3 py-2.5 border border-slate-200 rounded-md focus:border-blue-500 outline-none transition-all text-sm appearance-none cursor-pointer text-slate-900 shadow-sm shadow-slate-100/50">
+                                    <div class="flex items-center justify-between">
+                                        <span class="truncate">{{ getModalProctorLabel() }}</span>
+                                        <i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform duration-300"
+                                            [class.rotate-90]="activeDropdown === 'modalProctor'"></i>
+                                    </div>
+                                </button>
+                                <div *ngIf="activeDropdown === 'modalProctor'"
+                                    class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                    <div (click)="selectedProctorId = null; activeDropdown = ''; $event.stopPropagation()"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                        [class.text-slate-900]="!selectedProctorId"
+                                        [class.bg-blue-50]="!selectedProctorId">
+                                        Không có
+                                    </div>
+                                    <div *ngFor="let p of lecturers"
+                                        (click)="selectedProctorId = p.id; activeDropdown = ''; $event.stopPropagation()"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                        [class.text-slate-900]="selectedProctorId === p.id"
+                                        [class.bg-blue-50]="selectedProctorId === p.id">
+                                        {{ p.firstName }} {{ p.lastName }} ({{ p.lecturerCode }})
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Ngày thi -->
                         <div class="space-y-2">
                             <label class="text-sm font-semibold text-slate-900">Ngày thi <span

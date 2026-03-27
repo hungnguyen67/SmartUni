@@ -77,9 +77,6 @@ public class MajorService {
         List<Curriculum> curriculums = curriculumRepository.findByMajorId(major.getId());
         int numberOfCurriculums = curriculums.size();
 
-        String displayStatus = major.getStatus() == com.example.demo.model.Major.Status.ACTIVE ? "Đang hoạt động"
-                : "Ngừng hoạt động";
-
         int totalCredits = 0;
         String activeCurriculumName = "-";
         int totalSubjects = 0;

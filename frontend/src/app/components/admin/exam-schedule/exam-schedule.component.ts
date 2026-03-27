@@ -1,6 +1,7 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
+import { AuthService } from '../../../auth.service';
 
 @Component({
   selector: 'app-exam-schedule',
@@ -44,6 +45,9 @@ export class ExamScheduleComponent implements OnInit {
   durationMinutes: number = 45;
   firstSlotStart: string = '07:30';
   gapDuration: number = 15;
+  lecturers: any[] = [];
+  selectedProctorId: number | null = null;
+  createdByName: string = '';
 
   arrangementMode: string = 'BY_NAME';
   isShuffled: boolean = true;
@@ -56,8 +60,9 @@ export class ExamScheduleComponent implements OnInit {
   newRoomCapacity: number = 40;
 
   isSubmitting: boolean = false;
+  currentUserId: number | null = null;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private authService: AuthService) { }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -94,6 +99,7 @@ export class ExamScheduleComponent implements OnInit {
   ngOnInit(): void {
     this.loadSchedules();
     this.loadSemesters();
+    this.loadLecturers();
 
     // Load current dates
     const today = new Date();
@@ -121,6 +127,10 @@ export class ExamScheduleComponent implements OnInit {
         this.filterSchedules();
       }
     });
+  }
+
+  loadLecturers(): void {
+    this.http.get<any[]>('http://localhost:8001/api/lecturers').subscribe(res => this.lecturers = res);
   }
 
   filterSchedules(): void {
@@ -177,6 +187,12 @@ export class ExamScheduleComponent implements OnInit {
 
   getModalExamFormatLabel(): string {
     return this.examFormat || 'Chọn hình thức';
+  }
+
+  getModalProctorLabel(): string {
+    if (!this.selectedProctorId) return 'Chọn cán bộ coi thi';
+    const p = this.lecturers.find(l => l.id === this.selectedProctorId);
+    return p ? (p.firstName + ' ' + p.lastName) : 'Chọn cán bộ coi thi';
   }
 
   getSelectedAdminClassName(): string {
@@ -260,6 +276,15 @@ export class ExamScheduleComponent implements OnInit {
       { roomName: 'VPC2-1204', capacity: 40 },
       { roomName: 'VPC2-1205', capacity: 40 }
     ];
+    // Load tên và ID người tạo từ thông tin đăng nhập
+    const user = this.authService.getUserFromStorage();
+    if (user) {
+      this.createdByName = user.fullName || user.firstName + ' ' + user.lastName || user.email || '...';
+      this.currentUserId = user.id;
+    } else {
+      this.createdByName = '...';
+      this.currentUserId = null;
+    }
     this.showModal = true;
   }
 
@@ -279,6 +304,8 @@ export class ExamScheduleComponent implements OnInit {
     this.examType = null;
     this.examFormat = null;
     this.examDate = '';
+    this.selectedProctorId = null;
+    this.createdByName = '';
 
     if (this.semesters.length > 0) {
       this.selectedSemester = this.semesters[0].id;
@@ -510,7 +537,9 @@ export class ExamScheduleComponent implements OnInit {
       arrangementMode: this.arrangementMode,
       isShuffled: this.isShuffled,
       hasRollNumbers: this.hasRollNumbers,
-      rooms: this.assignedRooms.filter((_, i) => this.selectedRoomIndexes.has(i))
+      rooms: this.assignedRooms.filter((_, i) => this.selectedRoomIndexes.has(i)),
+      proctorId: this.selectedProctorId,
+      createdById: this.currentUserId
     };
 
     this.isSubmitting = true;

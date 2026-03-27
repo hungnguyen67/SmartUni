@@ -1,0 +1,178 @@
+<div class="h-full flex flex-col space-y-6">
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200">
+
+        <div class="p-6 rounded-t-lg">
+            <div class="flex flex-wrap items-center gap-6">
+                <div class="space-y-2">
+                    <label class="text-[14px] font-medium text-slate-600">Học kỳ</label>
+                    <div class="relative w-48 sm:w-64">
+                        <button (click)="toggleDropdown('semester', $event)"
+                            class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-md flex items-center justify-between text-sm text-slate-700 focus:border-blue-500 outline-none transition-all cursor-pointer">
+                            <span>{{ selectedSemester ? selectedSemester.name : 'Chọn học kỳ' }}</span>
+                            <i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform"
+                                [class.rotate-90]="activeDropdown === 'semester'"></i>
+                        </button>
+                        <div *ngIf="activeDropdown === 'semester'"
+                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-lg shadow-md overflow-y-auto max-h-60 custom-scrollbar transform origin-top animate-in fade-in zoom-in-95 duration-200">
+                            <div (click)="selectedSemester = null; selectedSubject = null; showTable = false; activeDropdown = ''"
+                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                [class.bg-blue-50]="selectedSemester === null"
+                                [class.text-slate-900]="selectedSemester === null">
+                                Chọn học kỳ
+                            </div>
+                            <div *ngFor="let sem of semesters" (click)="onSemesterSelect(sem)"
+                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                [class.bg-blue-50]="selectedSemester?.id === sem.id"
+                                [class.text-slate-900]="selectedSemester?.id === sem.id">
+                                {{ sem.name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[14px] font-medium text-slate-600">Học phần</label>
+                    <div class="relative w-48 sm:w-64">
+                        <button (click)="toggleDropdown('subject', $event)"
+                            class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-md flex items-center justify-between text-sm text-slate-900 outline-none transition-all cursor-pointer"
+                            [class.text-slate-400]="!selectedSubject">
+                            <span class="truncate">{{ selectedSubject ? (userRole === 'LECTURER' ?
+                                selectedSubject.courseClass?.subjectName : selectedSubject.subjectName) : 'Chọn học
+                                phần' }}</span>
+                            <i class="fas fa-chevron-right text-[10px] text-slate-400 transition-transform"
+                                [class.rotate-90]="activeDropdown === 'subject'"></i>
+                        </button>
+                        <div *ngIf="activeDropdown === 'subject'"
+                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md overflow-y-auto max-h-60 custom-scrollbar transform origin-top animate-in fade-in zoom-in-95 duration-200">
+                            <div (click)="onSubjectSelect(null)"
+                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                [class.bg-blue-50]="selectedSubject === null"
+                                [class.text-slate-900]="selectedSubject === null">
+                                Chọn học phần
+                            </div>
+                            <div *ngFor="let s of semesterSubjects" (click)="onSubjectSelect(s)"
+                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                [class.bg-blue-50]="selectedSubject === s"
+                                [class.text-slate-900]="selectedSubject === s">
+                                {{ userRole === 'LECTURER' ? s.courseClass?.subjectName : s.subjectName }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading / Placeholder / Table -->
+        <div class="p-4">
+            <div class="pb-4">
+                <h2 class="text-lg font-bold text-slate-800 tracking-tight">
+                    {{ userRole === 'LECTURER' ? 'Lịch coi thi cá nhân' : 'Lịch thi cá nhân' }}
+                </h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full table-auto border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200">
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-center w-16">
+                                STT
+                            </th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                                Mã học phần
+                            </th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                                Tên học phần
+                            </th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                                Ngày thi
+                            </th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                                Thời gian thi
+                            </th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                                Hình thức
+                            </th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                                Phòng thi
+                            </th>
+                            <th *ngIf="userRole === 'STUDENT'"
+                                class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                                Số báo danh
+                            </th>
+                            <th class="px-4 py-4 text-sm font-semibold text-slate-900 text-left">
+                                Thông tin {{ userRole === 'LECTURER' ? 'Giảng viên' : 'Sinh viên' }} (Họ tên, mã số)
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        <!-- Empty/Waiting Row -->
+                        <tr *ngIf="!loading && !showTable">
+                            <td [attr.colspan]="userRole === 'STUDENT' ? 9 : 8"
+                                class="px-4 py-8 text-center text-sm text-slate-300 italic">
+                            </td>
+                        </tr>
+
+                        <!-- No data row -->
+                        <tr
+                            *ngIf="!loading && showTable && (userRole === 'LECTURER' ? filteredLecturerSchedules.length === 0 : filteredStudentSchedules.length === 0)">
+                            <td [attr.colspan]="userRole === 'STUDENT' ? 9 : 8"
+                                class="px-4 py-8 text-center text-sm text-slate-400 italic">
+                            </td>
+                        </tr>
+                        <ng-container *ngIf="showTable && userRole === 'LECTURER'">
+                            <tr *ngFor="let s of filteredLecturerSchedules; let i = index"
+                                class="hover:bg-slate-50 transition-colors">
+                                <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ i + 1 }}
+                                </td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{
+                                    s.courseClass?.subjectCode }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ s.courseClass?.subjectName
+                                    }}
+                                </td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ s.examDate |
+                                    date:'dd/MM/yyyy' }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{
+                                    s.firstSlotStart }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">
+                                    {{ s.examFormat }}
+                                </td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">
+                                    <span *ngFor="let r of s.rooms">
+                                        {{ r.roomName }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">
+                                    <span>{{ s.proctorName ||
+                                        currentUser?.fullName }}</span> - <span>{{ s.proctorCode ||
+                                        currentUser?.username }}</span>
+                                </td>
+                            </tr>
+                        </ng-container>
+
+                        <ng-container *ngIf="showTable && userRole === 'STUDENT'">
+                            <tr *ngFor="let s of filteredStudentSchedules; let i = index"
+                                class="hover:bg-slate-50 transition-colors">
+                                <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ i + 1 }}
+                                </td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ s.subjectCode }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ s.subjectName }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ s.examDate |
+                                    date:'dd/MM/yyyy' }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ s.startTime }}
+                                    - {{ s.endTime }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ s.examFormat
+                                    }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{
+                                    s.roomName }}</td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ s.rollNumber }}
+                                </td>
+                                <td class="px-4 py-4 text-sm text-slate-900 text-left">
+                                    <span>{{ s.studentName }}</span> - <span>{{ s.studentCode }}</span>
+                                </td>
+                            </tr>
+                        </ng-container>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

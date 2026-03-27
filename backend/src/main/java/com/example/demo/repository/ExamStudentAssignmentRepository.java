@@ -11,6 +11,7 @@ public interface ExamStudentAssignmentRepository extends JpaRepository<ExamStude
     List<ExamStudentAssignment> findByExamScheduleId(Long examScheduleId);
     List<ExamStudentAssignment> findByExamSlotId(Long examSlotId);
     long countByExamScheduleId(Long examScheduleId);
+    List<ExamStudentAssignment> findByStudentUserId(Long studentId);
 
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT a.student.studentCode FROM ExamStudentAssignment a " +
             "WHERE a.examSchedule.courseClass.subject.id = :subjectId " +

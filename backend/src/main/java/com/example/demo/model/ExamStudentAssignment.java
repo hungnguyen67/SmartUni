@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "exam_student_assignments", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"exam_schedule_id", "student_id"}),
-    @UniqueConstraint(columnNames = {"exam_slot_id", "room_name", "seat_number"}),
     @UniqueConstraint(columnNames = {"exam_schedule_id", "roll_number"})
 })
 public class ExamStudentAssignment {
@@ -32,15 +31,6 @@ public class ExamStudentAssignment {
 
     @Column(name = "roll_number", length = 50)
     private String rollNumber;
-
-    @Column(name = "seat_number", length = 20)
-    private String seatNumber;
-
-    @Column(name = "row_no")
-    private Integer rowNo;
-
-    @Column(name = "column_no")
-    private Integer columnNo;
 
     @Column(name = "attendance_status", length = 30)
     private String attendanceStatus = "PENDING";
@@ -76,15 +66,6 @@ public class ExamStudentAssignment {
 
     public String getRollNumber() { return rollNumber; }
     public void setRollNumber(String rollNumber) { this.rollNumber = rollNumber; }
-
-    public String getSeatNumber() { return seatNumber; }
-    public void setSeatNumber(String seatNumber) { this.seatNumber = seatNumber; }
-
-    public Integer getRowNo() { return rowNo; }
-    public void setRowNo(Integer rowNo) { this.rowNo = rowNo; }
-
-    public Integer getColumnNo() { return columnNo; }
-    public void setColumnNo(Integer columnNo) { this.columnNo = columnNo; }
 
     public String getAttendanceStatus() { return attendanceStatus; }
     public void setAttendanceStatus(String attendanceStatus) { this.attendanceStatus = attendanceStatus; }

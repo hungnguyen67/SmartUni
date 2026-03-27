@@ -15,11 +15,16 @@ public class ExamScheduleDTO {
     private String status;
     private Integer totalStudents;
     private List<RoomInfo> rooms;
+    private String proctorName;
+    private String proctorCode;
+    private String proctorEmail;
+    private String createdByName;
 
     public static class CourseClassInfo {
         private Long id;
         private String classCode;
         private String className;
+        private String subjectCode;
         private String subjectName;
         private Integer currentEnrolled;
         private Long semesterId;
@@ -31,6 +36,8 @@ public class ExamScheduleDTO {
         public void setClassCode(String classCode) { this.classCode = classCode; }
         public String getClassName() { return className; }
         public void setClassName(String className) { this.className = className; }
+        public String getSubjectCode() { return subjectCode; }
+        public void setSubjectCode(String subjectCode) { this.subjectCode = subjectCode; }
         public String getSubjectName() { return subjectName; }
         public void setSubjectName(String subjectName) { this.subjectName = subjectName; }
         public Integer getCurrentEnrolled() { return currentEnrolled; }
@@ -72,4 +79,13 @@ public class ExamScheduleDTO {
     public void setTotalStudents(Integer totalStudents) { this.totalStudents = totalStudents; }
     public List<RoomInfo> getRooms() { return rooms; }
     public void setRooms(List<RoomInfo> rooms) { this.rooms = rooms; }
+
+    public String getProctorName() { return proctorName; }
+    public void setProctorName(String proctorName) { this.proctorName = proctorName; }
+    public String getProctorCode() { return proctorCode; }
+    public void setProctorCode(String proctorCode) { this.proctorCode = proctorCode; }
+    public String getProctorEmail() { return proctorEmail; }
+    public void setProctorEmail(String proctorEmail) { this.proctorEmail = proctorEmail; }
+    public String getCreatedByName() { return createdByName; }
+    public void setCreatedByName(String createdByName) { this.createdByName = createdByName; }
 }

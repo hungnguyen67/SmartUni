@@ -2,10 +2,11 @@ import { Component, OnInit, Renderer2 } from '@angular/core';
 import { ScheduleService } from '../../../services/schedule.service';
 import { SemesterService } from '../../../services/semester.service';
 import { AuthService } from '../../../auth.service';
+import { forkJoin, map, of } from 'rxjs';
 
 @Component({
   selector: 'app-user-schedule',
-  templateUrl: './user-schedule.component.html'
+  templateUrl: './schedule.component.html'
 })
 export class UserScheduleComponent implements OnInit {
   semesters: any[] = [];
@@ -94,13 +95,21 @@ export class UserScheduleComponent implements OnInit {
       ? this.scheduleService.getLecturerSchedule(userId, this.selectedSemesterId)
       : this.scheduleService.getStudentSchedule(userId, this.selectedSemesterId);
 
-    scheduleObservable.subscribe({
-      next: (res) => {
-        this.scheduleItems = res;
+    const examObservable = this.isLecturer
+      ? this.scheduleService.getLecturerExamSchedules(userId)
+      : this.scheduleService.getStudentExamSchedules(userId);
+
+    forkJoin({
+      regular: scheduleObservable,
+      exams: examObservable
+    }).subscribe({
+      next: (result) => {
+        const normalizedExams = result.exams.map(e => this.normalizeExam(e));
+        this.scheduleItems = [...result.regular, ...normalizedExams];
         this.loading = false;
         this.updateDisplayedPeriods();
         if (this.scheduleItems.length === 0) {
-          this.errorMessage = 'Không có lịch nào trong trần này.';
+          this.errorMessage = 'Không có lịch nào trong tuần này.';
         }
       },
       error: (err) => {
@@ -109,6 +118,36 @@ export class UserScheduleComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  normalizeExam(exam: any): any {
+    const isLecturer = this.authService.getRole() === 'LECTURER';
+    return {
+      id: -1, 
+      scheduleDate: exam.examDate,
+      startTime: isLecturer ? exam.firstSlotStart : exam.startTime,
+      endTime: isLecturer ? null : exam.endTime,
+      duration: isLecturer ? exam.durationMinutes : exam.duration,
+      subjectName: isLecturer ? exam.courseClass?.subjectName : exam.subjectName,
+      roomName: isLecturer ? (exam.rooms?.map((r: any) => r.roomName).join(', ')) : exam.roomName,
+      isExam: true,
+      examFormat: exam.examFormat,
+      studentCode: exam.studentCode,
+      rollNumber: exam.rollNumber,
+      startPeriod: this.timeToPeriod(isLecturer ? exam.firstSlotStart : exam.startTime)
+    };
+  }
+
+  timeToPeriod(time: any): number {
+    if (!time) return 1;
+    const timeStr = this.formatBackendTime(time);
+    const mins = this.timeToMinutes(timeStr);
+    
+    // Logic: Find the closest period starting at or before this time
+    for (let p = 17; p >= 1; p--) {
+      if (mins >= this.timeToMinutes(this.realPeriodTimes[p])) return p;
+    }
+    return 1;
   }
 
   calculateWeekDays(): void {
@@ -305,6 +344,15 @@ export class UserScheduleComponent implements OnInit {
     if (item.endTime) {
       return this.formatBackendTime(item.endTime);
     }
+    
+    if (item.isExam && item.duration) {
+      const sMins = this.timeToMinutes(this.getStartTime(item));
+      const eMins = sMins + (item.duration || 60);
+      const h = Math.floor(eMins / 60);
+      const m = eMins % 60;
+      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    }
+
     const endPeriod = item.endPeriod;
     if (this.periodEndTimes[endPeriod]) {
       return this.periodEndTimes[endPeriod];

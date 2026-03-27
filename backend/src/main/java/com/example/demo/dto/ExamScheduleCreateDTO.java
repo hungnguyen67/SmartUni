@@ -17,6 +17,8 @@ public class ExamScheduleCreateDTO {
     private Boolean isShuffled;
     private Boolean hasRollNumbers;
     private List<RoomCapacityDTO> rooms;
+    private Long proctorId;
+    private Long createdById;
 
     public Long getCourseClassId() { return courseClassId; }
     public void setCourseClassId(Long courseClassId) { this.courseClassId = courseClassId; }
@@ -53,6 +55,12 @@ public class ExamScheduleCreateDTO {
 
     public List<RoomCapacityDTO> getRooms() { return rooms; }
     public void setRooms(List<RoomCapacityDTO> rooms) { this.rooms = rooms; }
+
+    public Long getProctorId() { return proctorId; }
+    public void setProctorId(Long proctorId) { this.proctorId = proctorId; }
+
+    public Long getCreatedById() { return createdById; }
+    public void setCreatedById(Long createdById) { this.createdById = createdById; }
 
     public static class RoomCapacityDTO {
         private String roomName;
