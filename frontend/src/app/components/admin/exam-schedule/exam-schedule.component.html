@@ -31,6 +31,31 @@
                                 <span class="font-bold text-slate-700">Bộ lọc</span>
                             </div>
                             <div class="p-4 space-y-5 min-h-[120px]">
+                                <!-- Semester Filter -->
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 text-[14px] font-medium text-slate-600">Học
+                                        kỳ</label>
+                                    <div class="relative">
+                                        <button
+                                            (click)="activeDropdown = activeDropdown === 'semester' ? '' : 'semester'; $event.stopPropagation()"
+                                            class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm appearance-none cursor-pointer text-slate-900 text-left">
+                                            {{ getSelectedSemesterFilterName() }}
+                                            <i class="fas fa-chevron-right absolute text-[10px] right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-transform duration-300"
+                                                [class.rotate-90]="activeDropdown === 'semester'"></i>
+                                        </button>
+                                        <div *ngIf="activeDropdown === 'semester'"
+                                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                            <div *ngFor="let s of semesters"
+                                                (click)="selectedSemesterFilter=s.id; filterSchedules(); activeDropdown=''"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                [class.text-slate-900]="selectedSemesterFilter === s.id"
+                                                [class.bg-blue-50]="selectedSemesterFilter === s.id">
+                                                {{ s.name }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="space-y-2">
                                     <label class="flex items-center gap-2 text-[14px] font-medium text-slate-600">
                                         Trạng thái
@@ -47,43 +72,12 @@
                                         </button>
                                         <div *ngIf="activeDropdown === 'status'"
                                             class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
-                                            <div (click)="selectedStatus=''; filterSchedules(); activeDropdown=''"
-                                                class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer">Tất cả Trạng
-                                                thái</div>
-                                            <div (click)="selectedStatus='ARRANGED'; filterSchedules(); activeDropdown=''"
-                                                class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer">Đã xếp lịch
-                                            </div>
-                                            <div (click)="selectedStatus='PUBLISHED'; filterSchedules(); activeDropdown=''"
-                                                class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer">Đã công bố
-                                            </div>
-                                            <div (click)="selectedStatus='DRAFT'; filterSchedules(); activeDropdown=''"
-                                                class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer">Bản nháp
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Semester Filter -->
-                                <div class="space-y-2">
-                                    <label class="flex items-center gap-2 text-[14px] font-medium text-slate-600">Học
-                                        kỳ</label>
-                                    <div class="relative">
-                                        <button
-                                            (click)="activeDropdown = activeDropdown === 'semester' ? '' : 'semester'; $event.stopPropagation()"
-                                            class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm appearance-none cursor-pointer text-slate-900 text-left">
-                                            {{ (selectedSemesterFilter ? 'Học kỳ ' + selectedSemesterFilter : 'Tất cả
-                                            học kỳ') }}
-                                            <i class="fas fa-chevron-right absolute text-[10px] right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-transform duration-300"
-                                                [class.rotate-90]="activeDropdown === 'semester'"></i>
-                                        </button>
-                                        <div *ngIf="activeDropdown === 'semester'"
-                                            class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
-                                            <div (click)="selectedSemesterFilter=null; filterSchedules(); activeDropdown=''"
-                                                class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer">Tất cả học kỳ
-                                            </div>
-                                            <div *ngFor="let s of semesters"
-                                                (click)="selectedSemesterFilter=s.id; filterSchedules(); activeDropdown=''"
-                                                class="px-4 py-3 text-sm hover:bg-slate-50 cursor-pointer">{{ s.name }}
+                                            <div *ngFor="let opt of [['', 'Tất cả trạng thái'], ['ARRANGED', 'Đã xếp lịch'], ['PUBLISHED', 'Đã công bố'], ['DRAFT', 'Bản nháp']]"
+                                                (click)="selectedStatus=opt[0]; filterSchedules(); activeDropdown=''"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                [class.text-slate-900]="selectedStatus === opt[0]"
+                                                [class.bg-blue-50]="selectedStatus === opt[0]">
+                                                {{ opt[1] }}
                                             </div>
                                         </div>
                                     </div>
@@ -256,14 +250,14 @@
                                 <div *ngIf="activeDropdown === 'modalCohort'"
                                     class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                                     <div (click)="selectedCohort = null; onCohortChange(); activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                         [class.text-slate-900]="selectedCohort === null"
                                         [class.bg-blue-50]="selectedCohort === null">
                                         Chọn khóa học
                                     </div>
                                     <div *ngFor="let c of cohorts"
                                         (click)="selectedCohort = c; onCohortChange(); activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                         [class.text-slate-900]="selectedCohort === c"
                                         [class.bg-blue-50]="selectedCohort === c">
                                         Khóa {{ c }}
@@ -289,14 +283,14 @@
                                 <div *ngIf="activeDropdown === 'modalSubject'"
                                     class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                                     <div (click)="selectedSubject = null; onFilterChange(); activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                         [class.text-slate-900]="selectedSubject === null"
                                         [class.bg-blue-50]="selectedSubject === null">
                                         Chọn học phần
                                     </div>
                                     <div *ngFor="let sub of subjects"
                                         (click)="selectedSubject = sub.id; onFilterChange(); activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                         [class.text-slate-900]="selectedSubject === sub.id"
                                         [class.bg-blue-50]="selectedSubject === sub.id">
                                         {{ sub.name }}
@@ -322,14 +316,14 @@
                                 <div *ngIf="activeDropdown === 'modalAdminClass'"
                                     class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                                     <div (click)="selectedAdminClass = null; onFilterChange(); activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                         [class.text-slate-900]="selectedAdminClass === null"
                                         [class.bg-blue-50]="selectedAdminClass === null">
                                         Chọn lớp học
                                     </div>
                                     <div *ngFor="let ac of adminClasses"
                                         (click)="selectedAdminClass = ac.id; onFilterChange(); activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
                                         [class.text-slate-900]="selectedAdminClass === ac.id"
                                         [class.bg-blue-50]="selectedAdminClass === ac.id">
                                         {{ ac.className }}
@@ -363,17 +357,20 @@
                                 <div *ngIf="activeDropdown === 'modalExamType'"
                                     class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                                     <div (click)="examType = 'MIDTERM'; resolveCourseClass(); activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                        [class.text-slate-900]="examType === 'MIDTERM'"
                                         [class.bg-blue-50]="examType === 'MIDTERM'">
                                         Giữa kỳ
                                     </div>
                                     <div (click)="examType = 'FINAL'; resolveCourseClass(); activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                        [class.text-slate-900]="examType === 'FINAL'"
                                         [class.bg-blue-50]="examType === 'FINAL'">
                                         Cuối kỳ
                                     </div>
                                     <div (click)="examType = 'RETAKE'; activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                        [class.text-slate-900]="examType === 'RETAKE'"
                                         [class.bg-blue-50]="examType === 'RETAKE'">
                                         Thi lại
                                     </div>
@@ -398,22 +395,26 @@
                                 <div *ngIf="activeDropdown === 'modalExamFormat'"
                                     class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
                                     <div (click)="examFormat = 'Tự luận'; activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                        [class.text-slate-900]="examFormat === 'Tự luận'"
                                         [class.bg-blue-50]="examFormat === 'Tự luận'">
                                         Tự luận
                                     </div>
                                     <div (click)="examFormat = 'Trắc nghiệm'; activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                        [class.text-slate-900]="examFormat === 'Trắc nghiệm'"
                                         [class.bg-blue-50]="examFormat === 'Trắc nghiệm'">
                                         Trắc nghiệm
                                     </div>
                                     <div (click)="examFormat = 'Vấn đáp'; activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                        [class.text-slate-900]="examFormat === 'Vấn đáp'"
                                         [class.bg-blue-50]="examFormat === 'Vấn đáp'">
                                         Vấn đáp
                                     </div>
                                     <div (click)="examFormat = 'Thực hành'; activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                        [class.text-slate-900]="examFormat === 'Thực hành'"
                                         [class.bg-blue-50]="examFormat === 'Thực hành'">
                                         Thực hành
                                     </div>
@@ -576,12 +577,14 @@
                                 <div *ngIf="activeDropdown === 'modalArrangementMode'"
                                     class="absolute z-[60] w-full bottom-full mb-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-bottom-2 duration-200 transform origin-bottom">
                                     <div (click)="arrangementMode = 'BY_NAME'; activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                        [class.text-slate-900]="arrangementMode === 'BY_NAME'"
                                         [class.bg-blue-50]="arrangementMode === 'BY_NAME'">
                                         Theo tên sinh viên
                                     </div>
                                     <div (click)="arrangementMode = 'BY_CODE'; activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                        [class.text-slate-900]="arrangementMode === 'BY_CODE'"
                                         [class.bg-blue-50]="arrangementMode === 'BY_CODE'">
                                         Theo mã sinh viên
                                     </div>

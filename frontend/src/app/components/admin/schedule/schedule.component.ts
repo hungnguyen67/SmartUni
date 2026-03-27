@@ -107,10 +107,12 @@ export class ScheduleComponent implements OnInit {
 
     loadSemesters(): void {
         this.semesterService.getAllSemesters().subscribe(res => {
-            this.semesters = res;
+            // Chỉ hiện Đang diễn ra và Sắp tới, ưu tiên Đang diễn ra lên đầu
+            this.semesters = res.filter(s => s.semesterStatus === 'ONGOING' || s.semesterStatus === 'UPCOMING')
+                .sort((a, b) => a.semesterStatus === 'ONGOING' ? -1 : 1);
+
             if (this.semesters.length > 0) {
-                const ongoing = this.semesters.find(s => s.semesterStatus === 'ONGOING');
-                this.selectedSemesterId = ongoing ? ongoing.id : this.semesters[0].id;
+                this.selectedSemesterId = this.semesters[0].id;
             }
         });
     }

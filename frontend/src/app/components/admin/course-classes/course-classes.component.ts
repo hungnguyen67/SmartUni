@@ -72,6 +72,8 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     listMajorId: number | null = null;
     listYear: number | null = null;
     listAdminClassId: number | null = null;
+    listStatus: string | null = null;
+    listStatusOptions: string[] = ['PLANNING', 'OPEN', 'ONGOING', 'CLOSED', 'CANCELLED'];
 
     selectionSearchTerm = '';
     selectionMajorId: number | null = null;
@@ -214,12 +216,12 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     }
 
     resetListFilters(): void {
+        this.listSearchTerm = '';
+        this.listMajorId = null;
         this.listYear = null;
         this.listAdminClassId = null;
-        this.listMajorId = null;
-        this.listSearchTerm = '';
-        this.loadAllClasses();
-        this.loadSubjects();
+        this.listStatus = null;
+        this.onListFilterChange();
     }
 
     refreshData(): void {
@@ -281,15 +283,15 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
 
     loadSemesters(): void {
         this.semesterService.getAllSemesters().subscribe(data => {
-            this.semesters = data;
-            const ongoing = data.find(s => s.semesterStatus === 'ONGOING');
-            if (ongoing) {
-                this.selectedSemesterId = ongoing.id;
-            } else if (data.length > 0) {
-                this.selectedSemesterId = data[0].id;
+            // Chỉ hiện Đang diễn ra và Sắp tới, ưu tiên Đang diễn ra lên đầu
+            this.semesters = data.filter(s => s.semesterStatus === 'ONGOING' || s.semesterStatus === 'UPCOMING')
+                .sort((a, b) => a.semesterStatus === 'ONGOING' ? -1 : 1);
+
+            if (this.semesters.length > 0) {
+                this.selectedSemesterId = this.semesters[0].id;
+                this.loadSubjects();
+                this.loadAllClasses();
             }
-            this.loadSubjects();
-            this.loadAllClasses();
         });
     }
 
@@ -302,8 +304,9 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     }
 
     getSelectedSemesterName(): string {
+        if (!this.selectedSemesterId) return 'Chọn học kỳ';
         const s = this.semesters.find(s => s.id == this.selectedSemesterId);
-        return s ? `${s.name} (${s.academicYear})` : 'Chưa chọn';
+        return s ? `${s.name}` : 'Chọn học kỳ';
     }
 
     loadSubjects(): void {
@@ -458,7 +461,10 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
             // Lọc theo Lớp hành chính (So khớp mã lớp - classCode)
             const matchesAdminClass = !this.listAdminClassId || c.targetClassName === selectedAdminClassCode;
 
-            return matchesSearch && matchesMajor && matchesYear && matchesAdminClass;
+            // Lọc theo Trạng thái
+            const matchesStatus = !this.listStatus || c.classStatus === this.listStatus;
+
+            return matchesSearch && matchesMajor && matchesYear && matchesAdminClass && matchesStatus;
         });
 
         // 2. Cập nhật thông tin phân trang và hiển thị
@@ -787,7 +793,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         if (payload.classStatus === 'OPEN') {
             const requiredPeriods = (payload.theoryPeriods || 0) + (payload.practicalPeriods || 0);
             const weeklyScheduled = payload.schedules.reduce((sum: number, s: any) => sum + (s.endPeriod - s.startPeriod + 1), 0);
-            
+
             // Assuming a standard 15-week semester for the validation estimate
             const estimatedTotal = weeklyScheduled * 15;
 
@@ -920,7 +926,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
             case 'ONGOING': return 'Đang học';
             case 'CLOSED': return 'Đã khóa sổ';
             case 'CANCELLED': return 'Đã hủy';
-            default: return status;
+            default: return status || 'Tất cả trạng thái';
         }
     }
 

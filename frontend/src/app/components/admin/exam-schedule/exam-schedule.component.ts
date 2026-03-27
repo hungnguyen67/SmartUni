@@ -85,6 +85,12 @@ export class ExamScheduleComponent implements OnInit {
     return map[this.selectedStatus] || 'Tất cả Trạng thái';
   }
 
+  getSelectedSemesterFilterName(): string {
+    if (!this.selectedSemesterFilter) return 'Chọn học kỳ';
+    const s = this.semesters.find(s => s.id === this.selectedSemesterFilter);
+    return s ? s.name : 'Chọn học kỳ';
+  }
+
   ngOnInit(): void {
     this.loadSchedules();
     this.loadSemesters();
@@ -103,11 +109,16 @@ export class ExamScheduleComponent implements OnInit {
 
   loadSemesters(): void {
     this.http.get<any[]>('http://localhost:8001/api/semesters').subscribe(data => {
-      this.semesters = data.filter(s => s.status === 'ONGOING' || s.semesterStatus === 'ONGOING');
+      // Chỉ hiện Đang diễn ra và Sắp tới, ưu tiên Đang diễn ra lên đầu
+      this.semesters = data.filter(s => s.semesterStatus === 'ONGOING' || s.semesterStatus === 'UPCOMING')
+        .sort((a, b) => a.semesterStatus === 'ONGOING' ? -1 : 1);
+
       // Auto-select first ongoing semester if available
-      if (this.semesters.length > 0 && !this.selectedSemester) {
+      if (this.semesters.length > 0) {
         this.selectedSemester = this.semesters[0].id;
+        this.selectedSemesterFilter = this.semesters[0].id;
         this.onSemesterChange();
+        this.filterSchedules();
       }
     });
   }
@@ -283,12 +294,16 @@ export class ExamScheduleComponent implements OnInit {
       this.http.get<any[]>(`http://localhost:8001/api/course-classes?semesterId=${this.selectedSemester}`)
         .subscribe(data => {
           this.allCourseClasses = data;
-          this.cohorts = [...new Set(data.map(c => c.cohort).filter(c => c != null))].sort((a: any, b: any) => Number(b) - Number(a));
+
+          // Chỉ lấy lớp HP đang học (ONGOING) để hiển thị trong dropdown
+          const ongoingClasses = data.filter(c => c.classStatus === 'ONGOING');
+
+          this.cohorts = [...new Set(ongoingClasses.map(c => c.cohort).filter(c => c != null))].sort((a: any, b: any) => Number(b) - Number(a));
 
           const uniqueSubjects = new Map<number, any>();
           const uniqueAdminClasses = new Map<number, any>();
 
-          data.forEach(c => {
+          ongoingClasses.forEach(c => {
             if (!uniqueSubjects.has(c.subjectId)) {
               uniqueSubjects.set(c.subjectId, { id: c.subjectId, name: c.subjectName });
             }
@@ -314,7 +329,8 @@ export class ExamScheduleComponent implements OnInit {
     this.selectedSubject = null;
     this.selectedAdminClass = null;
     if (this.selectedCohort) {
-      const filtered = this.allCourseClasses.filter(c => c.cohort == this.selectedCohort);
+      // Chỉ lấy lớp HP đang học (ONGOING) trong khóa đã chọn
+      const filtered = this.allCourseClasses.filter(c => c.cohort == this.selectedCohort && c.classStatus === 'ONGOING');
       const uniqueAdminClasses = new Map<number, any>();
       const uniqueSubjects = new Map<number, any>();
 

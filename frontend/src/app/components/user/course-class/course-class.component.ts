@@ -87,14 +87,14 @@ export class CourseClassComponent implements OnInit, OnDestroy {
 
     loadSemesters(): void {
         this.semesterService.getAllSemesters().subscribe(data => {
-            this.semesters = data;
-            const ongoing = data.find(s => s.semesterStatus === 'ONGOING');
-            if (ongoing) {
-                this.selectedSemesterId = ongoing.id;
-            } else if (data.length > 0) {
-                this.selectedSemesterId = data[0].id;
+            // Chỉ hiện Đang diễn ra và Sắp tới, ưu tiên Đang diễn ra lên đầu
+            this.semesters = data.filter(s => s.semesterStatus === 'ONGOING' || s.semesterStatus === 'UPCOMING')
+                .sort((a, b) => a.semesterStatus === 'ONGOING' ? -1 : 1);
+
+            if (this.semesters.length > 0) {
+                this.selectedSemesterId = this.semesters[0].id;
+                this.loadMyClasses();
             }
-            this.loadMyClasses();
         });
     }
 
@@ -167,12 +167,25 @@ export class CourseClassComponent implements OnInit, OnDestroy {
 
     getSelectedSemesterName(): string {
         const s = this.semesters.find(s => s.id == this.selectedSemesterId);
-        return s ? `${s.name} (${s.academicYear})` : 'Chọn học kỳ';
+        return s ? `${s.name}` : 'Chọn học kỳ';
     }
 
     getSelectedSubjectName(): string {
-        const s = this.subjects.find(s => s.id == this.selectedSubjectId);
-        return s ? s.name : 'Tất cả môn học';
+        if (!this.selectedSubjectId) return 'Chọn học phần';
+        const s = this.availableSubjects.find(s => s.subjectId == this.selectedSubjectId);
+        return s ? s.subjectName : 'Chọn học phần';
+    }
+
+    get availableSubjects(): { subjectId: number; subjectName: string }[] {
+        const map = new Map<number, string>();
+        this.allCourseClasses.forEach(c => {
+            if (c.subjectId && c.subjectName) {
+                map.set(c.subjectId, c.subjectName);
+            }
+        });
+        return Array.from(map.entries())
+            .map(([subjectId, subjectName]) => ({ subjectId, subjectName }))
+            .sort((a, b) => a.subjectName.localeCompare(b.subjectName));
     }
 
     getStatusLabel(status: string): string {
