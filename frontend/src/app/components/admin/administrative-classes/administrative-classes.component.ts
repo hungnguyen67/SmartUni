@@ -366,6 +366,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
         if (event.target === event.currentTarget) {
             this.closeMainModal();
             this.closeDeleteModal();
+            this.closeStudentModal();
         }
     }
 

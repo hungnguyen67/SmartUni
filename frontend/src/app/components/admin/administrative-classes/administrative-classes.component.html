@@ -276,7 +276,7 @@
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">
                             {{ item.classCode }}
                         </td>
-                        <td class="px-4 py-4 text-sm text-slate-900">
+                        <td class="px-4 py-4 text-sm font-medium text-slate-700">
                             <span class="hover:text-blue-700 cursor-pointer" (click)="viewClassDetails(item)">
                                 {{item.className}}
                             </span>
@@ -344,58 +344,46 @@
     </div>
 </div>
 
-<!-- Student List Modal -->
-<div *ngIf="showStudentModal" class="fixed inset-0 z-[100] flex items-center justify-center p-6">
-    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" (click)="closeStudentModal()"></div>
+<div *ngIf="showStudentModal" (mousedown)="handleBackdropClick($event)" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+    <div *ngIf="selectedClass" (mousedown)="$event.stopPropagation()"
+        class="bg-white rounded-md shadow-md w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
 
-    <div *ngIf="selectedClass"
-        class="relative w-full max-w-7xl bg-white rounded-2xl shadow-md overflow-hidden flex flex-col max-h-[95vh] animate-in zoom-in-95 duration-200 custom-scrollbar">
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 class="text-[17px] font-bold text-slate-900">
+                Lớp học: {{ selectedClass.className }}
+            </h3>
+            <button (click)="closeStudentModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
 
-        <header class="px-6 py-6 border-b border-slate-200 bg-white">
-            <div class="flex justify-between items-start">
-                <div class="space-y-3">
-                    <div class="flex items-center gap-2">
-                        <h2 class="text-[17px] font-bold text-slate-800">
-                            Lớp: {{ selectedClass.className }}
-                        </h2>
-                    </div>
-                </div>
-
-                <button (click)="closeStudentModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-        </header>
-
-        <!-- Sub-header - Advisor Info & Search -->
-        <div class="flex-shrink-0 px-6 py-4 bg-white border-b border-slate-50">
-            <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                <div class="space-y-1">
-                    <h3 class="text-sm font-bold text-slate-800">Cố vấn: {{ selectedClass.advisorName }}</h3>
-                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wider">
-                        Sĩ số: <span class="text-slate-900">{{ selectedClass.studentCount }}</span> sinh viên
+        <div class="px-6 py-5 bg-white flex justify-between items-center">
+            <div class="space-y-1">
+                <h3 class="text-[17px] font-bold text-slate-900">
+                    Cố vấn: {{ selectedClass.advisorName }}
+                </h3>
+                <div class="flex items-center gap-4">
+                    <p class="text-[15px] text-slate-800 font-medium">
+                        (Sĩ số: {{ selectedClass.studentCount }} sinh viên)
                     </p>
                 </div>
+            </div>
 
-                <div class="flex flex-col sm:flex-row items-center gap-4">
-                    <div class="relative w-full sm:w-72 group">
-                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors">
-                            <i class="fas fa-search text-sm"></i>
-                        </span>
-                        <input type="text" [(ngModel)]="studentSearchTerm" (input)="onStudentFilterChange()"
-                            placeholder="Tìm tên, mã sinh viên"
-                            class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-md outline-none transition-all text-sm focus:border-blue-500 shadow-sm">
-                    </div>
-                </div>
+            <div class="relative w-full md:w-72 group">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors">
+                    <i class="fas fa-search text-sm"></i>
+                </span>
+                <input type="text" [(ngModel)]="studentSearchTerm" (input)="onStudentFilterChange()" placeholder="Tìm tên, mã số sinh viên"
+                    class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-md outline-none transition-all text-sm focus:border-blue-500 shadow-sm">
             </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto custom-scrollbar px-6 bg-white">
-            <div class="overflow-x-auto custom-scrollbar">
+        <div class="flex-1 overflow-auto custom-scrollbar p-4 bg-white">
+            <div class="overflow-x-auto">
                 <table class="w-full table-auto border-collapse text-[13px]">
                     <thead class="sticky top-0 z-10 bg-white">
                         <tr class="bg-slate-50 border-b border-slate-200 text-slate-900">
-                            <th class="w-14 px-2 py-4 text-sm font-semibold text-center">STT</th>
+                            <th class="w-14 px-4 py-4 text-sm font-semibold text-center">STT</th>
                             <th class="w-32 px-4 py-4 text-sm font-semibold text-left whitespace-nowrap">Mã số</th>
                             <th class="w-36 px-4 py-4 text-sm font-semibold text-left">Họ đệm</th>
                             <th class="w-28 px-4 py-4 text-sm font-semibold text-left">Tên</th>
@@ -406,10 +394,10 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        <tr *ngFor="let s of pagedStudents; let i = index"
+                        <tr *ngFor="let s of filteredStudents; let i = index"
                             class="transition-colors hover:bg-slate-50/50">
-                            <td class="px-4 py-4 text-center">
-                                {{ (studentCurrentPage - 1) * studentItemsPerPage + i + 1 }}
+                            <td class="px-4 py-4 text-sm text-slate-900 text-center">
+                                {{ i + 1 }}
                             </td>
                             <td class="px-4 py-4 text-sm text-slate-900">
                                 {{ s.studentCode }}
@@ -439,24 +427,11 @@
                     </tbody>
                 </table>
             </div>
+        </div>
 
-            <div class="flex justify-between items-center p-4 border-t border-slate-100">
-                <div class="text-sm text-slate-600">
-                    Hiển thị {{studentMinEnd}} / {{studentTotalItems}} sinh viên
-                </div>
-                <div class="flex space-x-2">
-                    <button (click)="changeStudentPage(-1)" [disabled]="studentCurrentPage === 1"
-                        class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-all">Trước
-                    </button>
-                    <span class="px-3 py-1 text-sm text-slate-600 flex items-center">
-                        {{ studentCurrentPage }} / {{ studentTotalPages }}
-                    </span>
-                    <button (click)="changeStudentPage(1)" [disabled]="studentCurrentPage === studentTotalPages"
-                        class="px-3 py-1 border border-slate-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-all">
-                        Sau
-                    </button>
-                </div>
-            </div>
+        <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 rounded-b-xl">
+            <button (click)="closeStudentModal()"
+                class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all">Hủy bỏ</button>
         </div>
     </div>
 </div>
