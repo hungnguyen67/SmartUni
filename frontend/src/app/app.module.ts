@@ -38,6 +38,7 @@ import { CourseClassComponent } from './components/user/course-class/course-clas
 import { AdministrativeClassComponent } from './components/user/administrative-class/administrative-class.component';
 import { ExamScheduleComponent } from './components/admin/exam-schedule/exam-schedule.component';
 import { UserExamScheduleComponent } from './components/user/exam-schedule/exam-schedule.component';
+import { GradesComponent } from './components/user/grades/grades.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -52,7 +53,7 @@ const routes: Routes = [
       { path: '', redirectTo: 'schedule', pathMatch: 'full' },
       { path: 'curriculum', component: CurriculumComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },
       { path: 'register-course', component: RegistrationComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },
-      { path: 'grades', component: DashboardComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },
+      { path: 'grades', component: GradesComponent, canActivate: [AuthGuard], data: { role: 'STUDENT' } },
       { path: 'schedule', component: UserScheduleComponent, canActivate: [AuthGuard] },
       { path: 'course-classes', component: CourseClassComponent, canActivate: [AuthGuard], data: { role: 'LECTURER' } },
       { path: 'administrative-classes', component: AdministrativeClassComponent, canActivate: [AuthGuard], data: { role: 'LECTURER' } },
@@ -121,7 +122,8 @@ const routes: Routes = [
     CourseClassComponent,
     AdministrativeClassComponent,
     ExamScheduleComponent,
-    UserExamScheduleComponent
+    UserExamScheduleComponent,
+    GradesComponent
   ],
   imports: [
     BrowserModule,

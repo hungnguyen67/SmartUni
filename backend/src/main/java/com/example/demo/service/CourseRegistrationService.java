@@ -204,6 +204,11 @@ public class CourseRegistrationService {
                 dto.setSubjectType("Bắt buộc");
                 dto.setClassStatus(cc.getClassStatus().name());
             }
+
+            if (cc.getSemester() != null) {
+                dto.setSemesterId(cc.getSemester().getId());
+                dto.setSemesterName(cc.getSemester().getName());
+            }
         }
 
         if (reg.getStudent() != null) {

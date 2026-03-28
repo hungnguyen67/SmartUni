@@ -30,16 +30,20 @@
                             [class.rotate-90]="openMenuName === 'study'"
                             [class.text-blue-700]="isParentActive(['/home/curriculum', '/home/grades'])"></i>
                     </div>
-                    <div *ngIf="isMenuOpen('study')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
-                        <a routerLink="/home/grades" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-                            class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-                            Tra cứu điểm
-                        </a>
-                        <a routerLink="/home/curriculum"
-                            routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-                            class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-                            Chương trình học
-                        </a>
+                    <div class="grid transition-all duration-300 ease-in-out" [ngStyle]="{'grid-template-rows': isMenuOpen('study') ? '1fr' : '0fr', 'opacity': isMenuOpen('study') ? '1' : '0'}">
+                        <div class="overflow-hidden">
+                            <div class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+                                <a routerLink="/home/grades" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                                    class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                                    Tra cứu điểm
+                                </a>
+                                <a routerLink="/home/curriculum"
+                                    routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                                    class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                                    Chương trình học
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -61,12 +65,16 @@
                             [class.text-blue-700]="isParentActive(['/home/register-course'])"></i>
                     </div>
 
-                    <div *ngIf="isMenuOpen('register')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
-                        <a routerLink="/home/register-course"
-                            routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-                            class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-                            Đăng ký học phần
-                        </a>
+                    <div class="grid transition-all duration-300 ease-in-out" [ngStyle]="{'grid-template-rows': isMenuOpen('register') ? '1fr' : '0fr', 'opacity': isMenuOpen('register') ? '1' : '0'}">
+                        <div class="overflow-hidden">
+                            <div class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+                                <a routerLink="/home/register-course"
+                                    routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                                    class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                                    Đăng ký học phần
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -88,17 +96,21 @@
                             [class.text-blue-700]="isParentActive(['/home/course-classes', '/home/administrative-classes'])"></i>
                     </div>
 
-                    <div *ngIf="isMenuOpen('teaching')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
-                        <a routerLink="/home/course-classes"
-                            routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-                            class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-                            Quản lý Lớp HP
-                        </a>
-                        <a routerLink="/home/administrative-classes"
-                            routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-                            class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-                            Quản lý Lớp HC
-                        </a>
+                    <div class="grid transition-all duration-300 ease-in-out" [ngStyle]="{'grid-template-rows': isMenuOpen('teaching') ? '1fr' : '0fr', 'opacity': isMenuOpen('teaching') ? '1' : '0'}">
+                        <div class="overflow-hidden">
+                            <div class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+                                <a routerLink="/home/course-classes"
+                                    routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                                    class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                                    Quản lý Lớp HP
+                                </a>
+                                <a routerLink="/home/administrative-classes"
+                                    routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                                    class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                                    Quản lý Lớp HC
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -119,15 +131,19 @@
                             [class.rotate-90]="openMenuName === 'schedule'"
                             [class.text-blue-700]="isParentActive(['/home/schedule', '/home/exams'])"></i>
                     </div>
-                    <div *ngIf="isMenuOpen('schedule')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
-                        <a routerLink="/home/schedule" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-                            class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-                            {{ currentUser?.role === 'LECTURER' ? 'Lịch giảng dạy' : 'Lịch học' }}
-                        </a>
-                        <a routerLink="/home/exams" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-                            class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-                            {{ currentUser?.role === 'LECTURER' ? 'Lịch coi thi' : 'Lịch thi' }}
-                        </a>
+                    <div class="grid transition-all duration-300 ease-in-out" [ngStyle]="{'grid-template-rows': isMenuOpen('schedule') ? '1fr' : '0fr', 'opacity': isMenuOpen('schedule') ? '1' : '0'}">
+                        <div class="overflow-hidden">
+                            <div class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+                                <a routerLink="/home/schedule" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                                    class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                                    {{ currentUser?.role === 'LECTURER' ? 'Lịch giảng dạy' : 'Lịch học' }}
+                                </a>
+                                <a routerLink="/home/exams" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                                    class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                                    {{ currentUser?.role === 'LECTURER' ? 'Lịch coi thi' : 'Lịch thi' }}
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -159,8 +175,8 @@
                             [class.rotate-90]="isUserDropdownOpen"></i>
                     </button>
 
-                    <div *ngIf="isUserDropdownOpen"
-                        class="absolute right-0 mt-3 w-52 bg-white border border-slate-200 rounded-md shadow-md py-1.5 z-50">
+                    <div [ngClass]="isUserDropdownOpen ? 'opacity-100 scale-100 pointer-events-auto translate-y-0' : 'opacity-0 scale-95 pointer-events-none -translate-y-2'"
+                        class="absolute right-0 mt-3 w-52 bg-white border border-slate-200 rounded-md shadow-md py-1.5 z-50 transition-all duration-200 origin-top-right">
                         <div class="px-3 py-2 mb-1 border-b border-slate-50">
                             <p class="text-[13px] font-bold text-slate-800 truncate">{{ currentUser?.name }}</p>
                             <p class="text-[11px] text-slate-500 truncate mt-0.5">{{ currentUser?.email }}</p>

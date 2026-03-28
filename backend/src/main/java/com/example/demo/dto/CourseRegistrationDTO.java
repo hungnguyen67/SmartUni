@@ -30,8 +30,26 @@ public class CourseRegistrationDTO {
     private String classStatus;
     private String className;
     private String adminClassCode;
+    private Long semesterId;
+    private String semesterName;
 
     public CourseRegistrationDTO() {
+    }
+
+    public Long getSemesterId() {
+        return semesterId;
+    }
+
+    public void setSemesterId(Long semesterId) {
+        this.semesterId = semesterId;
+    }
+
+    public String getSemesterName() {
+        return semesterName;
+    }
+
+    public void setSemesterName(String semesterName) {
+        this.semesterName = semesterName;
     }
 
     public String getClassStatus() {

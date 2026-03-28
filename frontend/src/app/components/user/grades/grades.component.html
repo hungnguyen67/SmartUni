@@ -1,0 +1,226 @@
+<div class="flex flex-col lg:flex-row gap-4">
+  <aside class="w-full lg:w-[26%] xl:w-[22%] space-y-6">
+    <!-- Student Header Information -->
+    <div class="bg-white w-full max-w-[340px] rounded-xl shadow-sm border border-slate-200 p-5">
+
+      <div class="bg-slate-100 rounded-lg py-2.5 px-3 mb-6 flex justify-center items-center">
+        <span class="text-slate-900 text-[15px]">{{ studentInfo.major }}</span>
+      </div>
+
+      <div class="space-y-4">
+
+        <div class="flex items-start gap-3 text-[15px]">
+          <div class="w-6 flex justify-center text-slate-700 mt-[2px]">
+            <i class="fa-regular fa-user text-[17px]"></i>
+          </div>
+          <div class="flex-1 leading-snug">
+            <span class="inline-block w-[90px] text-slate-700">Họ tên:</span>
+            <span class="font-medium text-slate-900">{{ studentInfo.name }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 text-[15px]">
+          <div class="w-6 flex justify-center text-slate-700 mt-[2px]">
+            <i class="fa-regular fa-address-card text-[17px]"></i>
+          </div>
+          <div class="flex-1 leading-snug">
+            <span class="inline-block w-[90px] text-slate-700">Mã số:</span>
+            <span class="font-medium text-slate-900">{{ studentInfo.code }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 text-[15px]">
+          <div class="w-6 flex justify-center text-slate-700 mt-[2px]">
+            <i class="fa-regular fa-calendar text-[17px]"></i>
+          </div>
+          <div class="flex-1 leading-snug">
+            <span class="inline-block w-[90px] text-slate-700">Ngày sinh:</span>
+            <span class="font-medium text-slate-900">{{ studentInfo.birthday }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 text-[15px]">
+          <div class="w-6 flex justify-center text-slate-700 mt-[2px]">
+            <i class="fa-regular fa-user text-[17px]"></i>
+          </div>
+          <div class="flex-1 leading-snug">
+            <span class="inline-block w-[90px] text-slate-700">Giới tính:</span>
+            <span class="font-medium text-slate-900">{{ studentInfo.gender }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 text-[15px]">
+          <div class="w-6 flex justify-center text-slate-700 mt-[2px]">
+            <i class="fa-regular fa-file-lines text-[17px]"></i>
+          </div>
+          <div class="flex-1 leading-snug">
+            <span class="inline-block w-[90px] text-slate-700">Trạng thái:</span>
+            <span class="font-medium text-slate-900">{{ studentInfo.status }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3 text-[15px]">
+          <div class="w-6 flex justify-center text-slate-700 mt-[2px]">
+            <i class="fa-solid fa-users text-[17px]"></i>
+          </div>
+          <div class="flex-1 leading-snug">
+            <span class="inline-block w-[90px] text-slate-700">Lớp:</span>
+            <span class="font-medium text-slate-900">{{ studentInfo.className }}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="w-full max-w-[340px]">
+      <div class="bg-white rounded-lg shadow-sm  border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2 px-4">
+          <span class="font-bold text-slate-900 uppercase text-[15px] mt-[2px]">Tổng điểm</span>
+        </div>
+
+        <div class="flex flex-col divide-y divide-slate-200">
+          <div class="py-3 flex justify-between items-center px-4 text-[15px]">
+            <span class="text-slate-600">Tổng số tín chỉ</span>
+            <span class="text-slate-800">{{ summaryGrades.tongSoTinChi }}</span>
+          </div>
+
+          <div class="py-3 flex justify-between items-center px-4 text-[15px]">
+            <span class="text-slate-600">Tổng số tín chỉ tích lũy</span>
+            <span class="text-slate-800">{{ summaryGrades.tongSoTinChiTichLuy }}</span>
+          </div>
+
+          <div class="py-3 flex justify-between items-center px-4 text-[15px]">
+            <span class="text-slate-600">Điểm trung bình hệ 10</span>
+            <span class="text-slate-800">{{ summaryGrades.diemTrungBinhHe10 }}</span>
+          </div>
+
+          <div class="py-3 flex justify-between items-center px-4 text-[15px]">
+            <span class="text-slate-600">Điểm trung bình hệ 4</span>
+            <span class="text-slate-800">{{ summaryGrades.diemTrungBinhHe4 }}</span>
+          </div>
+
+          <div class="py-3 flex justify-between items-center px-4 text-[15px]">
+            <span class="text-slate-600">Điểm trung bình tích lũy hệ 10</span>
+            <span class="text-slate-800">{{ summaryGrades.diemTrungBinhTichLuyHe10 }}</span>
+          </div>
+
+          <div class="py-3 flex justify-between items-center px-4 text-[15px]">
+            <span class="text-slate-600">Điểm trung bình tích lũy hệ 4</span>
+            <span class="text-slate-800">{{ summaryGrades.diemTrungBinhTichLuyHe4 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="w-full lg:w-[74%] xl:w-[78%]">
+    <div class="bg-white rounded-xl shadow-sm rounded-tl-none border border-slate-200 overflow-hidden">
+
+      <div class="p-4 sm:p-6" *ngIf="activeTab === 'bang-diem'">
+        <!-- Loading State -->
+        <div *ngIf="loading" class="flex flex-col items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p class="text-slate-500 font-medium">Đang tải dữ liệu bảng điểm...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loading && semesterData.length === 0"
+          class="flex flex-col items-center justify-center py-12 text-center">
+          <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+            <i class="fa-solid fa-folder-open text-slate-300 text-3xl"></i>
+          </div>
+          <h3 class="text-slate-600 font-bold text-lg">Chưa có dữ liệu bảng điểm</h3>
+          <p class="text-slate-400 max-w-sm">Hiện tại hệ thống chưa ghi nhận kết quả học tập nào cho sinh viên này.</p>
+        </div>
+
+        <!-- Semester Grades Loop -->
+        <div *ngIf="!loading && semesterData.length > 0">
+          <div *ngFor="let semester of semesterData" class="mb-8 last:mb-0">
+            <div class="flex items-center gap-2 mb-4 text-slate-900 font-bold text-[16px]">
+              <i class="fa-regular text-[18px] mt-[1px] cursor-pointer"
+                [ngClass]="semester.isExpanded ? 'fa-arrow-alt-circle-down' : 'fa-arrow-alt-circle-right'"
+                (click)="semester.isExpanded = !semester.isExpanded"></i>
+              <h3 class="cursor-pointer hover:opacity-80 transition-opacity"
+                (click)="semester.isExpanded = !semester.isExpanded">
+                {{ formatSemesterName(semester.semesterName) }}
+              </h3>
+            </div>
+
+            <div class="grid transition-all duration-500 ease-in-out"
+              [ngStyle]="{'grid-template-rows': semester.isExpanded ? '1fr' : '0fr', 'opacity': semester.isExpanded ? '1' : '0', 'margin-bottom': semester.isExpanded ? '0' : '-16px'}">
+              <div class="overflow-hidden">
+                <div class="overflow-x-auto pt-1">
+                  <table class="w-full table-auto border-collapse text-[13px]">
+                    <thead class="sticky top-0 z-10 bg-white">
+                      <tr class="bg-slate-50 border-b border-slate-200 text-slate-900">
+                        <th class="px-4 py-4 text-sm font-semibold text-center w-12">STT</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-left">Mã HP</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-left">Tên học phần</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-center">STC</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-center">Lần học</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-center">Lần thi</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-center">Hệ 10</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-center">Hệ 4</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-center">Chữ</th>
+                        <th class="px-4 py-4 text-sm font-semibold text-center">Đánh giá</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                      <tr *ngFor="let item of semester.items" class="transition-colors">
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ item.stt }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900">{{ item.maHocPhan }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900">{{ item.tenHocPhan }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ item.soTinChi }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ item.lanHoc }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ item.lanThi }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ item.diemHe10 }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ item.diemHe4 }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ item.diemChu }}</td>
+                        <td class="px-4 py-4 text-sm text-slate-900 text-center">
+                          <span [class.text-slate-900]="item.danhGia === 'Đạt'"
+                            [class.text-slate-900]="item.danhGia === 'Không đạt'">{{ item.danhGia
+                            }}</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="mt-4 p-4 flex flex-wrap gap-x-16 gap-y-4">
+                  <div class="flex flex-col space-y-2 flex-1">
+                    <div class="flex justify-between text-sm">
+                      <span class="text-slate-500">Tổng tín chỉ:</span>
+                      <span class="font-medium text-slate-900">{{ semester.tongTinChi }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                      <span class="text-slate-500">Điểm trung bình hệ 10:</span>
+                      <span class="font-medium text-slate-900">{{ semester.diemTrungBinhHe10 }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                      <span class="text-slate-500">Điểm trung bình tích lũy hệ 10:</span>
+                      <span class="font-medium text-slate-900">{{ semester.diemTrungBinhTichLuyHe10 }}</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col space-y-2 flex-1">
+                    <div class="flex justify-between text-sm">
+                      <span class="text-slate-500">Tổng số tín chỉ tích lũy:</span>
+                      <span class="font-medium text-slate-900">{{ semester.tongTinChiTichLuy }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                      <span class="text-slate-500">Điểm trung bình hệ 4:</span>
+                      <span class="font-medium text-slate-900">{{ semester.diemTrungBinhHe4 }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                      <span class="text-slate-500">Điểm trung bình tích lũy hệ 4:</span>
+                      <span class="font-medium text-slate-900">{{ semester.diemTrungBinhTichLuyHe4 }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

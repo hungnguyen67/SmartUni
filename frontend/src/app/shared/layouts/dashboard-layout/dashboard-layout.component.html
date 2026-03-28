@@ -38,11 +38,15 @@
               [class.rotate-90]="openMenuName === 'users'"
               [class.text-blue-700]="isGroupActive(['/dashboard/users'])"></i>
           </div>
-          <div *ngIf="isMenuOpen('users')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
-            <a routerLink="/dashboard/users" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Quản lý Tài khoản
-            </a>
+          <div class="grid transition-all duration-300 ease-in-out" [ngStyle]="{'grid-template-rows': isMenuOpen('users') ? '1fr' : '0fr', 'opacity': isMenuOpen('users') ? '1' : '0'}">
+            <div class="overflow-hidden">
+              <div class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+                <a routerLink="/dashboard/users" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Quản lý Tài khoản
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -66,25 +70,29 @@
               [class.text-blue-700]="isGroupActive(['/dashboard/faculties', '/dashboard/programs', '/dashboard/subjects', '/dashboard/curriculum', '/dashboard/curriculums', '/dashboard/training-programs'])"></i>
           </div>
 
-          <div *ngIf="isMenuOpen('academic')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
-            <a routerLink="/dashboard/faculties" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Quản lý Khoa
-            </a>
-            <a routerLink="/dashboard/programs"
-              [ngClass]="isGroupActive(['/dashboard/programs', '/dashboard/curriculums']) ? '!text-blue-700 bg-blue-50/50 !border-blue-500' : ''"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Quản lý Ngành
-            </a>
-            <a routerLink="/dashboard/subjects" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Quản lý Học phần
-            </a>
-            <a routerLink="/dashboard/training-programs"
-              routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Chương trình đào tạo
-            </a>
+          <div class="grid transition-all duration-300 ease-in-out" [ngStyle]="{'grid-template-rows': isMenuOpen('academic') ? '1fr' : '0fr', 'opacity': isMenuOpen('academic') ? '1' : '0'}">
+            <div class="overflow-hidden">
+              <div class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+                <a routerLink="/dashboard/faculties" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Quản lý Khoa
+                </a>
+                <a routerLink="/dashboard/programs"
+                  [ngClass]="isGroupActive(['/dashboard/programs', '/dashboard/curriculums']) ? '!text-blue-700 bg-blue-50/50 !border-blue-500' : ''"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Quản lý Ngành
+                </a>
+                <a routerLink="/dashboard/subjects" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Quản lý Học phần
+                </a>
+                <a routerLink="/dashboard/training-programs"
+                  routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Chương trình đào tạo
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -106,20 +114,24 @@
               [class.text-blue-700]="isGroupActive(['/dashboard/students', '/dashboard/lecturers', '/dashboard/administrative-classes'])"></i>
           </div>
 
-          <div *ngIf="isMenuOpen('profiles')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
-            <a routerLink="/dashboard/lecturers" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Quản lý Giảng viên
-            </a>
-            <a routerLink="/dashboard/administrative-classes"
-              routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Quản lý Lớp HC
-            </a>
-            <a routerLink="/dashboard/students" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Quản lý Sinh viên
-            </a>
+          <div class="grid transition-all duration-300 ease-in-out" [ngStyle]="{'grid-template-rows': isMenuOpen('profiles') ? '1fr' : '0fr', 'opacity': isMenuOpen('profiles') ? '1' : '0'}">
+            <div class="overflow-hidden">
+              <div class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+                <a routerLink="/dashboard/lecturers" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Quản lý Giảng viên
+                </a>
+                <a routerLink="/dashboard/administrative-classes"
+                  routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Quản lý Lớp HC
+                </a>
+                <a routerLink="/dashboard/students" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Quản lý Sinh viên
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -141,23 +153,27 @@
               [class.text-blue-700]="isGroupActive(['/dashboard/semesters', '/dashboard/sections', '/dashboard/schedules', '/dashboard/exams'])"></i>
           </div>
 
-          <div *ngIf="isMenuOpen('operation')" class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
-            <a routerLink="/dashboard/semesters" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Quản lý Học kỳ
-            </a>
-            <a routerLink="/dashboard/sections" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Quản lý Lớp HP
-            </a>
-            <a routerLink="/dashboard/schedules" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Quản lý Lịch học
-            </a>
-            <a routerLink="/dashboard/exams" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
-              class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
-              Quản lý Lịch thi
-            </a>
+          <div class="grid transition-all duration-300 ease-in-out" [ngStyle]="{'grid-template-rows': isMenuOpen('operation') ? '1fr' : '0fr', 'opacity': isMenuOpen('operation') ? '1' : '0'}">
+            <div class="overflow-hidden">
+              <div class="ml-[23px] mt-1 border-l-2 border-slate-200 space-y-1">
+                <a routerLink="/dashboard/semesters" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Quản lý Học kỳ
+                </a>
+                <a routerLink="/dashboard/sections" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Quản lý Lớp HP
+                </a>
+                <a routerLink="/dashboard/schedules" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Quản lý Lịch học
+                </a>
+                <a routerLink="/dashboard/exams" routerLinkActive="!text-blue-700 bg-blue-50/50 !border-blue-500"
+                  class="flex items-center pl-6 py-2 text-[13px] text-slate-600 font-semibold hover:text-blue-600 transition-all relative -ml-[2px] border-l-2 border-transparent">
+                  Quản lý Lịch thi
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -190,8 +206,8 @@
               [class.rotate-90]="isUserDropdownOpen"></i>
           </button>
 
-          <div *ngIf="isUserDropdownOpen"
-            class="absolute right-0 mt-3 w-52 bg-white border border-slate-200 rounded-md shadow-md py-1.5 z-50">
+          <div [ngClass]="isUserDropdownOpen ? 'opacity-100 scale-100 pointer-events-auto translate-y-0' : 'opacity-0 scale-95 pointer-events-none -translate-y-2'"
+            class="absolute right-0 mt-3 w-52 bg-white border border-slate-200 rounded-md shadow-md py-1.5 z-50 transition-all duration-200 origin-top-right">
             <div class="px-3 py-2 mb-1 border-b border-slate-50">
               <p class="text-[13px] font-bold text-slate-800 truncate">{{ currentUser?.name }}</p>
               <p class="text-[11px] text-slate-500 truncate mt-0.5">{{ currentUser?.email }}</p>
