@@ -56,7 +56,7 @@ public class CourseRegistrationService {
         Set<Long> affectedStudentIds = new HashSet<>();
         for (com.example.demo.dto.CourseRegistrationDTO dto : dtos) {
             CourseRegistration reg = registrationRepository.findById(dto.getId())
-                    .orElseThrow(() -> new RuntimeException("Registration not found"));
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy đăng ký"));
             
             // Check if class is already CLOSED
             if (reg.getCourseClass().getClassStatus() == CourseClass.ClassStatus.CLOSED) {
@@ -85,7 +85,7 @@ public class CourseRegistrationService {
     @Transactional
     public void lockGrades(Long classId) {
         CourseClass cc = courseClassRepository.findById(classId)
-                .orElseThrow(() -> new RuntimeException("Course class not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp học phần"));
         
         // Stage 5: Khóa sổ (CLOSED)
         cc.setClassStatus(CourseClass.ClassStatus.CLOSED);
@@ -230,21 +230,21 @@ public class CourseRegistrationService {
     @Transactional
     public com.example.demo.dto.CourseRegistrationDTO register(Long studentId, Long classId) {
         CourseClass cc = courseClassRepository.findById(classId)
-                .orElseThrow(() -> new RuntimeException("Course class not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp học phần"));
 
         if (!cc.getAllowRegister()) {
-            throw new RuntimeException("Class is not open for registration");
+            throw new RuntimeException("Lớp chưa mở đăng ký");
         }
 
         if (cc.getCurrentEnrolled() >= cc.getMaxStudents()) {
-            throw new RuntimeException("Class is full");
+            throw new RuntimeException("Lớp đã đầy");
         }
 
         StudentProfile student = studentProfileRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student profile not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin sinh viên"));
 
         if (registrationRepository.findByCourseClassIdAndStudentUserId(classId, studentId).isPresent()) {
-            throw new RuntimeException("Already registered for this class");
+            throw new RuntimeException("Đã đăng ký lớp này rồi");
         }
 
         CourseRegistration reg = new CourseRegistration();
@@ -263,7 +263,7 @@ public class CourseRegistrationService {
     @Transactional
     public void drop(Long registrationId) {
         CourseRegistration reg = registrationRepository.findById(registrationId)
-                .orElseThrow(() -> new RuntimeException("Registration not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đăng ký"));
 
         registrationRepository.delete(reg);
         

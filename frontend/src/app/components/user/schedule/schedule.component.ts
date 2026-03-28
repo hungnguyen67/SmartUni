@@ -2,6 +2,7 @@ import { Component, OnInit, Renderer2 } from '@angular/core';
 import { ScheduleService } from '../../../services/schedule.service';
 import { SemesterService } from '../../../services/semester.service';
 import { AuthService } from '../../../auth.service';
+import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
 import { forkJoin, map, of } from 'rxjs';
 
 @Component({
@@ -49,7 +50,8 @@ export class UserScheduleComponent implements OnInit {
     private scheduleService: ScheduleService,
     private semesterService: SemesterService,
     private authService: AuthService,
-    private renderer: Renderer2
+    private renderer: Renderer2,
+    private flashMessageService: FlashMessageService
   ) { }
 
   ngOnInit(): void {
@@ -538,25 +540,32 @@ export class UserScheduleComponent implements OnInit {
 
   onOpenAttendance(): void {
     if (!this.attendanceCodeInput.trim()) {
-      alert('Vui lòng nhập mã điểm danh!');
+      this.flashMessageService.warning('Vui lòng nhập mã điểm danh!');
       return;
     }
     this.scheduleService.openAttendance(this.selectedSession.id, this.attendanceCodeInput).subscribe({
-      next: () => alert('Đã mở điểm danh tự động!'),
-      error: (err) => alert('Lỗi: ' + (err.error?.message || err.message))
+      next: () => this.flashMessageService.success('Đã mở điểm danh tự động!'),
+      error: (err) => this.flashMessageService.error('Lỗi: ' + (err.error?.message || err.message))
     });
   }
 
   onFinalizeAutoAttendance(): void {
-    if (!confirm('Bạn có chắc chắn muốn chốt danh sách điểm danh? Những sinh viên chưa điểm danh sẽ bị đánh vắng.')) {
+    if (!this.selectedSession?.attendanceCode) {
+      this.flashMessageService.warning('Bạn chưa lưu từ khóa điểm danh! Vui lòng nhập mã và nhấn "Lưu từ khóa" trước.');
       return;
     }
+
+    if (this.attendanceCodeInput !== this.selectedSession.attendanceCode) {
+      this.flashMessageService.warning('Từ khóa điểm danh vừa thay đổi chưa được lưu. Hãy nhấn "Lưu từ khóa" trước khi chốt!');
+      return;
+    }
+
     this.scheduleService.finalizeAttendance(this.selectedSession.id).subscribe({
       next: () => {
-        alert('Chốt danh sách thành công!');
+        this.flashMessageService.success('Chốt danh sách thành công!');
         this.openSessionDetail(this.selectedSession.id);
       },
-      error: (err) => alert('Lỗi: ' + (err.error?.message || err.message))
+      error: (err) => this.flashMessageService.error('Lỗi: ' + (err.error?.message || err.message))
     });
   }
 
@@ -572,26 +581,26 @@ export class UserScheduleComponent implements OnInit {
       records: records
     }).subscribe({
       next: () => {
-        alert('Lưu điểm danh thành công!');
+        this.flashMessageService.success('Lưu điểm danh thành công!');
         this.openSessionDetail(this.selectedSession.id);
       },
-      error: (err) => alert('Lỗi: ' + (err.error?.message || err.message))
+      error: (err) => this.flashMessageService.error('Lỗi: ' + (err.error?.message || err.message))
     });
   }
 
   onSelfAttend(): void {
     if (!this.attendanceCodeForStudents.trim()) {
-      alert('Vui lòng nhập mã điểm danh!');
+      this.flashMessageService.warning('Vui lòng nhập mã điểm danh!');
       return;
     }
     const user = this.authService.getUserFromStorage();
     this.scheduleService.selfAttend(this.attendanceCodeForStudents, user.studentId || user.id, this.selectedSession.id).subscribe({
       next: () => {
-        alert('Điểm danh thành công!');
+        this.flashMessageService.success('Điểm danh thành công!');
         // Refresh to show "✓ (Tiết ...)"
         this.openSessionDetail(this.selectedSession.id);
       },
-      error: (err) => alert('Lỗi: ' + (err.error?.message || err.message))
+      error: (err) => this.flashMessageService.error('Lỗi: ' + (err.error?.message || err.message))
     });
   }
 }

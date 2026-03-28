@@ -40,14 +40,41 @@ public class ExamScheduleController {
     public ResponseEntity<java.util.List<String>> getAssignedStudentCodes(
             @RequestParam Long subjectId,
             @RequestParam Long semesterId,
-            @RequestParam String examType) {
-        return ResponseEntity.ok(examScheduleService.getAssignedStudentCodes(subjectId, semesterId, examType));
+            @RequestParam String examType,
+            @RequestParam(required = false) Long excludeScheduleId) {
+        return ResponseEntity.ok(examScheduleService.getAssignedStudentCodes(subjectId, semesterId, examType, excludeScheduleId));
     }
 
     @GetMapping("/assigned-keys")
     public ResponseEntity<java.util.List<String>> getAllAssignedKeys(
             @RequestParam Long semesterId,
-            @RequestParam String examType) {
-        return ResponseEntity.ok(examScheduleService.getAllAssignedKeys(semesterId, examType));
+            @RequestParam String examType,
+            @RequestParam(required = false) Long excludeScheduleId) {
+        return ResponseEntity.ok(examScheduleService.getAllAssignedKeys(semesterId, examType, excludeScheduleId));
+    }
+
+    @GetMapping("/{id}/details")
+    public ResponseEntity<com.example.demo.dto.ExamScheduleDTO> getScheduleDetails(@PathVariable Long id) {
+        return ResponseEntity.ok(examScheduleService.getScheduleDetails(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteSchedule(@PathVariable Long id) {
+        try {
+            examScheduleService.deleteSchedule(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(java.util.Collections.singletonMap("message", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateSchedule(@PathVariable Long id, @RequestBody ExamScheduleCreateDTO dto) {
+        try {
+            examScheduleService.updateSchedule(id, dto);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(java.util.Collections.singletonMap("message", e.getMessage()));
+        }
     }
 }

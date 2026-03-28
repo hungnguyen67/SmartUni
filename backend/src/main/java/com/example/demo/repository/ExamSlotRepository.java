@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface ExamSlotRepository extends JpaRepository<ExamSlot, Long> {
     List<ExamSlot> findByExamScheduleId(Long scheduleId);
+    void deleteByExamScheduleId(Long scheduleId);
 }

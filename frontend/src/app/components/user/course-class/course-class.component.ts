@@ -4,6 +4,7 @@ import { Semester, SemesterService } from '../../../services/semester.service';
 import { AuthService } from '../../../auth.service';
 import { RegistrationService } from '../../../services/registration.service';
 import { SubjectService, SubjectDTO } from '../../../services/subject.service';
+import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -50,7 +51,8 @@ export class CourseClassComponent implements OnInit, OnDestroy {
         private semesterService: SemesterService,
         private subjectService: SubjectService,
         private authService: AuthService,
-        private registrationService: RegistrationService
+        private registrationService: RegistrationService,
+        private flashMessage: FlashMessageService
     ) { }
 
     ngOnInit(): void {
@@ -313,51 +315,60 @@ export class CourseClassComponent implements OnInit, OnDestroy {
         this.registrationService.updateGrades(this.registrations).subscribe({
             next: () => {
                 this.isSavingGrades = false;
-                alert('Đã tính toán và lưu điểm thành công cho toàn bộ lớp!');
+                this.flashMessage.success('Đã tính toán và lưu điểm thành công cho toàn bộ lớp!');
             },
             error: (err) => {
                 console.error('Error saving grades', err);
                 this.isSavingGrades = false;
-                alert('Lỗi khi lưu điểm!');
+                this.flashMessage.error('Lỗi khi lưu điểm!');
             }
         });
     }
 
     startTeaching(cc: any): void {
-        if (confirm(`BẮT ĐẦU GIẢNG DẠY LỚP: ${cc.className}?\n\n- Toàn bộ SV đăng ký sẽ được chuyển sang trạng thái STUDYING.\n- Khóa cổng đăng ký của lớp.`)) {
-            this.isUpdatingStatus = true;
-            this.courseClassService.updateStatus(cc.id, 'ONGOING').subscribe({
-                next: () => {
-                    cc.classStatus = 'ONGOING';
-                    this.isUpdatingStatus = false;
-                    alert('Lớp đã bắt đầu giảng dạy!');
-                },
-                error: (err: any) => {
-                    console.error('Error starting teaching', err);
-                    this.isUpdatingStatus = false;
-                    alert('Lỗi hệ thống!');
-                }
-            });
-        }
+        this.isUpdatingStatus = true;
+        this.courseClassService.updateStatus(cc.id, 'ONGOING').subscribe({
+            next: () => {
+                cc.classStatus = 'ONGOING';
+                this.isUpdatingStatus = false;
+                this.flashMessage.success('Lớp đã bắt đầu giảng dạy!');
+            },
+            error: (err: any) => {
+                console.error('Error starting teaching', err);
+                this.isUpdatingStatus = false;
+                this.flashMessage.error('Lỗi hệ thống!');
+            }
+        });
     }
 
     lockGrades(): void {
         if (!this.selectedClassForGrades) return;
-        if (confirm('BẠN CÓ CHẮC CHẮN MUỐN XÁC NHẬN & CHỐT ĐIỂM?\n\n- Trạng thái lớp sẽ chuyển sang CLOSED.\n- Trạng thái sinh viên sẽ chuyển sang COMPLETED.\n- Mọi dữ liệu điểm sẽ bị KHÓA, không thể chỉnh sửa.')) {
-            this.registrationService.lockGrades(this.selectedClassForGrades.id).subscribe({
-                next: () => {
-                    if (this.selectedClassForGrades) {
-                        this.selectedClassForGrades.classStatus = 'CLOSED';
-                    }
-                    alert('Đã xác nhận & khóa sổ bảng điểm thành công!');
-                    this.closeGradeModal();
-                    this.loadMyClasses(); // Refresh list to see updated status
-                },
-                error: (err) => {
-                    console.error('Error locking grades', err);
-                    alert('Lỗi hệ thống khi chốt điểm!');
-                }
-            });
+
+        // Kiểm tra xem đã đủ 3 đầu điểm cho toàn bộ SV chưa
+        const hasMissingScores = this.registrations.some(reg => 
+            reg.attendanceScore == null || 
+            reg.midtermScore == null || 
+            reg.finalScore == null
+        );
+
+        if (hasMissingScores) {
+            this.flashMessage.warning('Vui lòng nhập đầy đủ cả 3 đầu điểm (CC, GK, CK) cho tất cả sinh viên trước khi chốt!');
+            return;
         }
+
+        this.registrationService.lockGrades(this.selectedClassForGrades.id).subscribe({
+            next: () => {
+                if (this.selectedClassForGrades) {
+                    this.selectedClassForGrades.classStatus = 'CLOSED';
+                }
+                this.flashMessage.success('Đã xác nhận & khóa sổ bảng điểm thành công!');
+                this.closeGradeModal();
+                this.loadMyClasses();
+            },
+            error: (err) => {
+                console.error('Error locking grades', err);
+                this.flashMessage.error('Lỗi hệ thống khi chốt điểm!');
+            }
+        });
     }
 }

@@ -862,6 +862,12 @@ export class ScheduleComponent implements OnInit {
     }
 
     onDragStart(event: DragEvent, courseClass: CourseClass): void {
+        const remaining = this.getRemainingPeriods(courseClass);
+        if (remaining <= 0) {
+            event.preventDefault();
+            return;
+        }
+
         this.draggedCourseClass = courseClass;
         if (event.dataTransfer) {
             event.dataTransfer.effectAllowed = 'copy';
@@ -899,10 +905,8 @@ export class ScheduleComponent implements OnInit {
         }
 
         if (this.draggedCourseClass) {
-            const currentWeek = this.getCurrentWeek();
-            const patternLength = 3;
             const remaining = this.getRemainingPeriods(this.draggedCourseClass);
-            if (remaining < patternLength) {
+            if (remaining <= 0) {
                 return false;
             }
         }
@@ -922,8 +926,28 @@ export class ScheduleComponent implements OnInit {
 
     onDrop(event: DragEvent, day: any, periodNumber: number): void {
         event.preventDefault();
+
         const courseClassJson = event.dataTransfer?.getData('courseClass');
         const moveItemJson = event.dataTransfer?.getData('moveItem');
+
+        if (courseClassJson) {
+            const courseClass: any = JSON.parse(courseClassJson);
+            // Re-verify the class state from the current local 'classes' list to get fresh count
+            const freshClassState = this.classes.find(c => c.id === courseClass.id);
+            if (freshClassState) {
+                const remaining = this.getRemainingPeriods(freshClassState);
+                if (remaining <= 0) {
+                    this.flashMessage.warning('Học phần này đã xếp đủ số tiết!');
+                    this.draggedCourseClass = null;
+                    return;
+                }
+            }
+        }
+
+        if (!this.canDrop(day.isoDate, periodNumber)) {
+            this.draggedCourseClass = null;
+            return;
+        }
 
         this.draggedCourseClass = null;
 
@@ -936,6 +960,26 @@ export class ScheduleComponent implements OnInit {
         } else if (moveItemJson) {
             const item = JSON.parse(moveItemJson);
             this.rescheduleItem(item, day, periodNumber);
+        }
+    }
+
+    onBacklogDrop(event: DragEvent): void {
+        event.preventDefault();
+        const moveItemJson = event.dataTransfer?.getData('moveItem');
+        if (moveItemJson) {
+            const item = JSON.parse(moveItemJson);
+            if (item.patternId) {
+                this.scheduleService.deletePattern(item.patternId).subscribe({
+                    next: () => {
+                        this.flashMessage.success('Hủy buổi học thành công!');
+                        if (this.selectedScheduleItem?.id === item.id) {
+                            this.selectedScheduleItem = null;
+                        }
+                        this.loadScheduleForAdminClass();
+                    },
+                    error: (err) => this.flashMessage.handleError(err)
+                });
+            }
         }
     }
 
@@ -952,12 +996,20 @@ export class ScheduleComponent implements OnInit {
             toWeek: currentWeek !== null ? currentWeek : 1
         };
 
+        // Tìm lớp trong danh sách và kiểm tra giới hạn tiết học
         const courseClass = this.classes.find(c => c.id === classId);
         if (courseClass && !isReschedule) {
             const remaining = this.getRemainingPeriods(courseClass);
+            if (remaining <= 0) {
+                this.flashMessage.warning('Học phần này đã xếp đủ số tiết!');
+                return;
+            }
+            
+            // Nếu số tiết còn lại ít hơn thời lượng buổi học định xếp (mặc định 3 tiết),
+            // ta sẽ tự động co ngắn buổi học lại cho vừa với số tiết còn lại.
             const duration = (pattern.endPeriod - pattern.startPeriod + 1);
             if (remaining < duration) {
-                return;
+                pattern.endPeriod = pattern.startPeriod + remaining - 1;
             }
         }
 
@@ -1046,6 +1098,20 @@ export class ScheduleComponent implements OnInit {
 
     onPeriodMouseEnter(period: number): void {
         if (this.isResizing && this.resizingItem) {
+            // "Kéo xuống" = tăng số tiết. 
+            // Nếu bạn đang định tăng thêm N tiết, nhưng lớp chỉ còn lại M tiết (M < N), thì không cho tăng nữa.
+            if (period > (this.resizingItemObject?.endPeriod || 0)) {
+                const courseClass = this.classes.find(c => c.id === this.resizingItem.classId);
+                if (courseClass) {
+                    const remaining = this.getRemainingPeriods(courseClass);
+                    const additionalPeriods = period - (this.resizingItemObject?.endPeriod || 0);
+                    
+                    if (additionalPeriods > remaining) {
+                        return; // Chặn không cho kéo xuống quá số tiết còn lại
+                    }
+                }
+            }
+
             if (period >= this.resizingItem.startPeriod) {
                 this.newEndPeriod = period;
                 this.resizingItem.endPeriod = period;

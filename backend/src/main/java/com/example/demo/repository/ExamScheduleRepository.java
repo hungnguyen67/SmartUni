@@ -11,4 +11,5 @@ public interface ExamScheduleRepository extends JpaRepository<ExamSchedule, Long
     List<ExamSchedule> findByCourseClassId(Long courseClassId);
     List<ExamSchedule> findByProctorUserId(Long proctorId);
     List<ExamSchedule> findByCourseClassLecturerUserId(Long lecturerId);
+    List<ExamSchedule> findByRoomsProctorUserId(Long lecturerId);
 }

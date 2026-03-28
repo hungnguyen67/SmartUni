@@ -152,13 +152,15 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
         }
     }
 
-    handleBackdropClick(event: MouseEvent): void {
+    handleBackdropClick(event: MouseEvent, type: string): void {
         if (event.target === event.currentTarget) {
-            this.closeModal();
-            this.closeDetailModal();
-            this.isDeleteModalOpen = false;
-            this.isSelectionModalOpen = false;
-            this.isBatchConfirmModalOpen = false;
+            switch (type) {
+                case 'main': this.closeModal(); break;
+                case 'detail': this.closeDetailModal(); break;
+                case 'delete': this.isDeleteModalOpen = false; break;
+                case 'selection': this.closeSelectionModal(); break;
+                case 'batchConfirm': this.isBatchConfirmModalOpen = false; break;
+            }
         }
     }
 

@@ -312,7 +312,7 @@
 </div>
 
 <!-- Modal: Tạo/Sửa lớp (Standard Admin Style) -->
-<div *ngIf="isModalOpen" (mousedown)="handleBackdropClick($event)"
+<div *ngIf="isModalOpen" (mousedown)="handleBackdropClick($event, 'main')"
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
     <div (mousedown)="$event.stopPropagation()"
         class="bg-white rounded-xl shadow-md w-full max-w-lg animate-in zoom-in-95 duration-200">
@@ -426,7 +426,7 @@
     </div>
 </div>
 
-<div *ngIf="isSelectionModalOpen" (mousedown)="handleBackdropClick($event)"
+<div *ngIf="isSelectionModalOpen" (mousedown)="handleBackdropClick($event, 'selection')"
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
     <div (mousedown)="$event.stopPropagation()"
         class="bg-white rounded-xl shadow-md w-full max-w-7xl h-[92vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
@@ -639,7 +639,7 @@
 </div>
 
 <!-- Batch Confirmation Modal -->
-<div *ngIf="isBatchConfirmModalOpen" (mousedown)="handleBackdropClick($event)"
+<div *ngIf="isBatchConfirmModalOpen" (mousedown)="handleBackdropClick($event, 'batchConfirm')"
     class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
     <div (mousedown)="$event.stopPropagation()"
         class="bg-white rounded-xl shadow-md w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
@@ -671,7 +671,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div *ngIf="isDeleteModalOpen" (mousedown)="handleBackdropClick($event)"
+<div *ngIf="isDeleteModalOpen" (mousedown)="handleBackdropClick($event, 'delete')"
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
     <div (mousedown)="$event.stopPropagation()"
         class="bg-white rounded-xl shadow-md w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
@@ -703,7 +703,7 @@
     </div>
 </div>
 
-<div *ngIf="isDetailModalOpen" (mousedown)="handleBackdropClick($event)"
+<div *ngIf="isDetailModalOpen" (mousedown)="handleBackdropClick($event, 'detail')"
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
     <div (mousedown)="$event.stopPropagation()" *ngIf="selectedClassDetails"
         class="bg-white rounded-md shadow-md w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">

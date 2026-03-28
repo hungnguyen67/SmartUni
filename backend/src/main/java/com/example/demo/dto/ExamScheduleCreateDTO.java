@@ -18,7 +18,9 @@ public class ExamScheduleCreateDTO {
     private Boolean hasRollNumbers;
     private List<RoomCapacityDTO> rooms;
     private Long proctorId;
+    private List<Long> proctorIds;
     private Long createdById;
+    private String notes;
 
     public Long getCourseClassId() { return courseClassId; }
     public void setCourseClassId(Long courseClassId) { this.courseClassId = courseClassId; }
@@ -59,8 +61,14 @@ public class ExamScheduleCreateDTO {
     public Long getProctorId() { return proctorId; }
     public void setProctorId(Long proctorId) { this.proctorId = proctorId; }
 
+    public List<Long> getProctorIds() { return proctorIds; }
+    public void setProctorIds(List<Long> proctorIds) { this.proctorIds = proctorIds; }
+
     public Long getCreatedById() { return createdById; }
     public void setCreatedById(Long createdById) { this.createdById = createdById; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 
     public static class RoomCapacityDTO {
         private String roomName;

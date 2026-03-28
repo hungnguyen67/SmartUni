@@ -2,6 +2,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
 import { AuthService } from '../../../auth.service';
+import { FlashMessageService } from '../../../shared/components/flash-message/flash-message.component';
 
 @Component({
   selector: 'app-exam-schedule',
@@ -46,7 +47,7 @@ export class ExamScheduleComponent implements OnInit {
   firstSlotStart: string = '07:30';
   gapDuration: number = 15;
   lecturers: any[] = [];
-  selectedProctorId: number | null = null;
+  selectedProctorIds: number[] = [];
   createdByName: string = '';
 
   arrangementMode: string = 'BY_NAME';
@@ -62,16 +63,39 @@ export class ExamScheduleComponent implements OnInit {
   isSubmitting: boolean = false;
   currentUserId: number | null = null;
 
-  constructor(private http: HttpClient, private authService: AuthService) { }
+  // New states for Edit/Delete
+  isEditing: boolean = false;
+  selectedSchedule: any = null;
+  originalScheduleData: any = null;
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.filter-menu-wrapper')) {
-      this.showFilter = false;
-      this.activeDropdown = '';
-    }
-  }
+  // Detailed Modal Filtering
+  showDetailFilter = false;
+  selectedDetailClass = '';
+  selectedDetailTime = '';
+  selectedDetailRoom = '';
+  selectedDetailProctor = '';
+  detailClasses: string[] = [];
+  detailTimes: string[] = [];
+  detailRooms: string[] = [];
+  detailProctors: string[] = [];
+  
+  // Temporary selections for Detail Filter (Apply/Reset pattern)
+  tempDetailClass = '';
+  tempDetailTime = '';
+  tempDetailRoom = '';
+  tempDetailProctor = '';
+
+  showDeleteModal: boolean = false;
+  scheduleToDelete: any = null;
+
+  // New states for detailed view
+  showDetailModal: boolean = false;
+  selectedScheduleDetails: any = null;
+  detailSearchTerm: string = '';
+  filteredDetailStudents: any[] = [];
+
+  constructor(private http: HttpClient, private authService: AuthService, private flashMessage: FlashMessageService) { }
+
 
   toggleFilter(event: MouseEvent) {
     event.stopPropagation();
@@ -111,6 +135,30 @@ export class ExamScheduleComponent implements OnInit {
       this.examSchedules = data.sort((a, b) => (b.id || 0) - (a.id || 0));
       this.filterSchedules();
     });
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.filter-menu-wrapper') && !target.closest('.relative')) {
+      this.showFilter = false;
+      this.showDetailFilter = false;
+      this.activeDropdown = '';
+    }
+  }
+
+  toggleDetailFilter(event: MouseEvent): void {
+    event.stopPropagation();
+    this.showDetailFilter = !this.showDetailFilter;
+    if (this.showDetailFilter) {
+      this.tempDetailClass = this.selectedDetailClass;
+      this.tempDetailTime = this.selectedDetailTime;
+      this.tempDetailRoom = this.selectedDetailRoom;
+      this.tempDetailProctor = this.selectedDetailProctor;
+      this.activeDropdown = 'detFilter';
+    } else {
+      this.activeDropdown = '';
+    }
   }
 
   loadSemesters(): void {
@@ -190,9 +238,25 @@ export class ExamScheduleComponent implements OnInit {
   }
 
   getModalProctorLabel(): string {
-    if (!this.selectedProctorId) return 'Chọn cán bộ coi thi';
-    const p = this.lecturers.find(l => l.id === this.selectedProctorId);
-    return p ? (p.firstName + ' ' + p.lastName) : 'Chọn cán bộ coi thi';
+    if (this.selectedProctorIds.length === 0) return 'Chọn cán bộ coi thi';
+    if (this.selectedProctorIds.length === 1) {
+      const p = this.lecturers.find(l => l.id === this.selectedProctorIds[0]);
+      return p ? (p.firstName + ' ' + p.lastName) : 'Chọn cán bộ coi thi';
+    }
+    return `Đã chọn ${this.selectedProctorIds.length} cán bộ`;
+  }
+
+  isProctorSelected(id: number): boolean {
+    return this.selectedProctorIds.includes(id);
+  }
+
+  toggleProctor(id: number): void {
+    const index = this.selectedProctorIds.indexOf(id);
+    if (index > -1) {
+      this.selectedProctorIds.splice(index, 1);
+    } else {
+      this.selectedProctorIds.push(id);
+    }
   }
 
   getSelectedAdminClassName(): string {
@@ -259,9 +323,13 @@ export class ExamScheduleComponent implements OnInit {
     return this.filteredSchedules.length;
   }
 
-  handleBackdropClick(event: MouseEvent): void {
+  handleBackdropClick(event: MouseEvent, type: 'add' | 'delete'): void {
     if (event.target === event.currentTarget) {
-      this.closeAddModal();
+      if (type === 'add') {
+        this.closeAddModal();
+      } else {
+        this.closeDeleteModal();
+      }
     }
   }
 
@@ -290,6 +358,126 @@ export class ExamScheduleComponent implements OnInit {
 
   closeAddModal(): void {
     this.showModal = false;
+    this.isEditing = false;
+    this.selectedSchedule = null;
+  }
+
+  confirmDelete(schedule: any): void {
+    this.scheduleToDelete = schedule;
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.scheduleToDelete = null;
+  }
+
+  deleteSchedule(): void {
+    if (!this.scheduleToDelete) return;
+    this.isSubmitting = true;
+    this.http.delete(`http://localhost:8001/api/admin/exam-schedules/${this.scheduleToDelete.id}`).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+        this.flashMessage.success("Xóa lịch thi thành công!");
+        this.closeDeleteModal();
+        this.loadSchedules();
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.flashMessage.handleError(err);
+      }
+    });
+  }
+
+  openEditModal(schedule: any): void {
+    this.isEditing = true;
+    this.selectedSchedule = schedule;
+    this.selectedSemester = schedule.courseClass?.semesterId;
+    
+    // First, we need to ensure allCourseClasses for this semester are loaded
+    this.http.get<any[]>(`http://localhost:8001/api/course-classes?semesterId=${this.selectedSemester}`)
+      .subscribe(data => {
+        this.allCourseClasses = data;
+        
+        // Re-populate the filtering lists (cohorts, subjects, adminClasses)
+        // Only ongoing classes for general selection, but for editing we might need historical ones 
+        // For simplicity, let's just use all for the lists in edit mode
+        const ongoingClasses = data; 
+
+        this.cohorts = [...new Set(ongoingClasses.map(c => c.cohort).filter(c => c != null))].sort((a: any, b: any) => Number(b) - Number(a));
+
+        const uniqueSubjects = new Map<number, any>();
+        const uniqueAdminClasses = new Map<number, any>();
+
+        ongoingClasses.forEach(c => {
+          if (!uniqueSubjects.has(c.subjectId)) {
+            uniqueSubjects.set(c.subjectId, { id: c.subjectId, name: c.subjectName });
+          }
+          if (c.targetClassId && !uniqueAdminClasses.has(c.targetClassId)) {
+            uniqueAdminClasses.set(c.targetClassId, { id: c.targetClassId, className: c.targetClassName, cohort: c.cohort });
+          }
+        });
+
+        this.subjects = Array.from(uniqueSubjects.values());
+        this.adminClasses = Array.from(uniqueAdminClasses.values());
+
+        // Now set the selected values for this specific schedule
+        this.selectedCohort = schedule.courseClass?.cohort;
+        this.selectedSubject = schedule.courseClass?.subjectId;
+        
+        // Chỉ tự động chọn lớp học nếu tổng sinh viên của lịch thi khớp với sĩ số của lớp học đó.
+        // Nếu không khớp (ví dụ 24 SV vs 12 SV), khả năng cao đây là lịch thi gộp nhiều lớp của cùng học phần.
+        if (schedule.totalStudents === schedule.courseClass?.currentEnrolled) {
+          this.selectedAdminClass = schedule.courseClass?.targetClassId;
+        } else {
+          this.selectedAdminClass = null;
+        }
+        
+        this.resolvedCourseClassId = schedule.courseClass?.id;
+
+        this.examType = schedule.examType;
+        this.examFormat = schedule.examFormat;
+        
+        // Format date properly for <input type="date"> (YYYY-MM-DD)
+        if (schedule.examDate) {
+          if (typeof schedule.examDate === 'string') {
+            this.examDate = schedule.examDate.substring(0, 10);
+          } else if (schedule.examDate instanceof Date) {
+            this.examDate = schedule.examDate.toISOString().substring(0, 10);
+          } else {
+            this.examDate = schedule.examDate;
+          }
+        } else {
+          this.examDate = '';
+        }
+
+        this.durationMinutes = schedule.durationMinutes;
+        this.firstSlotStart = schedule.firstSlotStart;
+        this.gapDuration = schedule.gapDuration || 15;
+        this.selectedProctorIds = schedule.proctorId ? [schedule.proctorId] : [];
+        if (schedule.proctorIds) this.selectedProctorIds = schedule.proctorIds;
+        
+        this.assignedRooms = schedule.rooms.map((r: any) => ({ roomName: r.roomName, capacity: r.capacity || 40 }));
+        this.selectedRoomIndexes.clear();
+        this.assignedRooms.forEach((_, i) => this.selectedRoomIndexes.add(i));
+        
+        this.resolveCourseClass();
+        
+        // Capture original state for change detection
+        this.originalScheduleData = {
+          examType: this.examType,
+          examFormat: this.examFormat,
+          examDate: this.examDate,
+          durationMinutes: this.durationMinutes,
+          firstSlotStart: this.formatTime(this.firstSlotStart),
+          gapDuration: this.gapDuration,
+          proctorIds: [...this.selectedProctorIds].sort(),
+          rooms: this.assignedRooms.filter((_, i) => this.selectedRoomIndexes.has(i))
+            .map(r => ({ roomName: r.roomName, capacity: r.capacity }))
+        };
+
+        this.showModal = true;
+      });
   }
 
   resetForm(): void {
@@ -304,7 +492,7 @@ export class ExamScheduleComponent implements OnInit {
     this.examType = null;
     this.examFormat = null;
     this.examDate = '';
-    this.selectedProctorId = null;
+    this.selectedProctorIds = [];
     this.createdByName = '';
 
     if (this.semesters.length > 0) {
@@ -409,7 +597,11 @@ export class ExamScheduleComponent implements OnInit {
       };
 
       if (this.examType) {
-        requests.assignedKeys = this.http.get<string[]>(`http://localhost:8001/api/admin/exam-schedules/assigned-keys?semesterId=${this.selectedSemester}&examType=${this.examType}`);
+        let keysUrl = `http://localhost:8001/api/admin/exam-schedules/assigned-keys?semesterId=${this.selectedSemester}&examType=${this.examType}`;
+        if (this.isEditing && this.selectedSchedule) {
+          keysUrl += `&excludeScheduleId=${this.selectedSchedule.id}`;
+        }
+        requests.assignedKeys = this.http.get<string[]>(keysUrl);
       }
 
       forkJoin(requests).subscribe((res: any) => {
@@ -517,11 +709,36 @@ export class ExamScheduleComponent implements OnInit {
   }
 
   submitAutoArrange(): void {
+    if (this.isEditing && this.selectedSchedule) {
+      this.updateSchedule();
+      return;
+    }
+
     const canSubmitBySubject = this.selectedSemester && this.selectedCohort && this.selectedSubject && this.resolvedCourseClassIds.length > 0;
     const canSubmitByClass = this.selectedSemester && this.resolvedCourseClassId;
 
-    if (!(canSubmitBySubject || canSubmitByClass) || this.assignedRooms.filter((_, i) => this.selectedRoomIndexes.has(i)).length === 0) {
-      alert("Vui lòng chọn đầy đủ Học kỳ, Khóa học, Học phần và phân bổ ít nhất 1 phòng thi.");
+    if (!(canSubmitBySubject || canSubmitByClass)) {
+      this.flashMessage.warning("Vui lòng chọn đầy đủ Học kỳ, Khóa học và Học phần/Lớp học.");
+      return;
+    }
+
+    if (!this.examType || !this.examFormat || !this.examDate || this.selectedProctorIds.length === 0) {
+      this.flashMessage.warning("Vui lòng nhập đầy đủ thông tin: Loại thi, Hình thức thi, Ngày thi và Cán bộ coi thi.");
+      return;
+    }
+
+    if (this.selectedProctorIds.length !== this.selectedRoomIndexes.size) {
+      this.flashMessage.warning(`Số lượng cán bộ (${this.selectedProctorIds.length}) phải bằng số lượng phòng thi (${this.selectedRoomIndexes.size}).`);
+      return;
+    }
+
+    if (this.assignedRooms.filter((_, i) => this.selectedRoomIndexes.has(i)).length === 0) {
+      this.flashMessage.warning("Vui lòng phân bổ ít nhất 1 phòng thi.");
+      return;
+    }
+
+    if (this.students.length === 0) {
+      this.flashMessage.warning("Không có sinh viên nào thỏa mãn để xếp lịch thi. Vui lòng kiểm tra lại học phần hoặc danh sách sinh viên.");
       return;
     }
 
@@ -532,13 +749,13 @@ export class ExamScheduleComponent implements OnInit {
       examFormat: this.examFormat,
       examDate: this.examDate,
       durationMinutes: this.durationMinutes,
-      firstSlotStart: this.firstSlotStart + ':00',
+      firstSlotStart: this.formatTime(this.firstSlotStart),
       gapDuration: this.gapDuration,
       arrangementMode: this.arrangementMode,
       isShuffled: this.isShuffled,
       hasRollNumbers: this.hasRollNumbers,
       rooms: this.assignedRooms.filter((_, i) => this.selectedRoomIndexes.has(i)),
-      proctorId: this.selectedProctorId,
+      proctorIds: this.selectedProctorIds,
       createdById: this.currentUserId
     };
 
@@ -547,15 +764,171 @@ export class ExamScheduleComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.isSubmitting = false;
-          alert(res.message || "Xếp lịch thi thành công!");
+          this.flashMessage.success(res.message || "Xếp lịch thi thành công!");
           this.closeAddModal();
           this.loadSchedules();
         },
         error: (err) => {
           this.isSubmitting = false;
-          const msg = err.error?.message || err.message || "Có lỗi xảy ra";
-          alert("Lỗi: " + msg);
+          this.flashMessage.handleError(err);
         }
       });
+  }
+
+  formatTime(time: string): string {
+    if (!time) return '';
+    // If it's HH:mm (len 5), add :00
+    if (time.length === 5) return time + ':00';
+    // If it's already HH:mm:ss (len 8), return as is
+    if (time.length === 8) return time;
+    // Handle other possible formats (like T prefix)
+    if (time.includes('T')) {
+      const parts = time.split('T');
+      if (parts.length > 1) return this.formatTime(parts[1].substring(0, 8));
+    }
+    return time;
+  }
+
+  hasScheduleChanges(): boolean {
+    if (!this.isEditing || !this.originalScheduleData) return true;
+
+    const currentRooms = this.assignedRooms.filter((_, i) => this.selectedRoomIndexes.has(i))
+      .map(r => ({ roomName: r.roomName, capacity: r.capacity }));
+    const originalRooms = this.originalScheduleData.rooms;
+
+    const roomsChanged = JSON.stringify(currentRooms) !== JSON.stringify(originalRooms);
+    const proctorsChanged = JSON.stringify([...this.selectedProctorIds].sort()) !== JSON.stringify(this.originalScheduleData.proctorIds);
+
+    return this.examType !== this.originalScheduleData.examType ||
+      this.examFormat !== this.originalScheduleData.examFormat ||
+      this.examDate !== this.originalScheduleData.examDate ||
+      this.durationMinutes !== this.originalScheduleData.durationMinutes ||
+      this.formatTime(this.firstSlotStart) !== this.originalScheduleData.firstSlotStart ||
+      this.gapDuration !== this.originalScheduleData.gapDuration ||
+      roomsChanged ||
+      proctorsChanged;
+  }
+
+  updateSchedule(): void {
+    if (!this.selectedSchedule) return;
+
+    if (this.isEditing && !this.hasScheduleChanges()) {
+      this.flashMessage.info('Không có thay đổi nào để cập nhật');
+      return;
+    }
+
+    if (!this.examType || !this.examFormat || !this.examDate || this.selectedProctorIds.length === 0) {
+      this.flashMessage.warning("Vui lòng nhập đầy đủ thông tin: Loại thi, Hình thức thi, Ngày thi và Cán bộ coi thi.");
+      return;
+    }
+
+    if (this.selectedProctorIds.length !== this.selectedRoomIndexes.size) {
+      this.flashMessage.warning(`Số lượng cán bộ (${this.selectedProctorIds.length}) phải bằng số lượng phòng thi (${this.selectedRoomIndexes.size}).`);
+      return;
+    }
+
+    const payload = {
+      examType: this.examType,
+      examFormat: this.examFormat,
+      examDate: this.examDate,
+      durationMinutes: this.durationMinutes,
+      firstSlotStart: this.formatTime(this.firstSlotStart),
+      gapDuration: this.gapDuration,
+      proctorIds: this.selectedProctorIds,
+      notes: this.selectedSchedule.notes,
+      rooms: this.assignedRooms.filter((_, i) => this.selectedRoomIndexes.has(i))
+    };
+
+    this.isSubmitting = true;
+    this.http.put(`http://localhost:8001/api/admin/exam-schedules/${this.selectedSchedule.id}`, payload).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+        this.flashMessage.success("Cập nhật lịch thi thành công!");
+        this.closeAddModal();
+        this.loadSchedules();
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.flashMessage.handleError(err);
+      }
+    });
+  }
+
+  viewScheduleDetails(id: number): void {
+    this.http.get<any>(`http://localhost:8001/api/admin/exam-schedules/${id}/details`).subscribe({
+      next: (res) => {
+        this.selectedScheduleDetails = res;
+        this.filteredDetailStudents = res.assignedStudents || [];
+        this.showDetailModal = true;
+
+        // Extract unique lists for filters
+        if (res.assignedStudents) {
+          this.detailClasses = [...new Set(res.assignedStudents.map((s: any) => s.className).filter((v: any) => !!v))].sort() as string[];
+          this.detailTimes = [...new Set(res.assignedStudents.map((s: any) => s.examTime).filter((v: any) => !!v))].sort() as string[];
+          this.detailRooms = [...new Set(res.assignedStudents.map((s: any) => s.roomName).filter((v: any) => !!v))].sort() as string[];
+          this.detailProctors = [...new Set(res.assignedStudents.map((s: any) => s.proctorName).filter((v: any) => !!v))].sort() as string[];
+        }
+      },
+      error: (err) => {
+        this.flashMessage.handleError(err);
+      }
+    });
+  }
+
+  closeDetailModal(): void {
+    this.showDetailModal = false;
+    this.selectedScheduleDetails = null;
+    this.detailSearchTerm = '';
+    this.showDetailFilter = false;
+    this.selectedDetailClass = '';
+    this.selectedDetailTime = '';
+    this.selectedDetailRoom = '';
+    this.selectedDetailProctor = '';
+    this.tempDetailClass = '';
+    this.tempDetailTime = '';
+    this.tempDetailRoom = '';
+    this.tempDetailProctor = '';
+  }
+
+  onDetailSearch(): void {
+    if (!this.selectedScheduleDetails || !this.selectedScheduleDetails.assignedStudents) return;
+    const term = this.detailSearchTerm.toLowerCase().trim();
+
+    this.filteredDetailStudents = this.selectedScheduleDetails.assignedStudents.filter((s: any) => {
+      const matchesSearch = !term ||
+        s.studentCode.toLowerCase().includes(term) ||
+        s.fullName.toLowerCase().includes(term) ||
+        (s.className && s.className.toLowerCase().includes(term)) ||
+        (s.roomName && s.roomName.toLowerCase().includes(term)) ||
+        (s.proctorName && s.proctorName.toLowerCase().includes(term));
+
+      const matchesClass = !this.selectedDetailClass || s.className === this.selectedDetailClass;
+      const matchesTime = !this.selectedDetailTime || s.examTime === this.selectedDetailTime;
+      const matchesRoom = !this.selectedDetailRoom || s.roomName === this.selectedDetailRoom;
+      const matchesProctor = !this.selectedDetailProctor || s.proctorName === this.selectedDetailProctor;
+
+      return matchesSearch && matchesClass && matchesTime && matchesRoom && matchesProctor;
+    });
+  }
+
+  applyDetailFilters(): void {
+    this.selectedDetailClass = this.tempDetailClass;
+    this.selectedDetailTime = this.tempDetailTime;
+    this.selectedDetailRoom = this.tempDetailRoom;
+    this.selectedDetailProctor = this.tempDetailProctor;
+    this.onDetailSearch();
+    this.showDetailFilter = false;
+  }
+
+  resetDetailFilterDrafts(): void {
+    this.tempDetailClass = '';
+    this.tempDetailTime = '';
+    this.tempDetailRoom = '';
+    this.tempDetailProctor = '';
+    this.selectedDetailClass = '';
+    this.selectedDetailTime = '';
+    this.selectedDetailRoom = '';
+    this.selectedDetailProctor = '';
+    this.onDetailSearch();
   }
 }

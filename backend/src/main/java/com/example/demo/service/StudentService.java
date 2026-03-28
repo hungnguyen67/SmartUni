@@ -71,7 +71,7 @@ public class StudentService {
         user.setCreatedAt(LocalDateTime.now());
 
         Role studentRole = roleRepository.findByName("STUDENT")
-                .orElseThrow(() -> new ApiException("Role STUDENT not found", HttpStatus.INTERNAL_SERVER_ERROR));
+                .orElseThrow(() -> new ApiException("Không tìm thấy vai trò STUDENT", HttpStatus.INTERNAL_SERVER_ERROR));
         user.setRole(studentRole);
 
         updateUserFields(user, dto);
@@ -99,7 +99,7 @@ public class StudentService {
     @Transactional
     public StudentDTO updateStudent(Long id, StudentDTO dto) {
         StudentProfile profile = studentProfileRepository.findById(id)
-                .orElseThrow(() -> new ApiException("Student not found with id: " + id, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ApiException("Không tìm thấy sinh viên với ID: " + id, HttpStatus.NOT_FOUND));
 
         User user = profile.getUser();
         updateUserFields(user, dto);
@@ -119,7 +119,7 @@ public class StudentService {
     @Transactional
     public void deleteStudent(Long id) {
         StudentProfile profile = studentProfileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sinh viên"));
         User user = profile.getUser();
 
         studentProfileRepository.delete(profile);
@@ -151,14 +151,14 @@ public class StudentService {
 
         if (dto.getClassId() != null) {
             AdministrativeClass ac = administrativeClassRepository.findById(dto.getClassId())
-                    .orElseThrow(() -> new ApiException("Class not found with id: " + dto.getClassId(),
+                    .orElseThrow(() -> new ApiException("Không tìm thấy lớp với ID: " + dto.getClassId(),
                             HttpStatus.NOT_FOUND));
             profile.setAdministrativeClass(ac);
         }
 
         if (dto.getCurriculumId() != null) {
             Curriculum curriculum = curriculumRepository.findById(dto.getCurriculumId())
-                    .orElseThrow(() -> new ApiException("Curriculum not found with id: " + dto.getCurriculumId(),
+                    .orElseThrow(() -> new ApiException("Không tìm thấy khung chương trình với ID: " + dto.getCurriculumId(),
                             HttpStatus.BAD_REQUEST));
             profile.setCurriculum(curriculum);
         }

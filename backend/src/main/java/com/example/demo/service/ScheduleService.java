@@ -48,7 +48,7 @@ public class ScheduleService {
     @Transactional
     public void addPattern(Long classId, ClassSchedulePattern pattern) {
         CourseClass cc = courseClassRepository.findById(classId)
-                .orElseThrow(() -> new RuntimeException("Course class not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp học phần"));
         pattern.setCourseClass(cc);
 
         if (pattern.getFromWeek() == null)
@@ -88,7 +88,7 @@ public class ScheduleService {
     @Transactional
     public void addPatternsBulk(Long classId, List<ClassSchedulePattern> patterns) {
         CourseClass cc = courseClassRepository.findById(classId)
-                .orElseThrow(() -> new RuntimeException("Course class not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp học phần"));
 
         for (ClassSchedulePattern pattern : patterns) {
             pattern.setCourseClass(cc);
@@ -128,7 +128,7 @@ public class ScheduleService {
     @Transactional
     public void generateInstances(Long classId) {
         CourseClass cc = courseClassRepository.findById(classId)
-                .orElseThrow(() -> new RuntimeException("Course class not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp học phần"));
 
         Semester semester = cc.getSemester();
         if (semester == null || semester.getStartDate() == null || semester.getEndDate() == null) {
@@ -206,7 +206,7 @@ public class ScheduleService {
 
     public SessionDetailDTO getScheduleInstanceDetail(Long instanceId) {
         ClassScheduleInstance inst = instanceRepository.findById(instanceId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy buổi học (Session not found)"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy buổi học"));
 
         SessionDetailDTO detail = new SessionDetailDTO();
         detail.setId(inst.getId());
@@ -226,7 +226,8 @@ public class ScheduleService {
             }
 
             // Get attendance session if exists
-            final AttendanceSession session = attendanceSessionRepository.findByScheduleInstanceId(inst.getId()).orElse(null);
+            final AttendanceSession session = attendanceSessionRepository.findByScheduleInstanceId(inst.getId())
+                    .orElse(null);
             if (session != null) {
                 detail.setAttendanceActive(session.getIsActive());
                 detail.setAttendanceCode(session.getAttendanceCode());
@@ -272,16 +273,18 @@ public class ScheduleService {
         dto.setStatus(student.getStatus() != null ? student.getStatus().name() : null);
 
         if (courseClass != null && courseClass.getSubject() != null) {
-            Integer absentPeriods = attendanceRepository.sumAbsentPeriodsByStudentAndCourseClass(student.getUserId(), courseClass.getId());
-            Integer absentSessions = attendanceRepository.countAbsentSessionsByStudentAndCourseClass(student.getUserId(), courseClass.getId());
-            
+            Integer absentPeriods = attendanceRepository.sumAbsentPeriodsByStudentAndCourseClass(student.getUserId(),
+                    courseClass.getId());
+            Integer absentSessions = attendanceRepository
+                    .countAbsentSessionsByStudentAndCourseClass(student.getUserId(), courseClass.getId());
+
             dto.setAbsentPeriods(absentPeriods != null ? absentPeriods : 0);
             dto.setAbsentSessions(absentSessions != null ? absentSessions : 0);
-            
+
             Subject subject = courseClass.getSubject();
-            Integer totalPeriods = (subject.getTheoryPeriods() != null ? subject.getTheoryPeriods() : 0) + 
-                                   (subject.getPracticalPeriods() != null ? subject.getPracticalPeriods() : 0);
-            
+            Integer totalPeriods = (subject.getTheoryPeriods() != null ? subject.getTheoryPeriods() : 0) +
+                    (subject.getPracticalPeriods() != null ? subject.getPracticalPeriods() : 0);
+
             if (totalPeriods > 0) {
                 double percent = (dto.getAbsentPeriods() * 100.0) / totalPeriods;
                 dto.setAbsentPercent(Math.round(percent * 100.0) / 100.0);
@@ -296,26 +299,28 @@ public class ScheduleService {
                 dto.setAbsent(false);
                 dto.setPresent(false);
                 dto.setExcused(false);
-                
-                attendanceRepository.findBySessionIdAndStudentUserId(session.getId(), student.getUserId())
-                    .ifPresent(a -> {
-                        dto.setEnteredCode(a.getStudentEnteredCode());
-                        boolean hasCode = a.getStudentEnteredCode() != null && !a.getStudentEnteredCode().isEmpty();
-                        dto.setSelfAttended(hasCode);
-                        
-                        // Nếu sinh viên đã tự điểm danh bằng mã, mặc định hiển thị là Có mặt để giảng viên dễ theo dõi
-                        if (hasCode) {
-                            dto.setPresent(true);
-                        }
 
-                        // Hiển thị trạng thái chính xác nếu phiên đã đóng hoặc được tích tay (không có mã)
-                        if (!session.getIsActive() || a.getStudentEnteredCode() == null) {
-                            dto.setAbsent(a.getStatus() == AttendanceStatus.ABSENT);
-                            dto.setExcused(a.getStatus() == AttendanceStatus.EXCUSED);
-                            dto.setPresent(a.getStatus() == AttendanceStatus.PRESENT);
-                            dto.setSessionAbsentPeriods(a.getAbsentPeriods());
-                        }
-                    });
+                attendanceRepository.findBySessionIdAndStudentUserId(session.getId(), student.getUserId())
+                        .ifPresent(a -> {
+                            dto.setEnteredCode(a.getStudentEnteredCode());
+                            boolean hasCode = a.getStudentEnteredCode() != null && !a.getStudentEnteredCode().isEmpty();
+                            dto.setSelfAttended(hasCode);
+
+                            // Nếu sinh viên đã tự điểm danh bằng mã, mặc định hiển thị là Có mặt để giảng
+                            // viên dễ theo dõi
+                            if (hasCode) {
+                                dto.setPresent(true);
+                            }
+
+                            // Hiển thị trạng thái chính xác nếu phiên đã đóng hoặc được tích tay (không có
+                            // mã)
+                            if (!session.getIsActive() || a.getStudentEnteredCode() == null) {
+                                dto.setAbsent(a.getStatus() == AttendanceStatus.ABSENT);
+                                dto.setExcused(a.getStatus() == AttendanceStatus.EXCUSED);
+                                dto.setPresent(a.getStatus() == AttendanceStatus.PRESENT);
+                                dto.setSessionAbsentPeriods(a.getAbsentPeriods());
+                            }
+                        });
             }
         } else {
             dto.setAbsentSessions(0);
@@ -550,37 +555,38 @@ public class ScheduleService {
             return result;
         }
     }
+
     @Transactional
     public AttendanceSession openAttendanceSession(Long instanceId, String code) {
         ClassScheduleInstance inst = instanceRepository.findById(instanceId)
-            .orElseThrow(() -> new RuntimeException("Instance not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy buổi học"));
+
         AttendanceSession session = attendanceSessionRepository.findByScheduleInstanceId(instanceId)
-            .orElse(new AttendanceSession());
-        
+                .orElse(new AttendanceSession());
+
         session.setScheduleInstance(inst);
         session.setAttendanceCode(code);
         session.setTotalPeriods(inst.getEndPeriod() - inst.getStartPeriod() + 1);
         session.setIsActive(true);
         session.setOpenedAt(java.time.LocalDateTime.now());
-        
+
         return attendanceSessionRepository.save(session);
     }
 
     @Transactional
     public void submitManualAttendance(AttendanceSubmitDTO dto) {
         AttendanceSession session = attendanceSessionRepository.findByScheduleInstanceId(dto.getScheduleInstanceId())
-            .orElseGet(() -> {
-                ClassScheduleInstance inst = instanceRepository.findById(dto.getScheduleInstanceId())
-                    .orElseThrow(() -> new RuntimeException("Instance not found"));
-                AttendanceSession s = new AttendanceSession();
-                s.setScheduleInstance(inst);
-                s.setAttendanceCode(""); // Mã để trống
-                s.setTotalPeriods(inst.getEndPeriod() - inst.getStartPeriod() + 1);
-                s.setIsActive(false);
-                s.setClosedAt(java.time.LocalDateTime.now());
-                return attendanceSessionRepository.save(s);
-            });
+                .orElseGet(() -> {
+                    ClassScheduleInstance inst = instanceRepository.findById(dto.getScheduleInstanceId())
+                            .orElseThrow(() -> new RuntimeException("Không tìm thấy buổi học"));
+                    AttendanceSession s = new AttendanceSession();
+                    s.setScheduleInstance(inst);
+                    s.setAttendanceCode(""); // Mã để trống
+                    s.setTotalPeriods(inst.getEndPeriod() - inst.getStartPeriod() + 1);
+                    s.setIsActive(false);
+                    s.setClosedAt(java.time.LocalDateTime.now());
+                    return attendanceSessionRepository.save(s);
+                });
 
         // Also update existing session if it was previously open
         if (session.getIsActive()) {
@@ -590,21 +596,22 @@ public class ScheduleService {
         }
 
         for (AttendanceSubmitDTO.AttendanceRecord record : dto.getRecords()) {
-            Attendance attendance = attendanceRepository.findBySessionIdAndStudentUserId(session.getId(), record.getStudentId())
-                .orElse(new Attendance());
-            
+            Attendance attendance = attendanceRepository
+                    .findBySessionIdAndStudentUserId(session.getId(), record.getStudentId())
+                    .orElse(new Attendance());
+
             attendance.setSession(session);
             attendance.setStudent(studentRepository.findById(record.getStudentId())
-                .orElseThrow(() -> new RuntimeException("Student not found: " + record.getStudentId())));
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sinh viên ID: " + record.getStudentId())));
             attendance.setStatus(record.getStatus());
             attendance.setAbsentPeriods(record.getAbsentPeriods());
             attendance.setMarkedAt(java.time.LocalDateTime.now());
             // Giữ lại mã đã nhập để không làm mất dấu tick xanh trong UI
             // attendance.setStudentEnteredCode(null);
-            
+
             attendanceRepository.save(attendance);
         }
-        
+
         // Recalculate scores for all students in this class
         recalculateAttendanceScores(session.getScheduleInstance().getCourseClass().getId());
     }
@@ -614,21 +621,24 @@ public class ScheduleService {
         for (CourseRegistration reg : registrations) {
             CourseClass courseClass = reg.getCourseClass();
             Subject subject = courseClass.getSubject();
-            
-            Integer totalAbsentPeriods = attendanceRepository.sumAbsentPeriodsByStudentAndCourseClass(reg.getStudent().getUserId(), courseClassId);
-            if (totalAbsentPeriods == null) totalAbsentPeriods = 0;
-            
-            int totalSubjectPeriods = (subject.getTheoryPeriods() != null ? subject.getTheoryPeriods() : 0) + 
-                                     (subject.getPracticalPeriods() != null ? subject.getPracticalPeriods() : 0);
-            
+
+            Integer totalAbsentPeriods = attendanceRepository
+                    .sumAbsentPeriodsByStudentAndCourseClass(reg.getStudent().getUserId(), courseClassId);
+            if (totalAbsentPeriods == null)
+                totalAbsentPeriods = 0;
+
+            int totalSubjectPeriods = (subject.getTheoryPeriods() != null ? subject.getTheoryPeriods() : 0) +
+                    (subject.getPracticalPeriods() != null ? subject.getPracticalPeriods() : 0);
+
             double attendanceScore = 10.0;
             if (totalSubjectPeriods > 0) {
-                attendanceScore = 10.0 * (1.0 - (double)totalAbsentPeriods / totalSubjectPeriods);
-                if (attendanceScore < 0) attendanceScore = 0;
+                attendanceScore = 10.0 * (1.0 - (double) totalAbsentPeriods / totalSubjectPeriods);
+                if (attendanceScore < 0)
+                    attendanceScore = 0;
             }
-            
+
             reg.setAttendanceScore(Math.round(attendanceScore * 10.0) / 10.0);
-            
+
             // Recompute total score - Handle null weights and scores
             double attWeight = (courseClass.getAttendanceWeight() != null) ? courseClass.getAttendanceWeight() : 0.1;
             double midWeight = (courseClass.getMidtermWeight() != null) ? courseClass.getMidtermWeight() : 0.3;
@@ -638,11 +648,11 @@ public class ScheduleService {
             double finScore = (reg.getFinalScore() != null) ? reg.getFinalScore() : 0.0;
 
             double total = reg.getAttendanceScore() * attWeight +
-                           midScore * midWeight +
-                           finScore * finWeight;
+                    midScore * midWeight +
+                    finScore * finWeight;
             reg.setTotalScore(Math.round(total * 100.0) / 100.0);
             reg.setScoreUpdatedAt(java.time.LocalDateTime.now());
-            
+
             registrationRepository.save(reg);
         }
     }
@@ -650,47 +660,50 @@ public class ScheduleService {
     @Transactional
     public void selfAttend(String code, Long studentId, Long instanceId) {
         AttendanceSession session = attendanceSessionRepository.findByScheduleInstanceId(instanceId)
-            .orElseThrow(() -> new RuntimeException("Không tìm thấy phiên điểm danh cho buổi học này (No session for this instance)"));
+                .orElseThrow(() -> new RuntimeException(
+                        "Không tìm thấy phiên điểm danh cho buổi học này"));
 
         if (!session.getIsActive()) {
-            throw new RuntimeException("Phiên điểm danh đã đóng (Attendance session is closed)");
+            throw new RuntimeException("Phiên điểm danh đã đóng");
         }
 
         Attendance attendance = attendanceRepository.findBySessionIdAndStudentUserId(session.getId(), studentId)
-            .orElse(new Attendance());
-        
+                .orElse(new Attendance());
+
         attendance.setSession(session);
         attendance.setStudent(studentRepository.findById(studentId)
-            .orElseThrow(() -> new RuntimeException("Student not found")));
-        
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sinh viên")));
+
         // Save the code entered by student
         attendance.setStudentEnteredCode(code);
         attendance.setMarkedAt(java.time.LocalDateTime.now());
-        
-        // Student is ALWAYS marked as ABSENT when they enter a code. 
+
+        // Student is ALWAYS marked as ABSENT when they enter a code.
         // Comparison only happens when lecturer finalizes the session.
         attendance.setStatus(AttendanceStatus.ABSENT);
         attendance.setAbsentPeriods(session.getTotalPeriods());
-        
+
         attendanceRepository.save(attendance);
     }
 
     @Transactional
     public void finalizeAutoAttendance(Long instanceId) {
         AttendanceSession session = attendanceSessionRepository.findByScheduleInstanceId(instanceId)
-            .orElseThrow(() -> new RuntimeException("No attendance session found for this instance"));
-        
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiên điểm danh cho buổi học này"));
+
         // Mark session as inactive
         session.setIsActive(false);
         session.setClosedAt(java.time.LocalDateTime.now());
         attendanceSessionRepository.save(session);
-        
+
         // Process all students in the class
-        List<CourseRegistration> registrations = registrationRepository.findByCourseClassId(session.getScheduleInstance().getCourseClass().getId());
+        List<CourseRegistration> registrations = registrationRepository
+                .findByCourseClassId(session.getScheduleInstance().getCourseClass().getId());
         for (CourseRegistration reg : registrations) {
-            Attendance att = attendanceRepository.findBySessionIdAndStudentUserId(session.getId(), reg.getStudent().getUserId())
-                .orElse(null);
-            
+            Attendance att = attendanceRepository
+                    .findBySessionIdAndStudentUserId(session.getId(), reg.getStudent().getUserId())
+                    .orElse(null);
+
             if (att == null) {
                 // Not attended at all -> ABSENT
                 att = new Attendance();
@@ -702,11 +715,12 @@ public class ScheduleService {
                 attendanceRepository.save(att);
             } else {
                 // Checking the code entered
-                if (att.getStudentEnteredCode() != null && att.getStudentEnteredCode().equals(session.getAttendanceCode())) {
+                if (att.getStudentEnteredCode() != null
+                        && att.getStudentEnteredCode().equals(session.getAttendanceCode())) {
                     att.setStatus(AttendanceStatus.PRESENT);
                     att.setAbsentPeriods(0);
                 } else if (att.getStatus() == AttendanceStatus.PRESENT && att.getStudentEnteredCode() == null) {
-                     // Keep as is if manually marked present by lecturer earlier (if we allow that)
+                    // Keep as is if manually marked present by lecturer earlier (if we allow that)
                 } else {
                     // Mismatched code -> ABSENT
                     att.setStatus(AttendanceStatus.ABSENT);
@@ -716,7 +730,7 @@ public class ScheduleService {
                 attendanceRepository.save(att);
             }
         }
-        
+
         // Final recalculation after closing session
         recalculateAttendanceScores(session.getScheduleInstance().getCourseClass().getId());
     }

@@ -213,7 +213,6 @@ export class RegistrationComponent implements OnInit {
     }
 
     drop(registrationId: number) {
-        if (!confirm('Bạn có chắc chắn muốn hủy đăng ký học phần này?')) return;
         this.registrationService.drop(registrationId).subscribe({
             next: () => {
                 this.flashMessage.success('Hủy đăng ký thành công!');

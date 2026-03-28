@@ -360,7 +360,7 @@
             </aside>
         </div>
 
-        <section
+        <section (dragover)="$event.preventDefault()" (drop)="onBacklogDrop($event)"
             class="h-80 bg-white flex flex-col shrink-0 overflow-hidden shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-40">
             <div class="flex items-end border-b border-slate-200">
                 <button (click)="activeBottomTab = 'CLASSES'"
@@ -401,9 +401,13 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        <tr *ngFor="let c of classes; let i = index" draggable="true"
+                        <tr *ngFor="let c of classes; let i = index"
+                            [attr.draggable]="getRemainingPeriods(c) > 0 ? 'true' : 'false'"
                             (dragstart)="onDragStart($event, c)" (dragend)="onDragEnd()"
-                            class="hover:bg-blue-50/50 transition-colors text-[12px] group cursor-grab active:cursor-grabbing">
+                            class="hover:bg-blue-50/50 transition-colors text-[12px] group"
+                            [class.cursor-grab]="getRemainingPeriods(c) > 0"
+                            [class.active:cursor-grabbing]="getRemainingPeriods(c) > 0"
+                            [class.opacity-50]="getRemainingPeriods(c) === 0">
                             <td class="border-r border-slate-100 py-2 px-3 font-semibold text-slate-700 text-center">
                                 {{ i + 1 }}
                             </td>

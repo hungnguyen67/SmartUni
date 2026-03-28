@@ -26,6 +26,13 @@ public class ExamScheduleRoom {
     @Column(name = "seat_capacity_override")
     private Integer seatCapacityOverride;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "proctor_id")
+    private LecturerProfile proctor;
+
+    public LecturerProfile getProctor() { return proctor; }
+    public void setProctor(LecturerProfile proctor) { this.proctor = proctor; }
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

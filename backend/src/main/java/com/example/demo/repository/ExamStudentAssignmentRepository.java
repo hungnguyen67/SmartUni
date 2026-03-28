@@ -12,6 +12,7 @@ public interface ExamStudentAssignmentRepository extends JpaRepository<ExamStude
     List<ExamStudentAssignment> findByExamSlotId(Long examSlotId);
     long countByExamScheduleId(Long examScheduleId);
     List<ExamStudentAssignment> findByStudentUserId(Long studentId);
+    void deleteByExamScheduleId(Long examScheduleId);
 
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT a.student.studentCode FROM ExamStudentAssignment a " +
             "WHERE a.examSchedule.courseClass.subject.id = :subjectId " +
@@ -22,10 +23,30 @@ public interface ExamStudentAssignmentRepository extends JpaRepository<ExamStude
             @org.springframework.data.repository.query.Param("semesterId") Long semesterId, 
             @org.springframework.data.repository.query.Param("examType") com.example.demo.model.ExamSchedule.ExamType examType);
 
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT a.student.studentCode FROM ExamStudentAssignment a " +
+            "WHERE a.examSchedule.courseClass.subject.id = :subjectId " +
+            "AND a.examSchedule.courseClass.semester.id = :semesterId " +
+            "AND a.examSchedule.examType = :examType " +
+            "AND a.examSchedule.id != :excludeScheduleId")
+    List<String> findAssignedStudentCodesExcludingSchedule(
+            @org.springframework.data.repository.query.Param("subjectId") Long subjectId, 
+            @org.springframework.data.repository.query.Param("semesterId") Long semesterId, 
+            @org.springframework.data.repository.query.Param("examType") com.example.demo.model.ExamSchedule.ExamType examType,
+            @org.springframework.data.repository.query.Param("excludeScheduleId") Long excludeScheduleId);
+
     @org.springframework.data.jpa.repository.Query("SELECT CONCAT(a.student.studentCode, '_', a.examSchedule.courseClass.subject.id) FROM ExamStudentAssignment a " +
             "WHERE a.examSchedule.courseClass.semester.id = :semesterId " +
             "AND a.examSchedule.examType = :examType")
     List<String> findAllAssignedStudentSubjectKeys(
             @org.springframework.data.repository.query.Param("semesterId") Long semesterId, 
             @org.springframework.data.repository.query.Param("examType") com.example.demo.model.ExamSchedule.ExamType examType);
+
+    @org.springframework.data.jpa.repository.Query("SELECT CONCAT(a.student.studentCode, '_', a.examSchedule.courseClass.subject.id) FROM ExamStudentAssignment a " +
+            "WHERE a.examSchedule.courseClass.semester.id = :semesterId " +
+            "AND a.examSchedule.examType = :examType " +
+            "AND a.examSchedule.id != :excludeScheduleId")
+    List<String> findAllAssignedStudentSubjectKeysExcludingSchedule(
+            @org.springframework.data.repository.query.Param("semesterId") Long semesterId, 
+            @org.springframework.data.repository.query.Param("examType") com.example.demo.model.ExamSchedule.ExamType examType,
+            @org.springframework.data.repository.query.Param("excludeScheduleId") Long excludeScheduleId);
 }

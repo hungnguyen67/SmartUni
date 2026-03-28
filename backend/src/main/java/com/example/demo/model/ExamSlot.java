@@ -34,6 +34,12 @@ public class ExamSlot {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @OneToMany(mappedBy = "examSlot", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<ExamSlotRoom> slotRooms;
+
+    @OneToMany(mappedBy = "examSlot", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<ExamStudentAssignment> assignments;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -54,4 +60,10 @@ public class ExamSlot {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public java.util.List<ExamSlotRoom> getSlotRooms() { return slotRooms; }
+    public void setSlotRooms(java.util.List<ExamSlotRoom> slotRooms) { this.slotRooms = slotRooms; }
+
+    public java.util.List<ExamStudentAssignment> getAssignments() { return assignments; }
+    public void setAssignments(java.util.List<ExamStudentAssignment> assignments) { this.assignments = assignments; }
 }

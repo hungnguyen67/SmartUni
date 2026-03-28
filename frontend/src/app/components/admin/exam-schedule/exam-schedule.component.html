@@ -126,8 +126,10 @@
                         class="hover:bg-slate-50 transition-colors">
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ (currentPage - 1) * itemsPerPage + i
                             + 1 }}</td>
-                        <td class="px-4 py-4 text-sm text-slate-900 text-left">
-                            {{ schedule.courseClass?.subjectName }}
+                        <td class="px-4 py-4 text-sm font-medium text-slate-700">
+                            <span class="hover:text-blue-700 cursor-pointer" (click)="viewScheduleDetails(schedule.id)">
+                                {{ schedule.courseClass?.subjectName }}
+                            </span>
                         </td>
                         <td class="px-4 py-4 text-sm text-slate-900 text-left">{{ getExamTypeLabel(schedule.examType)
                             }}</td>
@@ -150,10 +152,12 @@
                             </span>
                         </td>
                         <td class="px-4 py-4 text-sm text-slate-900 text-center">
-                            <button class="text-blue-600 hover:text-blue-900 mr-3" title="Chỉnh sửa">
+                            <button (click)="openEditModal(schedule)" class="text-blue-600 hover:text-blue-900 mr-3"
+                                title="Chỉnh sửa">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="text-red-600 hover:text-red-900" title="Xóa">
+                            <button (click)="confirmDelete(schedule)" class="text-red-600 hover:text-red-900"
+                                title="Xóa">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </td>
@@ -214,12 +218,13 @@
 </style>
 
 <!-- Modal: Xếp thi tự động -->
-<div *ngIf="showModal" (click)="closeAddModal()"
+<div *ngIf="showModal" (mousedown)="handleBackdropClick($event, 'add')"
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-    <div (click)="$event.stopPropagation(); activeDropdown = ''"
+    <div (mousedown)="$event.stopPropagation()"
         class="bg-white rounded-xl shadow-md w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-xl">
-            <h3 class="text-[17px] font-bold text-slate-900">Thêm lịch thi mới</h3>
+            <h3 class="text-[17px] font-bold text-slate-900">{{ isEditing ? 'Cập nhật lịch thi' : 'Xếp lịch thi tự động'
+                }}</h3>
             <button (click)="closeAddModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i class="fas fa-times"></i>
             </button>
@@ -438,19 +443,33 @@
                                 </button>
                                 <div *ngIf="activeDropdown === 'modalProctor'"
                                     class="absolute z-[60] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-60 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
-                                    <div (click)="selectedProctorId = null; activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                        [class.text-slate-900]="!selectedProctorId"
-                                        [class.bg-blue-50]="!selectedProctorId">
-                                        Không có
+                                    <div (click)="selectedProctorIds = []; $event.stopPropagation()"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors border-b border-slate-50 text-slate-500">
+                                        <div
+                                            class="w-4 h-4 border border-slate-300 rounded flex items-center justify-center">
+                                        </div>
+                                        Bỏ chọn tất cả
                                     </div>
                                     <div *ngFor="let p of lecturers"
-                                        (click)="selectedProctorId = p.id; activeDropdown = ''; $event.stopPropagation()"
-                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
-                                        [class.text-slate-900]="selectedProctorId === p.id"
-                                        [class.bg-blue-50]="selectedProctorId === p.id">
+                                        (click)="toggleProctor(p.id); $event.stopPropagation()"
+                                        class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors border-b border-slate-50 last:border-0"
+                                        [class.bg-blue-50]="isProctorSelected(p.id)"
+                                        [class.text-blue-600]="isProctorSelected(p.id)">
+                                        <div class="w-4 h-4 border rounded flex items-center justify-center transition-colors"
+                                            [class.bg-blue-600]="isProctorSelected(p.id)"
+                                            [class.border-blue-600]="isProctorSelected(p.id)"
+                                            [class.border-slate-300]="!isProctorSelected(p.id)">
+                                            <i *ngIf="isProctorSelected(p.id)"
+                                                class="fas fa-check text-[10px] text-white"></i>
+                                        </div>
                                         {{ p.firstName }} {{ p.lastName }} ({{ p.lecturerCode }})
                                     </div>
+                                </div>
+                                <div *ngIf="selectedProctorIds.length > 0 && selectedProctorIds.length !== selectedRoomIndexes.size"
+                                    class="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-amber-600 bg-amber-50/50 px-2 py-1 rounded border border-amber-100/50">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Số cán bộ ({{selectedProctorIds.length}}) nên bằng số phòng thi
+                                    ({{selectedRoomIndexes.size}})
                                 </div>
                             </div>
                         </div>
@@ -664,7 +683,274 @@
             <button (click)="submitAutoArrange()" [disabled]="isSubmitting"
                 class="flex items-center bg-blue-600 hover:bg-blue-700 text-white gap-3 px-4 py-2 border border-slate-200 rounded-md text-sm font-semibold transition-all">
                 <i *ngIf="isSubmitting" class="fas fa-circle-notch fa-spin"></i>
-                <span>{{ isSubmitting ? 'ĐANG XỬ LÝ...' : 'Lưu danh sách' }}</span>
+                <span>{{ isSubmitting ? 'ĐANG XỬ LÝ...' : (isEditing ? 'Cập nhật' : 'Lưu danh sách') }}</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Xác nhận xóa -->
+<div *ngIf="showDeleteModal" (mousedown)="handleBackdropClick($event, 'delete')"
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+    <div (mousedown)="$event.stopPropagation()"
+        class="bg-white rounded-xl shadow-md w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+        <div
+            class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 text-slate-900">
+            <h3 class="text-[17px] font-bold text-slate-900">Xác nhận xóa</h3>
+            <button (click)="closeDeleteModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div>
+                <p class="text-slate-900 mt-2 leading-relaxed">
+                    Bạn có chắc muốn xóa lịch thi học phần
+                    <span class="font-semibold">{{ scheduleToDelete?.courseClass?.subjectName }}</span>?
+                    Thao tác này không thể hoàn tác.
+                </p>
+            </div>
+        </div>
+        <div class="p-6 flex justify-end gap-3 border-t border-slate-100">
+            <button type="button" (click)="closeDeleteModal()"
+                class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all text-slate-900">
+                Hủy bỏ
+            </button>
+            <button (click)="deleteSchedule()"
+                class="px-6 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all shadow-md"
+                [disabled]="isSubmitting">
+                <i *ngIf="isSubmitting" class="fas fa-circle-notch fa-spin mr-2"></i>
+                {{ isSubmitting ? 'Đang xóa...' : 'Xác nhận' }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Information Modal -->
+<div *ngIf="showDetailModal" (mousedown)="closeDetailModal()"
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+    <div *ngIf="selectedScheduleDetails" (mousedown)="$event.stopPropagation()"
+        class="bg-white rounded-xl shadow-md w-full max-w-5xl h-[92vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 class="text-[17px] font-bold text-slate-900">
+                Chi tiết lịch thi: {{ selectedScheduleDetails.courseClass?.subjectName }}
+            </h3>
+            <button (click)="closeDetailModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="relative z-20 px-6 py-5 bg-white border-b border-slate-50">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1">
+                    <p class="text-xs text-slate-500 uppercase font-semibold tracking-wider">Thông tin thi</p>
+                    <p class="text-sm text-slate-900 font-medium">Loại: {{
+                        getExamTypeLabel(selectedScheduleDetails.examType) }}</p>
+                    <p class="text-sm text-slate-900 font-medium">Hình thức: {{ selectedScheduleDetails.examFormat }}
+                    </p>
+                    <p class="text-sm text-slate-900 font-medium">Ngày: {{ selectedScheduleDetails.examDate |
+                        date:'dd/MM/yyyy' }}</p>
+                </div>
+
+                <div class="flex items-center justify-end gap-3">
+                    <div class="relative w-full md:w-64 group">
+                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors">
+                            <i class="fas fa-search text-sm"></i>
+                        </span>
+                        <input type="text" [(ngModel)]="detailSearchTerm" (input)="onDetailSearch()"
+                            placeholder="Tìm sinh viên"
+                            class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-md outline-none transition-all text-sm focus:border-blue-500 shadow-sm">
+                    </div>
+
+                    <div class="relative">
+                        <button (click)="toggleDetailFilter($event)"
+                            class="flex items-center gap-3 px-4 py-2 bg-white border border-slate-200 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
+                            <i class="fas fa-filter text-slate-600"></i>
+                            Lọc
+                            <i class="fas fa-chevron-right ml-1 text-[10px] transition-transform duration-200"
+                                [class.rotate-90]="showDetailFilter"></i>
+                        </button>
+
+                        <!-- Filter Dropdown -->
+                        <div *ngIf="showDetailFilter" (click)="$event.stopPropagation()"
+                            class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-md border border-slate-200 z-[110] animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                            <div class="px-4 py-3 border-b border-slate-100 rounded-md">
+                                <span class="font-bold text-slate-700">Bộ lọc</span>
+                            </div>
+
+                            <div class="p-4 space-y-5 min-h-[120px]">
+                                <!-- Lớp SV Filter -->
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 text-[14px] font-medium text-slate-600">Lớp
+                                        sinh viên</label>
+                                    <div class="relative">
+                                        <button
+                                            (click)="activeDropdown = activeDropdown === 'detClass' ? 'detFilter' : 'detClass'; $event.stopPropagation()"
+                                            class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm appearance-none cursor-pointer text-slate-900 text-left">
+                                            {{ tempDetailClass || 'Tất cả lớp' }}
+                                            <i class="fas fa-chevron-right absolute text-[10px] right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-transform duration-300"
+                                                [class.rotate-90]="activeDropdown === 'detClass'"></i>
+                                        </button>
+                                        <div *ngIf="activeDropdown === 'detClass'"
+                                            class="absolute z-[120] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                            <div (click)="tempDetailClass=''; activeDropdown='detFilter'"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                [class.bg-blue-50]="tempDetailClass === ''">
+                                                Tất cả lớp
+                                            </div>
+                                            <div *ngFor="let c of detailClasses"
+                                                (click)="tempDetailClass=c; activeDropdown='detFilter'"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                [class.bg-blue-50]="tempDetailClass === c">
+                                                {{ c }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Giờ thi Filter -->
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 text-[14px] font-medium text-slate-600">Giờ
+                                        thi</label>
+                                    <div class="relative">
+                                        <button
+                                            (click)="activeDropdown = activeDropdown === 'detTime' ? 'detFilter' : 'detTime'; $event.stopPropagation()"
+                                            class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm appearance-none cursor-pointer text-slate-900 text-left">
+                                            {{ tempDetailTime || 'Tất cả giờ' }}
+                                            <i class="fas fa-chevron-right absolute text-[10px] right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-transform duration-300"
+                                                [class.rotate-90]="activeDropdown === 'detTime'"></i>
+                                        </button>
+                                        <div *ngIf="activeDropdown === 'detTime'"
+                                            class="absolute z-[120] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                            <div (click)="tempDetailTime=''; activeDropdown='detFilter'"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                [class.bg-blue-50]="tempDetailTime === ''">
+                                                Tất cả giờ
+                                            </div>
+                                            <div *ngFor="let s of detailTimes"
+                                                (click)="tempDetailTime=s; activeDropdown='detFilter'"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                [class.bg-blue-50]="tempDetailTime === s">
+                                                {{ s }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Phòng Filter -->
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 text-[14px] font-medium text-slate-600">Phòng
+                                        thi</label>
+                                    <div class="relative">
+                                        <button
+                                            (click)="activeDropdown = activeDropdown === 'detRoom' ? 'detFilter' : 'detRoom'; $event.stopPropagation()"
+                                            class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm appearance-none cursor-pointer text-slate-900 text-left">
+                                            {{ tempDetailRoom || 'Tất cả phòng' }}
+                                            <i class="fas fa-chevron-right absolute text-[10px] right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-transform duration-300"
+                                                [class.rotate-90]="activeDropdown === 'detRoom'"></i>
+                                        </button>
+                                        <div *ngIf="activeDropdown === 'detRoom'"
+                                            class="absolute z-[120] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                            <div (click)="tempDetailRoom=''; activeDropdown='detFilter'"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                [class.bg-blue-50]="tempDetailRoom === ''">
+                                                Tất cả phòng
+                                            </div>
+                                            <div *ngFor="let r of detailRooms"
+                                                (click)="tempDetailRoom=r; activeDropdown='detFilter'"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                [class.bg-blue-50]="tempDetailRoom === r">
+                                                {{ r }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Proctor Filter -->
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 text-[14px] font-medium text-slate-600">Cán bộ
+                                        coi thi</label>
+                                    <div class="relative">
+                                        <button
+                                            (click)="activeDropdown = activeDropdown === 'detProctor' ? 'detFilter' : 'detProctor'; $event.stopPropagation()"
+                                            class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:border-blue-500 outline-none transition-all text-sm appearance-none cursor-pointer text-slate-900 text-left">
+                                            {{ tempDetailProctor || 'Tất cả cán bộ' }}
+                                            <i class="fas fa-chevron-right absolute text-[10px] right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-transform duration-300"
+                                                [class.rotate-90]="activeDropdown === 'detProctor'"></i>
+                                        </button>
+                                        <div *ngIf="activeDropdown === 'detProctor'"
+                                            class="absolute z-[120] w-full mt-2 bg-white border border-slate-100 rounded-md shadow-md max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-200 transform origin-top">
+                                            <div (click)="tempDetailProctor=''; activeDropdown='detFilter'"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                [class.bg-blue-50]="tempDetailProctor === ''">
+                                                Tất cả cán bộ
+                                            </div>
+                                            <div *ngFor="let p of detailProctors"
+                                                (click)="tempDetailProctor=p; activeDropdown='detFilter'"
+                                                class="px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-colors"
+                                                [class.bg-blue-50]="tempDetailProctor === p">
+                                                {{ p }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 border-t border-slate-100 flex justify-end gap-2 rounded-b-xl bg-white">
+                                <button (click)="resetDetailFilterDrafts(); showDetailFilter = false"
+                                    class="px-4 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-all text-slate-900">
+                                    Đặt lại
+                                </button>
+                                <button (click)="applyDetailFilters()"
+                                    class="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all">
+                                    Áp dụng
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 min-h-0 overflow-auto custom-scrollbar py-4 bg-white">
+            <div class="overflow-x-auto">
+                <table class="w-full table-auto border-collapse text-[13px]">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-900">
+                            <th class="w-14 px-4 py-4 text-sm font-semibold text-center">STT
+                            </th>
+                            <th class="w-32 px-4 py-4 text-sm font-semibold text-left">Mã số</th>
+                            <th class="w-auto px-4 py-4 text-sm font-semibold text-left">Họ và
+                                tên</th>
+                            <th class="w-32 px-4 py-4 text-sm font-semibold text-left">Lớp SV
+                            </th>
+                            <th class="w-24 px-4 py-4 text-sm font-semibold text-center">Giờ thi</th>
+                            <th class="w-32 px-4 py-4 text-sm font-semibold text-center">Phòng
+                            </th>
+                            <th class="w-40 px-4 py-4 text-sm font-semibold text-left">Cán bộ
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr *ngFor="let s of filteredDetailStudents; let i = index" class="transition-colors">
+                            <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ i + 1 }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900">{{ s.studentCode }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900">{{ s.fullName }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900">{{ s.className }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ s.examTime }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900 text-center">{{ s.roomName }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-900">{{ s.proctorName }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 rounded-b-xl">
+            <button (click)="closeDetailModal()"
+                class="px-5 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition-all border border-slate-200 bg-white">
+                Đóng
             </button>
         </div>
     </div>

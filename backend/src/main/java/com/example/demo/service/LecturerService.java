@@ -59,7 +59,7 @@ public class LecturerService {
         user.setCreatedAt(LocalDateTime.now());
 
         Role lecturerRole = roleRepository.findByName("LECTURER")
-                .orElseThrow(() -> new RuntimeException("Role LECTURER not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy vai trò LECTURER"));
         user.setRole(lecturerRole);
 
         updateUserFields(user, dto);
@@ -77,7 +77,7 @@ public class LecturerService {
     @Transactional
     public LecturerDTO updateLecturer(Long id, LecturerDTO dto) {
         LecturerProfile profile = lecturerProfileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giảng viên"));
 
         User user = profile.getUser();
         updateUserFields(user, dto);
@@ -92,7 +92,7 @@ public class LecturerService {
     @Transactional
     public void deleteLecturer(Long id) {
         LecturerProfile profile = lecturerProfileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giảng viên"));
         User user = profile.getUser();
 
         // Clear advisor from administrative classes
@@ -140,7 +140,7 @@ public class LecturerService {
 
         if (dto.getFacultyId() != null) {
             Faculty faculty = facultyRepository.findById(dto.getFacultyId())
-                    .orElseThrow(() -> new RuntimeException("Faculty not found"));
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy khoa"));
             profile.setFaculty(faculty);
         }
 

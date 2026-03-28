@@ -69,6 +69,14 @@ public class ExamSchedule {
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties("examSchedule")
     private java.util.List<ExamScheduleRoom> rooms;
 
+    @OneToMany(mappedBy = "examSchedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("examSchedule")
+    private java.util.List<ExamSlot> slots;
+
+    @OneToMany(mappedBy = "examSchedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("examSchedule")
+    private java.util.List<ExamStudentAssignment> assignments;
+
     @PreUpdate
     public void preUpdate() {
         updatedAt = LocalDateTime.now();
@@ -133,4 +141,10 @@ public class ExamSchedule {
 
     public java.util.List<ExamScheduleRoom> getRooms() { return rooms; }
     public void setRooms(java.util.List<ExamScheduleRoom> rooms) { this.rooms = rooms; }
+
+    public java.util.List<ExamSlot> getSlots() { return slots; }
+    public void setSlots(java.util.List<ExamSlot> slots) { this.slots = slots; }
+
+    public java.util.List<ExamStudentAssignment> getAssignments() { return assignments; }
+    public void setAssignments(java.util.List<ExamStudentAssignment> assignments) { this.assignments = assignments; }
 }
