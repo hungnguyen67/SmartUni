@@ -192,7 +192,7 @@ export class StudentsComponent implements OnInit {
             'ACADEMIC_RESERVE': 'Bảo lưu',
             'DROPPED_OUT': 'Thôi học'
         };
-        return map[status] || status || '---';
+        return map[status] || status || 'Chưa cập nhật';
     }
 
     getGenderName(gender: string | undefined): string {

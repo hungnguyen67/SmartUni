@@ -396,7 +396,19 @@ export class CurriculumsComponent implements OnInit {
             const curriculumId = Number(block.curriculumId);
 
             if (isNaN(curriculumId) || curriculumId <= 0) {
-                this.flashMessage.error('ID chương trình đào tạo không hợp lệ');
+                this.flashMessage.error('Vui lòng chọn chương trình đào tạo');
+                this.savingCurriculum = false;
+                return;
+            }
+
+            if (!block.blockCode || !block.blockCode.trim()) {
+                this.flashMessage.error('Vui lòng nhập mã khối');
+                this.savingCurriculum = false;
+                return;
+            }
+
+            if (!block.blockName || !block.blockName.trim()) {
+                this.flashMessage.error('Vui lòng nhập tên khối');
                 this.savingCurriculum = false;
                 return;
             }
@@ -513,12 +525,6 @@ export class CurriculumsComponent implements OnInit {
             };
 
             if (this.isEditing) {
-                if (isNaN(dataId) || dataId <= 0) {
-                    this.flashMessage.error('Không tìm thấy định danh bản ghi để cập nhật');
-                    this.savingCurriculum = false;
-                    return;
-                }
-                data.id = dataId;
                 if (!this.hasChanges()) {
                     this.flashMessage.info('Không có thay đổi nào để cập nhật');
                     this.savingCurriculum = false;

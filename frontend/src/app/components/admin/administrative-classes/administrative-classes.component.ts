@@ -299,7 +299,7 @@ export class AdministrativeClassesComponent implements OnInit, OnDestroy {
             case 'DROPPED': return 'Thôi học';
             case 'GRADUATED': return 'Đã tốt nghiệp';
             case 'SUSPENDED': return 'Đình chỉ';
-            default: return status || '---';
+            default: return status || 'Chưa cập nhật';
         }
     }
 

@@ -105,6 +105,8 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
     selectedClassDetails: any = null;
     classRegistrations: any[] = [];
     registrationSearchText = '';
+    
+    isBatchConfirmModalOpen = false;
 
     constructor(
         private courseClassService: CourseClassService,
@@ -156,6 +158,7 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
             this.closeDetailModal();
             this.isDeleteModalOpen = false;
             this.isSelectionModalOpen = false;
+            this.isBatchConfirmModalOpen = false;
         }
     }
 
@@ -402,6 +405,26 @@ export class CourseClassesComponent implements OnInit, OnDestroy {
 
     isDemandSelected(demand: any): boolean {
         return this.selectedDemandKeys.has(`${demand.subjectId}_${demand.adminClassId}`);
+    }
+
+    openBatchConfirmation(): void {
+        const demandsToCreate = this.filteredDemandAnalysis.filter(d =>
+            this.isDemandSelected(d) && d.openedClasses === 0
+        );
+
+        if (demandsToCreate.length === 0) {
+            this.flashMessage.warning('Vui lòng chọn ít nhất một môn học để khởi tạo!');
+            this.selectedDemandKeys.clear();
+            this.allSelected = false;
+            return;
+        }
+        
+        this.isBatchConfirmModalOpen = true;
+    }
+
+    confirmBatchClasses(): void {
+        this.isBatchConfirmModalOpen = false;
+        this.generateBatchClasses();
     }
 
     generateBatchClasses(): void {
